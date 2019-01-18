@@ -29,5 +29,13 @@ class TestComputeSortedEigenvectors(unittest.TestCase):
         self.assertGreater(w[1], w[2])
 
 
+class TestComputeNumberOfClusters(unittest.TestCase):
+
+    def test_5_values(self):
+        eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
+        result = spectral_clusterer.compute_number_of_clusters(eigenvalues)
+        self.assertEqual(3, result)
+
+
 if __name__ == "__main__":
     unittest.main()

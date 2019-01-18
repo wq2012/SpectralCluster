@@ -47,6 +47,25 @@ def compute_sorted_eigenvectors(A):
     return w, v
 
 
+def compute_number_of_clusters(eigenvalues):
+    """Compute number of clusters using EigenGap principle.
+
+    Args:
+        eigenvalues: sorted eigenvalues of the affinity matrix
+
+    Returns:
+        number of clusters as an integer
+    """
+    max_delta = 0
+    max_delta_index = 0
+    for i in range(1, len(eigenvalues)):
+        delta = eigenvalues[i - 1] / eigenvalues[i]
+        if delta > max_delta:
+            max_delta = delta
+            max_delta_index = i
+    return max_delta_index
+
+
 class SpectralClusterer(object):
     def __init__(self):
         pass
@@ -74,3 +93,6 @@ class SpectralClusterer(object):
         # TODO: Add refinements here
 
         # Perform eigen decomposion.
+        (eigenvalues,
+         eigenvectors) = spectral_clusterer.compute_sorted_eigenvectors(
+             affinity)
