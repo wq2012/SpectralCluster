@@ -45,8 +45,8 @@ class CropDiagonal(AffinityRefinementOperation):
         self.check_input(X)
         Y = np.copy(X)
         np.fill_diagonal(Y, 0.0)
-        for i in range(Y.shape[0]):
-            Y[i, i] = Y[i, :].max()
+        for r in range(Y.shape[0]):
+            Y[r, r] = Y[r, :].max()
         return Y
 
 
@@ -60,8 +60,43 @@ class GaussianBlur(AffinityRefinementOperation):
         return gaussian_filter(X, sigma=self.sigma)
 
 
+class RowWiseThreshold(AffinityRefinementOperation):
+    """Apply row wise thresholding."""
+    def __init__(self, p_percentile=0.95, thresholding_soft_multiplier=0.01):
+        self.p_percentile = p_percentile
+        self.multiplier = thresholding_soft_multiplier
+
+    def refine(self, X):
+        self.check_input(X)
+        Y = np.copy(X)
+        for r in range(Y.shape[0]):
+            row_max = Y[r, :].max()
+            for c in range(Y.shape[1]):
+                if Y[r, c] < row_max * self.p_percentile:
+                    Y[r, c] /= self.multiplier
+        return Y
+
+
+class Symmetrize(AffinityRefinementOperation):
+    """The Symmetrization operation."""
+    def refine(self, X):
+        self.check_input(X)
+        return np.maximum(X, np.transpose(X))
+
+
 class Diffuse(AffinityRefinementOperation):
     """The diffusion operation."""
     def refine(self, X):
         self.check_input(X)
         return np.matmul(X, np.transpose(X))
+
+
+class RowWiseNormalize(AffinityRefinementOperation):
+    """The row wise max normalization operation."""
+    def refine(self, X):
+        self.check_input(X)
+        Y = np.copy(X)
+        for r in range(Y.shape[0]):
+            row_max = Y[r, :].max()
+            Y[r, :] /= row_max
+        return Y

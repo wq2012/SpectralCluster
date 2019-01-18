@@ -72,7 +72,9 @@ class SpectralClusterer(object):
             self,
             min_clusters=None,
             max_clusters=None,
-            gaussian_blur_sigma=1):
+            gaussian_blur_sigma=1,
+            p_percentile=0.95,
+            thresholding_soft_multiplier=0.01):
         """Constructor of the clusterer.
 
         Args:
@@ -82,10 +84,15 @@ class SpectralClusterer(object):
                 if not None), can be used together with min_clusters to fix
                 the number of clusters
             gaussian_blur_sigma: sigma value of the Gaussian blur operation
+            p_percentile: the p-percentile for the row wise thresholding
+            thresholding_soft_multiplier: the multiplier for soft threhsold,
+                if this value is 0, then it's a hard thresholding
         """
         self.min_clusters = min_clusters
         self.max_clusters = max_clusters
         self.gaussian_blur_sigma = gaussian_blur_sigma
+        self.p_percentile = p_percentile
+        self.thresholding_soft_multiplier = thresholding_soft_multiplier
 
     def cluster(self, X):
         """Perform spectral clustering on data X.
@@ -107,11 +114,16 @@ class SpectralClusterer(object):
         #  Compute affinity matrix.
         affinity = compute_affinity_matrix(X)
 
-        # TODO: Add refinements here
+        # Refinement opertions on the affinity matrix.
         affinity = refinement.CropDiagonal().refine(affinity)
         affinity = refinement.GaussianBlur(
             self.gaussian_blur_sigma).refine(affinity)
+        affinity = refinement.RowWiseThreshold(
+            self.p_percentile,
+            self.thresholding_soft_multiplier).refine(affinity)
+        affinity = refinement.Symmetrize().refine(affinity)
         affinity = refinement.Diffuse().refine(affinity)
+        affinity = refinement.RowWiseNormalize().refine(affinity)
 
         # Perform eigen decomposion.
         (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(affinity)
