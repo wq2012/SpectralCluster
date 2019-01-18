@@ -73,7 +73,7 @@ class RowWiseThreshold(AffinityRefinementOperation):
             row_max = Y[r, :].max()
             for c in range(Y.shape[1]):
                 if Y[r, c] < row_max * self.p_percentile:
-                    Y[r, c] /= self.multiplier
+                    Y[r, c] *= self.multiplier
         return Y
 
 
