@@ -1,4 +1,4 @@
-# Spectral Clustering
+# Spectral Clustering [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster)
 
 ## Overview
 
@@ -15,10 +15,22 @@ Specifically, in this implementation, we use the K-Means from
 [scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html),
 which does NOT support customized distance measure like cosine distance.
 
+## Dependencies
+
+* numpy
+* scipy
+* sklearn
+
 ## Tutorial
 
-Simply use the `cluster()` method of class `SpectralClusterer` to perform
-spectral clustering.
+Install the [package](https://pypi.org/project/spectralcluster/) by:
+
+```bash
+pip install spectralcluster
+```
+
+Then simply use the `cluster()` method of class `SpectralClusterer` to perform
+spectral clustering:
 
 ```python
 from spectralcluster import SpectralClusterer
