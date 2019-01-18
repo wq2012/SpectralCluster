@@ -1,0 +1,11 @@
+{
+  "editor.tabSize": 4,
+  "editor.rulers": [
+    80
+  ],
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": true,
+  "terminal.integrated.fontSize": 13,
+  "python.formatting.provider": "autopep8"
+}
