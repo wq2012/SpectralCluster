@@ -39,6 +39,7 @@ def compute_sorted_eigenvectors(A):
     # Eigen decomposition.
     eigenvalues, eigenvectors = np.linalg.eig(A)
     eigenvalues = eigenvalues.real
+    eigenvectors = eigenvectors.real
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
     # Re-order.
@@ -67,8 +68,21 @@ def compute_number_of_clusters(eigenvalues):
 
 
 class SpectralClusterer(object):
-    def __init__(self):
-        pass
+    def __init__(
+            self,
+            min_clusters=None,
+            max_clusters=None):
+        """Constructor of the clusterer.
+
+        Args:
+            min_clusters: minimal number of clusters allowed (only effective
+                if not None)
+            max_clusters: maximal number of clusters allowed (only effective
+                if not None), can be used together with min_clusters to fix
+                the number of clusters
+        """
+        self.min_clusters = min_clusters
+        self.max_clusters = max_clusters
 
     def cluster(self, X):
         """Perform spectral clustering on data X.
@@ -91,8 +105,26 @@ class SpectralClusterer(object):
         affinity = compute_affinity_matrix(X)
 
         # TODO: Add refinements here
+        affinity = refinement.Diffuse().refine(affinity)
 
         # Perform eigen decomposion.
-        (eigenvalues,
-         eigenvectors) = spectral_clusterer.compute_sorted_eigenvectors(
-             affinity)
+        (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(affinity)
+
+        # Get number of clusters.
+        k = compute_number_of_clusters(eigenvalues)
+        if self.min_clusters is not None:
+            k = max(k, self.min_clusters)
+        if self.max_clusters is not None:
+            k = min(k, self.max_clusters)
+
+        # Get spectral embeddings.
+        spectral_embeddings = eigenvectors[:, :k]
+
+        # Run K-Means++ on spectral embeddings.
+        kmeans_clusterer = KMeans(
+            n_clusters=k,
+            init="k-means++",
+            max_iter=300,
+            random_state=0)
+        labels = kmeans_clusterer.fit_predict(spectral_embeddings)
+        return labels

@@ -18,6 +18,7 @@ class TestComputeAffinityMatrix(unittest.TestCase):
 
 
 class TestComputeSortedEigenvectors(unittest.TestCase):
+    """Tests for the compute_sorted_eigenvectors function."""
 
     def test_3by2_matrix(self):
         X = np.array([[1, 2], [3, 4], [1, 3]])
@@ -30,11 +31,30 @@ class TestComputeSortedEigenvectors(unittest.TestCase):
 
 
 class TestComputeNumberOfClusters(unittest.TestCase):
+    """Tests for the compute_number_of_clusters function."""
 
     def test_5_values(self):
         eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
         result = spectral_clusterer.compute_number_of_clusters(eigenvalues)
         self.assertEqual(3, result)
+
+
+class TestSpectralClusterer(unittest.TestCase):
+    """Tests for the SpectralClusterer class."""
+
+    def test_6by2_matrix(self):
+        X = np.array([
+            [1.0, 0.0],
+            [1.1, 0.1],
+            [0.0, 1.0],
+            [0.1, 1.0],
+            [0.9, -0.1],
+            [0.0, 1.2],
+        ])
+        clusterer = spectral_clusterer.SpectralClusterer()
+        labels = clusterer.cluster(X)
+        expected = np.array([0, 0, 1, 1, 0, 1])
+        self.assertTrue(np.array_equal(expected, labels))
 
 
 if __name__ == "__main__":
