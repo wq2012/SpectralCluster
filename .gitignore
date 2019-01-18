@@ -1,0 +1,5 @@
+*~
+*.pyc
+build/*
+dist/*
+spectralcluster.egg-info/*
