@@ -16,5 +16,18 @@ class TestComputeAffinityMatrix(unittest.TestCase):
              [0, 0.5, 0, 1]])
         self.assertTrue(np.array_equal(expected, affinity))
 
+
+class TestComputeSortedEigenvectors(unittest.TestCase):
+
+    def test_3by2_matrix(self):
+        X = np.array([[1, 2], [3, 4], [1, 3]])
+        affinity = spectral_clusterer.compute_affinity_matrix(X)
+        w, v = spectral_clusterer.compute_sorted_eigenvectors(affinity)
+        self.assertEqual((3, ), w.shape)
+        self.assertEqual((3, 3), v.shape)
+        self.assertGreater(w[0], w[1])
+        self.assertGreater(w[1], w[2])
+
+
 if __name__ == "__main__":
     unittest.main()

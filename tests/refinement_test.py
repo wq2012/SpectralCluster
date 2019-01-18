@@ -12,5 +12,6 @@ class TestDiffuse(unittest.TestCase):
         expected = np.array([[5, 11], [11, 25]])
         self.assertTrue(np.array_equal(expected, Y))
 
+
 if __name__ == "__main__":
     unittest.main()

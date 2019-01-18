@@ -25,6 +25,28 @@ def compute_affinity_matrix(X):
     return affinity
 
 
+def compute_sorted_eigenvectors(A):
+    """Sort eigenvectors by the real part of eigenvalues.
+
+    Args:
+        A: the matrix to perform eigen analysis with shape (M, M)
+
+    Returns:
+        w: sorted eigenvalues of shape (M,)
+        v: sorted eigenvectors, where v[;, i] corresponds to ith largest
+           eigenvalue
+    """
+    # Eigen decomposition.
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    eigenvalues = eigenvalues.real
+    # Sort from largest to smallest.
+    index_array = np.argsort(-eigenvalues)
+    # Re-order.
+    w = eigenvalues[index_array]
+    v = eigenvectors[:, index_array]
+    return w, v
+
+
 class SpectralClusterer(object):
     def __init__(self):
         pass
@@ -37,5 +59,18 @@ class SpectralClusterer(object):
 
         Returns:
             labels: numpy array of shape (n_samples,)
+
+        Raises:
+            TypeError: if X has wrong type
+            ValueError: if X has wrong shape
         """
+        if not isinstance(X, np.ndarray):
+            raise TypeError("X must be a numpy array")
+        if len(X.shape) != 2:
+            raise ValueError("X must be 2-dimensional")
+        #  Compute affinity matrix.
         affinity = compute_affinity_matrix(X)
+
+        # TODO: Add refinements here
+
+        # Perform eigen decomposion.
