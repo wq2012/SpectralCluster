@@ -54,6 +54,7 @@ class TestSpectralClusterer(unittest.TestCase):
         clusterer = spectral_clusterer.SpectralClusterer()
         labels = clusterer.cluster(X)
         expected = np.array([0, 0, 1, 1, 0, 1])
+        print(labels)
         self.assertTrue(np.array_equal(expected, labels))
 
 

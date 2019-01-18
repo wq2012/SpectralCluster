@@ -71,7 +71,8 @@ class SpectralClusterer(object):
     def __init__(
             self,
             min_clusters=None,
-            max_clusters=None):
+            max_clusters=None,
+            gaussian_blur_sigma=1):
         """Constructor of the clusterer.
 
         Args:
@@ -80,9 +81,11 @@ class SpectralClusterer(object):
             max_clusters: maximal number of clusters allowed (only effective
                 if not None), can be used together with min_clusters to fix
                 the number of clusters
+            gaussian_blur_sigma: sigma value of the Gaussian blur operation
         """
         self.min_clusters = min_clusters
         self.max_clusters = max_clusters
+        self.gaussian_blur_sigma = gaussian_blur_sigma
 
     def cluster(self, X):
         """Perform spectral clustering on data X.
@@ -105,6 +108,9 @@ class SpectralClusterer(object):
         affinity = compute_affinity_matrix(X)
 
         # TODO: Add refinements here
+        affinity = refinement.CropDiagonal().refine(affinity)
+        affinity = refinement.GaussianBlur(
+            self.gaussian_blur_sigma).refine(affinity)
         affinity = refinement.Diffuse().refine(affinity)
 
         # Perform eigen decomposion.
@@ -121,6 +127,10 @@ class SpectralClusterer(object):
         spectral_embeddings = eigenvectors[:, :k]
 
         # Run K-Means++ on spectral embeddings.
+        # Note: The correct way should be using a K-Means implementation
+        # that supports customized distance measure such as cosine distance.
+        # This implemention from scikit-learn does NOT, which is inconsistent
+        # with the paper.
         kmeans_clusterer = KMeans(
             n_clusters=k,
             init="k-means++",

@@ -1,4 +1,5 @@
 import abc
+from scipy.ndimage import gaussian_filter
 import numpy as np
 
 
@@ -32,6 +33,31 @@ class AffinityRefinementOperation(metaclass=abc.ABCMeta):
             a matrix of the same size as X
         """
         pass
+
+
+class CropDiagonal(AffinityRefinementOperation):
+    """Crop the diagonal.
+
+    Replace diagonal element by the max value of row.
+    We do this because the diagonal will bias Gaussian blur and normalization.
+    """
+    def refine(self, X):
+        self.check_input(X)
+        Y = np.copy(X)
+        np.fill_diagonal(Y, 0.0)
+        for i in range(Y.shape[0]):
+            Y[i, i] = Y[i, :].max()
+        return Y
+
+
+class GaussianBlur(AffinityRefinementOperation):
+    """Apply Gaussian blur."""
+    def __init__(self, sigma=1):
+        self.sigma = sigma
+
+    def refine(self, X):
+        self.check_input(X)
+        return gaussian_filter(X, sigma=self.sigma)
 
 
 class Diffuse(AffinityRefinementOperation):
