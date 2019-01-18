@@ -5,7 +5,7 @@
 This is a Python re-implementation of the spectral clustering algorithm in the
 paper [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/).
 
-![refinement](resources/refinement.png)
+![refinement](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/refinement.png)
 
 ## Disclaimer
 
