@@ -19,7 +19,7 @@ which does NOT support customized distance measure like cosine distance.
 
 * numpy
 * scipy
-* sklearn
+* scikit-learn
 
 ## Tutorial
 
