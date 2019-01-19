@@ -72,3 +72,12 @@ Our paper is cited as:
   organization={IEEE}
 }
 ```
+
+## Misc
+
+Our new speaker diarization systems are now fully supervised, powered by
+[uis-rnn](https://github.com/google/uis-rnn).
+Check this [Google AI Blog](https://ai.googleblog.com/2018/11/accurate-online-speaker-diarization.html).
+
+To learn more about speaker diarization, here is a curated list of resources:
+[awesome-diarization](https://github.com/wq2012/awesome-diarization).
