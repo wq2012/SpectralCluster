@@ -1,5 +1,6 @@
 {
   "editor.tabSize": 4,
+  "editor.insertSpaces": true,
   "editor.rulers": [
     80
   ],
@@ -7,5 +8,9 @@
   "files.trimTrailingWhitespace": true,
   "editor.formatOnSave": true,
   "terminal.integrated.fontSize": 13,
-  "python.formatting.provider": "autopep8"
+  "python.formatting.provider": "autopep8",
+  "python.formatting.autopep8Args": [
+    "--indent-size=4",
+    "--max-line-length=80"
+  ],
 }

@@ -21,15 +21,23 @@ which does NOT support customized distance measure like cosine distance.
 * scipy
 * scikit-learn
 
-## Tutorial
+## Installation
 
 Install the [package](https://pypi.org/project/spectralcluster/) by:
 
 ```bash
-pip install spectralcluster
+pip3 install spectralcluster
 ```
 
-Then simply use the `cluster()` method of class `SpectralClusterer` to perform
+or
+
+```bash
+python3 -m pip install spectralcluster
+```
+
+## Tutorial
+
+Simply use the `cluster()` method of class `SpectralClusterer` to perform
 spectral clustering:
 
 ```python
