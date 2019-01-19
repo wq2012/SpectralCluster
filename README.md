@@ -53,7 +53,7 @@ labels = clusterer.cluster(X)
 ```
 
 The input `X` is a numpy array of shape `(n_samples, n_features)`,
-and the returned `1abels` is a numpy array of shape `(n_samples,)`.
+and the returned `labels` is a numpy array of shape `(n_samples,)`.
 
 For the complete list of parameters of the clusterer, see
 `spectralcluster/spectral_clusterer.py`.
