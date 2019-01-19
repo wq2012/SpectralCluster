@@ -8,6 +8,16 @@ from spectralcluster import refinement
 from spectralcluster import utils
 
 
+DEFAULT_REFINEMENT_SEQUENCE = [
+    "CropDiagonal",
+    "GaussianBlur",
+    "RowWiseThreshold",
+    "Symmetrize",
+    "Diffuse",
+    "RowWiseNormalize",
+]
+
+
 class SpectralClusterer(object):
     def __init__(
             self,
@@ -16,7 +26,8 @@ class SpectralClusterer(object):
             gaussian_blur_sigma=1,
             p_percentile=0.95,
             thresholding_soft_multiplier=0.01,
-            stop_eigenvalue=1e-2):
+            stop_eigenvalue=1e-2,
+            refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
         """Constructor of the clusterer.
 
         Args:
@@ -32,6 +43,8 @@ class SpectralClusterer(object):
             stop_eigenvalue: when computing the number of clusters using
                 Eigen Gap, we do not look at eigen values smaller than this
                 value
+            refinement_sequence: a list of strings for the sequence of
+                refinement operations to apply on the affinity matrix
         """
         self.min_clusters = min_clusters
         self.max_clusters = max_clusters
@@ -39,6 +52,7 @@ class SpectralClusterer(object):
         self.p_percentile = p_percentile
         self.thresholding_soft_multiplier = thresholding_soft_multiplier
         self.stop_eigenvalue = stop_eigenvalue
+        self.refinement_sequence = refinement_sequence
 
     def predict(self, X):
         """Perform spectral clustering on data X.
@@ -51,7 +65,8 @@ class SpectralClusterer(object):
 
         Raises:
             TypeError: if X has wrong type
-            ValueError: if X has wrong shape
+            ValueError: if X has wrong shape, or we see an unknown refinement
+                operation
         """
         if not isinstance(X, np.ndarray):
             raise TypeError("X must be a numpy array")
@@ -61,15 +76,24 @@ class SpectralClusterer(object):
         affinity = utils.compute_affinity_matrix(X)
 
         # Refinement opertions on the affinity matrix.
-        affinity = refinement.CropDiagonal().refine(affinity)
-        affinity = refinement.GaussianBlur(
-            self.gaussian_blur_sigma).refine(affinity)
-        affinity = refinement.RowWiseThreshold(
-            self.p_percentile,
-            self.thresholding_soft_multiplier).refine(affinity)
-        affinity = refinement.Symmetrize().refine(affinity)
-        affinity = refinement.Diffuse().refine(affinity)
-        affinity = refinement.RowWiseNormalize().refine(affinity)
+        for op in self.refinement_sequence:
+            if op == "CropDiagonal":
+                affinity = refinement.CropDiagonal().refine(affinity)
+            elif op == "GaussianBlur":
+                affinity = refinement.GaussianBlur(
+                    self.gaussian_blur_sigma).refine(affinity)
+            elif op == "RowWiseThreshold":
+                affinity = refinement.RowWiseThreshold(
+                    self.p_percentile,
+                    self.thresholding_soft_multiplier).refine(affinity)
+            elif op == "Symmetrize":
+                affinity = refinement.Symmetrize().refine(affinity)
+            elif op == "Diffuse":
+                affinity = refinement.Diffuse().refine(affinity)
+            elif op == "RowWiseNormalize":
+                affinity = refinement.RowWiseNormalize().refine(affinity)
+            else:
+                raise ValueError("Unknown refinement operation: {}".format(op))
 
         # Perform eigen decomposion.
         (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
