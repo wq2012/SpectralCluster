@@ -49,3 +49,18 @@ and the returned `1abels` is a numpy array of shape `(n_samples,)`.
 
 For the complete list of parameters of the clusterer, see
 `spectralcluster/spectral_clusterer.py`.
+
+## Citations
+
+Our paper is cited as:
+
+```
+@inproceedings{wang2018speaker,
+  title={Speaker diarization with lstm},
+  author={Wang, Quan and Downey, Carlton and Wan, Li and Mansfield, Philip Andrew and Moreno, Ignacio Lopz},
+  booktitle={2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages={5239--5243},
+  year={2018},
+  organization={IEEE}
+}
+```

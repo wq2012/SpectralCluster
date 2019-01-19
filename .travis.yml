@@ -1,0 +1,21 @@
+language: python
+
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.5
+
+install:
+  - pip install -q -r requirements.txt
+  - pip install flake8
+
+script:
+  - flake8 .
+  - bash run_tests.sh
+
+notifications:
+  email: false
+
+branches:
+  only:
+    - master
