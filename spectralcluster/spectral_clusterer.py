@@ -40,7 +40,7 @@ class SpectralClusterer(object):
         self.thresholding_soft_multiplier = thresholding_soft_multiplier
         self.stop_eigenvalue = stop_eigenvalue
 
-    def cluster(self, X):
+    def predict(self, X):
         """Perform spectral clustering on data X.
 
         Args:

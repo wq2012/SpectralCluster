@@ -26,7 +26,7 @@ class TestSpectralClusterer(unittest.TestCase):
         clusterer = spectral_clusterer.SpectralClusterer(
             p_percentile=0.95,
             gaussian_blur_sigma=0)
-        labels = clusterer.cluster(X)
+        labels = clusterer.predict(X)
         expected = np.array([0, 0, 1, 1, 0, 1])
         self.assertTrue(np.array_equal(expected, labels))
 
@@ -43,7 +43,7 @@ class TestSpectralClusterer(unittest.TestCase):
             p_percentile=0.2,
             gaussian_blur_sigma=0,
             stop_eigenvalue=0.01)
-        labels = clusterer.cluster(X)
+        labels = clusterer.predict(X)
         expected = np.array(
             [2] * 400 + [0] * 300 + [1] * 200 + [3] * 100
         )

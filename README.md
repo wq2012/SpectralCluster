@@ -37,7 +37,7 @@ python3 -m pip install spectralcluster
 
 ## Tutorial
 
-Simply use the `cluster()` method of class `SpectralClusterer` to perform
+Simply use the `predict()` method of class `SpectralClusterer` to perform
 spectral clustering:
 
 ```python
@@ -49,7 +49,7 @@ clusterer = SpectralClusterer(
     p_percentile=0.95,
     gaussian_blur_sigma=1)
 
-labels = clusterer.cluster(X)
+labels = clusterer.predict(X)
 ```
 
 The input `X` is a numpy array of shape `(n_samples, n_features)`,
