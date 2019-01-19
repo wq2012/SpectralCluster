@@ -15,7 +15,8 @@ class SpectralClusterer(object):
             max_clusters=None,
             gaussian_blur_sigma=1,
             p_percentile=0.95,
-            thresholding_soft_multiplier=0.01):
+            thresholding_soft_multiplier=0.01,
+            stop_eigenvalue=1e-2):
         """Constructor of the clusterer.
 
         Args:
@@ -28,12 +29,16 @@ class SpectralClusterer(object):
             p_percentile: the p-percentile for the row wise thresholding
             thresholding_soft_multiplier: the multiplier for soft threhsold,
                 if this value is 0, then it's a hard thresholding
+            stop_eigenvalue: when computing the number of clusters using
+                Eigen Gap, we do not look at eigen values smaller than this
+                value
         """
         self.min_clusters = min_clusters
         self.max_clusters = max_clusters
         self.gaussian_blur_sigma = gaussian_blur_sigma
         self.p_percentile = p_percentile
         self.thresholding_soft_multiplier = thresholding_soft_multiplier
+        self.stop_eigenvalue = stop_eigenvalue
 
     def cluster(self, X):
         """Perform spectral clustering on data X.
@@ -70,7 +75,7 @@ class SpectralClusterer(object):
         (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
             affinity)
         # Get number of clusters.
-        k = utils.compute_number_of_clusters(eigenvalues)
+        k = utils.compute_number_of_clusters(eigenvalues, self.stop_eigenvalue)
         if self.min_clusters is not None:
             k = max(k, self.min_clusters)
         if self.max_clusters is not None:

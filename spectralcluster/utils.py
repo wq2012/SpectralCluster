@@ -50,7 +50,7 @@ def compute_sorted_eigenvectors(A):
     return w, v
 
 
-def compute_number_of_clusters(eigenvalues, stop_eigenvalue=1e-3):
+def compute_number_of_clusters(eigenvalues, stop_eigenvalue=1e-2):
     """Compute number of clusters using EigenGap principle.
 
     Args:
