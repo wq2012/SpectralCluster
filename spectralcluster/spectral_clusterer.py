@@ -54,6 +54,35 @@ class SpectralClusterer(object):
         self.stop_eigenvalue = stop_eigenvalue
         self.refinement_sequence = refinement_sequence
 
+    def _get_refinement_operator(self, name):
+        """Get the refinement operator.
+
+        Args:
+            name: operator class name as a string
+
+        Returns:
+            object of the operator
+
+        Raises:
+            ValueError: if name is an unknown refinement operation
+        """
+        if name == "CropDiagonal":
+            return refinement.CropDiagonal()
+        elif name == "GaussianBlur":
+            return refinement.GaussianBlur(self.gaussian_blur_sigma)
+        elif name == "RowWiseThreshold":
+            return refinement.RowWiseThreshold(
+                self.p_percentile,
+                self.thresholding_soft_multiplier)
+        elif name == "Symmetrize":
+            return refinement.Symmetrize()
+        elif name == "Diffuse":
+            return refinement.Diffuse()
+        elif name == "RowWiseNormalize":
+            return refinement.RowWiseNormalize()
+        else:
+            raise ValueError("Unknown refinement operation: {}".format(name))
+
     def predict(self, X):
         """Perform spectral clustering on data X.
 
@@ -65,8 +94,7 @@ class SpectralClusterer(object):
 
         Raises:
             TypeError: if X has wrong type
-            ValueError: if X has wrong shape, or we see an unknown refinement
-                operation
+            ValueError: if X has wrong shape
         """
         if not isinstance(X, np.ndarray):
             raise TypeError("X must be a numpy array")
@@ -76,24 +104,9 @@ class SpectralClusterer(object):
         affinity = utils.compute_affinity_matrix(X)
 
         # Refinement opertions on the affinity matrix.
-        for op in self.refinement_sequence:
-            if op == "CropDiagonal":
-                affinity = refinement.CropDiagonal().refine(affinity)
-            elif op == "GaussianBlur":
-                affinity = refinement.GaussianBlur(
-                    self.gaussian_blur_sigma).refine(affinity)
-            elif op == "RowWiseThreshold":
-                affinity = refinement.RowWiseThreshold(
-                    self.p_percentile,
-                    self.thresholding_soft_multiplier).refine(affinity)
-            elif op == "Symmetrize":
-                affinity = refinement.Symmetrize().refine(affinity)
-            elif op == "Diffuse":
-                affinity = refinement.Diffuse().refine(affinity)
-            elif op == "RowWiseNormalize":
-                affinity = refinement.RowWiseNormalize().refine(affinity)
-            else:
-                raise ValueError("Unknown refinement operation: {}".format(op))
+        for refinement_name in self.refinement_sequence:
+            op = self._get_refinement_operator(refinement_name)
+            affinity = op.refine(affinity)
 
         # Perform eigen decomposion.
         (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
