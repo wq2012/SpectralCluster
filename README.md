@@ -1,4 +1,4 @@
-# Spectral Clustering [![Build Status](https://travis-ci.org/wq2012/SpectralCluster.svg?branch=master)](https://travis-ci.org/wq2012/SpectralCluster) [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster)
+# Spectral Clustering [![Build Status](https://travis-ci.org/wq2012/SpectralCluster.svg?branch=master)](https://travis-ci.org/wq2012/SpectralCluster) [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster) [![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://wq2012.github.io/SpectralCluster)
 
 ## Overview
 
@@ -57,8 +57,6 @@ and the returned `labels` is a numpy array of shape `(n_samples,)`.
 
 For the complete list of parameters of the clusterer, see
 `spectralcluster/spectral_clusterer.py`.
-
-The detailed documentation is available [here](https://wq2012.github.io/SpectralCluster/index.html).
 
 ## Citations
 
