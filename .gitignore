@@ -3,3 +3,4 @@
 build/*
 dist/*
 spectralcluster.egg-info/*
+.coverage

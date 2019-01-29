@@ -14,7 +14,7 @@ pushd ${PROJECT_PATH}
 # Run tests.
 for TEST_FILE in $(find tests -name "*_test.py"); do
     echo "Running tests in ${TEST_FILE}"
-    python3 ${TEST_FILE}
+    python3 -m coverage run ${TEST_FILE}
 done
 echo "All tests passed!"
 
