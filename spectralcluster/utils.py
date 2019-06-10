@@ -50,11 +50,13 @@ def compute_sorted_eigenvectors(A):
     return w, v
 
 
-def compute_number_of_clusters(eigenvalues, stop_eigenvalue=1e-2):
+def compute_number_of_clusters(
+        eigenvalues, max_clusters=None, stop_eigenvalue=1e-2):
     """Compute number of clusters using EigenGap principle.
 
     Args:
         eigenvalues: sorted eigenvalues of the affinity matrix
+        max_clusters: max number of clusters allowed
         stop_eigenvalue: we do not look at eigen values smaller than this
 
     Returns:
@@ -62,7 +64,10 @@ def compute_number_of_clusters(eigenvalues, stop_eigenvalue=1e-2):
     """
     max_delta = 0
     max_delta_index = 0
-    for i in range(1, len(eigenvalues)):
+    range_end = len(eigenvalues)
+    if max_clusters and max_clusters + 1 < range_end:
+        range_end = max_clusters + 1
+    for i in range(1, range_end):
         if eigenvalues[i - 1] < stop_eigenvalue:
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]

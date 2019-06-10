@@ -112,11 +112,10 @@ class SpectralClusterer(object):
         (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
             affinity)
         # Get number of clusters.
-        k = utils.compute_number_of_clusters(eigenvalues, self.stop_eigenvalue)
+        k = utils.compute_number_of_clusters(
+            eigenvalues, self.max_clusters, self.stop_eigenvalue)
         if self.min_clusters is not None:
             k = max(k, self.min_clusters)
-        if self.max_clusters is not None:
-            k = min(k, self.max_clusters)
 
         # Get spectral embeddings.
         spectral_embeddings = eigenvectors[:, :k]

@@ -42,6 +42,17 @@ class TestComputeNumberOfClusters(unittest.TestCase):
         result = utils.compute_number_of_clusters(eigenvalues)
         self.assertEqual(3, result)
 
+    def test_max_clusters(self):
+        max_clusters = 2
+        eigenvalues = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5])
+
+        result_1 = utils.compute_number_of_clusters(eigenvalues)
+        self.assertEqual(5, result_1)
+
+        result_2 = utils.compute_number_of_clusters(
+            eigenvalues, max_clusters=max_clusters)
+        self.assertEqual(max_clusters, result_2)
+
 
 if __name__ == "__main__":
     unittest.main()
