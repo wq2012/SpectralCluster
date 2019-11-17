@@ -58,6 +58,8 @@ and the returned `labels` is a numpy array of shape `(n_samples,)`.
 For the complete list of parameters of the clusterer, see
 `spectralcluster/spectral_clusterer.py`.
 
+[![youtube_screenshot](resources/youtube_screenshot.jpg)](https://youtu.be/pjxGPZQeeO4)
+
 ## Citations
 
 Our paper is cited as:
