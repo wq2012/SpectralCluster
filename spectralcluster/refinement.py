@@ -50,7 +50,7 @@ class CropDiagonal(AffinityRefinementOperation):
         Y = np.copy(X)
         np.fill_diagonal(Y, 0.0)
         di = np.diag_indices(Y.shape[0])
-        Y[di] = Y.max(axis=1) 
+        Y[di] = Y.max(axis=1)
         return Y
 
 
