@@ -49,8 +49,8 @@ class CropDiagonal(AffinityRefinementOperation):
         self.check_input(X)
         Y = np.copy(X)
         np.fill_diagonal(Y, 0.0)
-        for r in range(Y.shape[0]):
-            Y[r, r] = Y[r, :].max()
+        di = np.diag_indices(Y.shape[0])
+        Y[di] = Y.max(axis=1)
         return Y
 
 
@@ -73,11 +73,11 @@ class RowWiseThreshold(AffinityRefinementOperation):
     def refine(self, X):
         self.check_input(X)
         Y = np.copy(X)
-        for r in range(Y.shape[0]):
-            row_max = Y[r, :].max()
-            for c in range(Y.shape[1]):
-                if Y[r, c] < row_max * self.p_percentile:
-                    Y[r, c] *= self.multiplier
+        row_max = Y.max(axis=1)
+        row_max = np.expand_dims(row_max, axis=1)
+        is_smaller = Y < (row_max * self.p_percentile)
+
+        Y = (Y * np.invert(is_smaller)) + (Y * self.multiplier * is_smaller)
         return Y
 
 
@@ -100,7 +100,6 @@ class RowWiseNormalize(AffinityRefinementOperation):
     def refine(self, X):
         self.check_input(X)
         Y = np.copy(X)
-        for r in range(Y.shape[0]):
-            row_max = Y[r, :].max()
-            Y[r, :] /= row_max
+        row_max = Y.max(axis=1)
+        Y /= np.expand_dims(row_max, axis=1)
         return Y
