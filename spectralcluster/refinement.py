@@ -75,9 +75,9 @@ class RowWiseThreshold(AffinityRefinementOperation):
         Y = np.copy(X)
         row_max = Y.max(axis=1)
         row_max = np.expand_dims(row_max, axis=1)
-        is_smaller_or_not = Y < row_max * self.p_percentile
+        is_smaller = Y < (row_max * self.p_percentile)
 
-        Y = (Y * np.invert(is_smaller_or_not)) + (Y * self.multiplier * is_smaller_or_not)
+        Y = (Y * np.invert(is_smaller)) + (Y * self.multiplier * is_smaller)
         return Y
 
 
