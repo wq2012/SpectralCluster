@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import scipy.linalg
 
 
 def compute_affinity_matrix(X):
@@ -39,7 +40,7 @@ def compute_sorted_eigenvectors(A):
            eigenvalue
     """
     # Eigen decomposition.
-    eigenvalues, eigenvectors = np.linalg.eig(A)
+    eigenvalues, eigenvectors = scipy.linalg.eigh(A, turbo=True)
     eigenvalues = eigenvalues.real
     eigenvectors = eigenvectors.real
     # Sort from largest to smallest.
