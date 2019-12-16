@@ -45,7 +45,7 @@ class TestSpectralClusterer(unittest.TestCase):
             stop_eigenvalue=0.01)
         labels = clusterer.predict(X)
         expected = np.array(
-            [2] * 400 + [0] * 300 + [1] * 200 + [3] * 100
+            [0] * 400 + [1] * 300 + [2] * 200 + [3] * 100
         )
         self.assertTrue(np.array_equal(expected, labels))
 
