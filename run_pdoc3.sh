@@ -10,7 +10,7 @@ rm -r docs
 
 # This script requires pdoc3 at least 0.5.2:
 # pip3 install pdoc3
-python3 -m pdoc spectralcluster --html --html-dir=docs
+python3 -m pdoc spectralcluster --html --output-dir=docs
 
 mv docs/spectralcluster/* docs/
 
