@@ -30,5 +30,4 @@ jobs:
         flake8 .
     - name: Run tests
       run: |
-        pip install codecov
-        bash run_tests.sh && codecov
+        bash run_tests.sh
