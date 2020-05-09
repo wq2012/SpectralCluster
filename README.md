@@ -78,19 +78,25 @@ Our paper is cited as:
 
 ## FAQs
 
+### Laplacian matrix
+
 **Question:** Why are you performing eigen-decomposition directly on the similarity matrix instead of its Laplacian matrix? ([source](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9053122))
 
 **Answer:** No, we are not performing eigen-decomposition directly on the similarity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the similarity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix.
+
+### Cosine vs. Euclidean distance
+
+**Question:** Your paper says the K-Means should be based on Cosine distance, but this repository is using Euclidean distance. Do you have a Cosine distance version?
+
+**Answer:** You can find a variant of this repository using Cosine distance for K-means instead of
+Euclidean distance here:
+[FlorianKrey/DNC](https://github.com/FlorianKrey/DNC)
 
 ## Misc
 
 Our new speaker diarization systems are now fully supervised, powered by
 [uis-rnn](https://github.com/google/uis-rnn).
 Check this [Google AI Blog](https://ai.googleblog.com/2018/11/accurate-online-speaker-diarization.html).
-
-A variant of this repository using Cosine distance for K-means instead of
-Euclidean distance is available at
-[FlorianKrey/DNC](https://github.com/FlorianKrey/DNC).
 
 To learn more about speaker diarization, here is a curated list of resources:
 [awesome-diarization](https://github.com/wq2012/awesome-diarization).
