@@ -42,9 +42,12 @@ class AffinityRefinementOperation(metaclass=abc.ABCMeta):
 class CropDiagonal(AffinityRefinementOperation):
     """Crop the diagonal.
 
-    Replace diagonal element by the max value of row.
-    We do this because the diagonal will bias Gaussian blur and normalization.
+    Replace diagonal element by the max non-diagonal value of row.
+    After this operation, the matrix has similar properties to a standard
+    Laplacian matrix.
+    This also helps to avoid the bias during Gaussian blur and normalization.
     """
+
     def refine(self, X):
         self.check_input(X)
         Y = np.copy(X)
@@ -56,6 +59,7 @@ class CropDiagonal(AffinityRefinementOperation):
 
 class GaussianBlur(AffinityRefinementOperation):
     """Apply Gaussian blur."""
+
     def __init__(self, sigma=1):
         self.sigma = sigma
 
@@ -66,6 +70,7 @@ class GaussianBlur(AffinityRefinementOperation):
 
 class RowWiseThreshold(AffinityRefinementOperation):
     """Apply row wise thresholding."""
+
     def __init__(self, p_percentile=0.95, thresholding_soft_multiplier=0.01):
         self.p_percentile = p_percentile
         self.multiplier = thresholding_soft_multiplier
@@ -83,6 +88,7 @@ class RowWiseThreshold(AffinityRefinementOperation):
 
 class Symmetrize(AffinityRefinementOperation):
     """The Symmetrization operation."""
+
     def refine(self, X):
         self.check_input(X)
         return np.maximum(X, np.transpose(X))
@@ -90,6 +96,7 @@ class Symmetrize(AffinityRefinementOperation):
 
 class Diffuse(AffinityRefinementOperation):
     """The diffusion operation."""
+
     def refine(self, X):
         self.check_input(X)
         return np.matmul(X, np.transpose(X))
@@ -97,6 +104,7 @@ class Diffuse(AffinityRefinementOperation):
 
 class RowWiseNormalize(AffinityRefinementOperation):
     """The row wise max normalization operation."""
+
     def refine(self, X):
         self.check_input(X)
         Y = np.copy(X)
