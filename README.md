@@ -84,6 +84,10 @@ Our paper is cited as:
 
 **Answer:** No, we are not performing eigen-decomposition directly on the similarity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the similarity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix.
 
+**Question:** Why don't you just use the standard Laplacian matrix?
+
+**Answer:** Our Laplacian matrix is less sensitive (thus more robust) to the Gaussian blur operation.
+
 ### Cosine vs. Euclidean distance
 
 **Question:** Your paper says the K-Means should be based on Cosine distance, but this repository is using Euclidean distance. Do you have a Cosine distance version?
