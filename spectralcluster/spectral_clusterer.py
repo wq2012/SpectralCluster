@@ -26,6 +26,7 @@ class SpectralClusterer(object):
             gaussian_blur_sigma=1,
             p_percentile=0.95,
             thresholding_soft_multiplier=0.01,
+            thresholding_with_row_max=True,
             stop_eigenvalue=1e-2,
             refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
         """Constructor of the clusterer.
@@ -40,6 +41,9 @@ class SpectralClusterer(object):
             p_percentile: the p-percentile for the row wise thresholding
             thresholding_soft_multiplier: the multiplier for soft threhsold,
                 if this value is 0, then it's a hard thresholding
+            thresholding_with_row_max: if true, we use row_max * p_percentile
+                as row wise threshold, instead of doing a percentile-based
+                thresholding
             stop_eigenvalue: when computing the number of clusters using
                 Eigen Gap, we do not look at eigen values smaller than this
                 value
@@ -51,6 +55,7 @@ class SpectralClusterer(object):
         self.gaussian_blur_sigma = gaussian_blur_sigma
         self.p_percentile = p_percentile
         self.thresholding_soft_multiplier = thresholding_soft_multiplier
+        self.thresholding_with_row_max = thresholding_with_row_max
         self.stop_eigenvalue = stop_eigenvalue
         self.refinement_sequence = refinement_sequence
 
@@ -73,7 +78,8 @@ class SpectralClusterer(object):
         elif name == "RowWiseThreshold":
             return refinement.RowWiseThreshold(
                 self.p_percentile,
-                self.thresholding_soft_multiplier)
+                self.thresholding_soft_multiplier,
+                self.thresholding_with_row_max)
         elif name == "Symmetrize":
             return refinement.Symmetrize()
         elif name == "Diffuse":

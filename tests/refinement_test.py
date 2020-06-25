@@ -37,14 +37,30 @@ class TestGaussianBlur(unittest.TestCase):
 class TestRowWiseThreshold(unittest.TestCase):
     """Tests for the RowWiseThreshold class."""
 
-    def test_3by3_matrix(self):
+    def test_3by3_matrix_percentile(self):
         X = np.array([
             [0.5, 2.0, 3.0],
             [3.0, 4.0, 5.0],
             [4.0, 2.0, 1.0]])
         Y = refinement.RowWiseThreshold(
             p_percentile=0.5,
-            thresholding_soft_multiplier=0.01).refine(X)
+            thresholding_soft_multiplier=0.01,
+            thresholding_with_row_max=False).refine(X)
+        expected = np.array([
+            [0.005, 2.0, 3.0],
+            [0.03, 4.0, 5.0],
+            [4.0, 2.0, 0.01]])
+        self.assertTrue(np.allclose(expected, Y, atol=0.001))
+
+    def test_3by3_matrix_row_max(self):
+        X = np.array([
+            [0.5, 2.0, 3.0],
+            [3.0, 4.0, 5.0],
+            [4.0, 2.0, 1.0]])
+        Y = refinement.RowWiseThreshold(
+            p_percentile=0.5,
+            thresholding_soft_multiplier=0.01,
+            thresholding_with_row_max=True).refine(X)
         expected = np.array([
             [0.005, 2.0, 3.0],
             [3.0, 4.0, 5.0],

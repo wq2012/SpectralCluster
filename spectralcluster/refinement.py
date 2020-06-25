@@ -71,16 +71,28 @@ class GaussianBlur(AffinityRefinementOperation):
 class RowWiseThreshold(AffinityRefinementOperation):
     """Apply row wise thresholding."""
 
-    def __init__(self, p_percentile=0.95, thresholding_soft_multiplier=0.01):
+    def __init__(self,
+                 p_percentile=0.95,
+                 thresholding_soft_multiplier=0.01,
+                 thresholding_with_row_max=False):
         self.p_percentile = p_percentile
         self.multiplier = thresholding_soft_multiplier
+        self.thresholding_with_row_max = thresholding_with_row_max
 
     def refine(self, X):
         self.check_input(X)
         Y = np.copy(X)
-        row_max = Y.max(axis=1)
-        row_max = np.expand_dims(row_max, axis=1)
-        is_smaller = Y < (row_max * self.p_percentile)
+
+        if self.thresholding_with_row_max:
+            # row_max based thresholding
+            row_max = Y.max(axis=1)
+            row_max = np.expand_dims(row_max, axis=1)
+            is_smaller = Y < (row_max * self.p_percentile)
+        else:
+            # percentile based thresholding
+            row_percentile = np.percentile(Y, self.p_percentile * 100, axis=1)
+            row_percentile = np.expand_dims(row_percentile, axis=1)
+            is_smaller = Y < row_percentile
 
         Y = (Y * np.invert(is_smaller)) + (Y * self.multiplier * is_smaller)
         return Y
