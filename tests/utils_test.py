@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
 import unittest
 from spectralcluster import utils
@@ -52,6 +48,16 @@ class TestComputeNumberOfClusters(unittest.TestCase):
         result_2 = utils.compute_number_of_clusters(
             eigenvalues, max_clusters=max_clusters)
         self.assertEqual(max_clusters, result_2)
+
+
+class TestPermutationInvariantTransform(unittest.TestCase):
+    """Tests for the permutation_invariant_transform function."""
+
+    def test_small_array(self):
+        labels = np.array([2, 2, 1, 0, 3, 3, 1])
+        expected = np.array([0, 0, 1, 2, 3, 3, 1])
+        result = utils.permutation_invariant_transform(labels)
+        self.assertTrue(np.array_equal(expected, result))
 
 
 if __name__ == "__main__":

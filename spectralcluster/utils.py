@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
 
 
@@ -75,3 +71,25 @@ def compute_number_of_clusters(
             max_delta = delta
             max_delta_index = i
     return max_delta_index
+
+
+def permutation_invariant_transform(labels):
+    """Transform the label matrix to a permutation-invariant form.
+
+    Args:
+        labels: a matrix of integers
+
+    Returns:
+        new_labels: a matrix of integers, where smaller labels always appear
+        first
+    """
+    new_labels = labels.copy()
+    max_label = -1
+    label_map = {}
+    for element in labels.tolist():
+        if element not in label_map:
+            max_label += 1
+            label_map[element] = max_label
+    for value in label_map.keys():
+        new_labels[labels == value] = label_map[value]
+    return new_labels
