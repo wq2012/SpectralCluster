@@ -8,8 +8,6 @@ class TestSpectralClusterer(unittest.TestCase):
     """Tests for the SpectralClusterer class."""
 
     def setUp(self):
-        # fix random seeds for reproducing results
-        # np.random.seed(1)
         pass
 
     def test_6by2_matrix(self):
