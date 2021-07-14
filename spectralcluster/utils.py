@@ -73,15 +73,19 @@ def compute_number_of_clusters(
     return max_delta_index
 
 
-def permutation_invariant_transform(labels):
-    """Transform the label matrix to a permutation-invariant form.
+def enforce_ordered_labels(labels):
+    """Transform the label sequence to an ordered form.
+
+    This is the same type of label sequence used in the paper "Discriminative
+    neural clustering for speaker diarisation". This makes the label sequence
+    permutation invariant.
 
     Args:
-        labels: a matrix of integers
+        labels: an array of integers
 
     Returns:
-        new_labels: a matrix of integers, where smaller labels always appear
-        first
+        new_labels: an arra of integers, where it starts with 0 and smaller
+        labels always appear first
     """
     new_labels = labels.copy()
     max_label = -1

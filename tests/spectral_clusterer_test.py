@@ -23,7 +23,7 @@ class TestSpectralClusterer(unittest.TestCase):
             p_percentile=0.95,
             gaussian_blur_sigma=0)
         labels = clusterer.predict(X)
-        labels = utils.permutation_invariant_transform(labels)
+        labels = utils.enforce_ordered_labels(labels)
         expected = np.array([0, 0, 1, 1, 0, 1])
         self.assertTrue(np.array_equal(expected, labels))
 
@@ -41,7 +41,7 @@ class TestSpectralClusterer(unittest.TestCase):
             gaussian_blur_sigma=0,
             stop_eigenvalue=0.01)
         labels = clusterer.predict(X)
-        labels = utils.permutation_invariant_transform(labels)
+        labels = utils.enforce_ordered_labels(labels)
         expected = np.array(
             [0] * 400 + [1] * 300 + [2] * 200 + [3] * 100
         )

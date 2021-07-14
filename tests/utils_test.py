@@ -50,13 +50,13 @@ class TestComputeNumberOfClusters(unittest.TestCase):
         self.assertEqual(max_clusters, result_2)
 
 
-class TestPermutationInvariantTransform(unittest.TestCase):
-    """Tests for the permutation_invariant_transform function."""
+class TestEnforceOrderedLabels(unittest.TestCase):
+    """Tests for the enforce_ordered_labels function."""
 
     def test_small_array(self):
         labels = np.array([2, 2, 1, 0, 3, 3, 1])
         expected = np.array([0, 0, 1, 2, 3, 3, 1])
-        result = utils.permutation_invariant_transform(labels)
+        result = utils.enforce_ordered_labels(labels)
         self.assertTrue(np.array_equal(expected, result))
 
 
