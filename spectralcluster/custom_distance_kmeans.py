@@ -1,4 +1,7 @@
-"""Implement custom kmeans with any distance measure defined in scipy.spatial.distance."""
+"""Implement custom kmeans.
+
+It supports any distance measure defined in scipy.spatial.distance.
+"""
 
 import numpy as np
 from scipy.spatial import distance
