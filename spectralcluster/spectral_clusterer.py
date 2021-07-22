@@ -1,136 +1,119 @@
+"""A spectral clusterer class to perform clustering."""
+
 import numpy as np
-from sklearn.cluster import KMeans
-from spectralcluster import refinement
+from spectralcluster import base_spectral_clusterer
+from spectralcluster import custom_distance_kmeans
 from spectralcluster import utils
 
 
-DEFAULT_REFINEMENT_SEQUENCE = [
-    "CropDiagonal",
-    "GaussianBlur",
-    "RowWiseThreshold",
-    "Symmetrize",
-    "Diffuse",
-    "RowWiseNormalize",
-]
+class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
+  """Spectral clustering class."""
 
+  def __init__(self,
+               min_clusters=None,
+               max_clusters=None,
+               refinement_options=None,
+               laplacian_type=None,
+               stop_eigenvalue=1e-2,
+               row_wise_renorm=False,
+               custom_dist="cosine",
+               max_iter=300):
+    """Constructor of the clusterer.
 
-class SpectralClusterer(object):
-    def __init__(
-            self,
-            min_clusters=None,
-            max_clusters=None,
-            gaussian_blur_sigma=1,
-            p_percentile=0.95,
-            thresholding_soft_multiplier=0.01,
-            thresholding_with_row_max=True,
-            stop_eigenvalue=1e-2,
-            refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
-        """Constructor of the clusterer.
+    Args:
+      min_clusters: minimal number of clusters allowed (only effective if not
+        None)
+      max_clusters: maximal number of clusters allowed (only effective if not
+        None), can be used together with min_clusters to fix the number of
+        clusters
+      refinement_options: a RefinementOptions object that contains refinement
+        arguments for the affinity matrix
+      laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
+        "unnormalized", compute the unnormalied laplacian. if "graph_cut",
+        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
+        "random_walk", compute the random walk view normalized laplacian,
+        D^{-1}L. If None, we do not use a laplacian matrix
+      stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
+        do not look at eigen values smaller than this value
+      row_wise_renorm: if True, perform row-wise re-normalization on the
+        spectral embeddings
+      custom_dist: str or callable. custom distance measure for k-means. if a
+        string, "cosine", "euclidean", "mahalanobis", or any other distance
+        functions defined in scipy.spatial.distance can be used
+      max_iter: the maximum number of iterations for the custom k-means
+    """
+    super().__init__(
+        min_clusters=min_clusters,
+        max_clusters=max_clusters,
+        refinement_options=refinement_options,
+        laplacian_type=laplacian_type,
+        stop_eigenvalue=stop_eigenvalue,
+        row_wise_renorm=row_wise_renorm,
+        custom_dist=custom_dist,
+        max_iter=max_iter)
 
-        Args:
-            min_clusters: minimal number of clusters allowed (only effective
-                if not None)
-            max_clusters: maximal number of clusters allowed (only effective
-                if not None), can be used together with min_clusters to fix
-                the number of clusters
-            gaussian_blur_sigma: sigma value of the Gaussian blur operation
-            p_percentile: the p-percentile for the row wise thresholding
-            thresholding_soft_multiplier: the multiplier for soft threhsold,
-                if this value is 0, then it's a hard thresholding
-            thresholding_with_row_max: if true, we use row_max * p_percentile
-                as row wise threshold, instead of doing a percentile-based
-                thresholding
-            stop_eigenvalue: when computing the number of clusters using
-                Eigen Gap, we do not look at eigen values smaller than this
-                value
-            refinement_sequence: a list of strings for the sequence of
-                refinement operations to apply on the affinity matrix
-        """
-        self.min_clusters = min_clusters
-        self.max_clusters = max_clusters
-        self.gaussian_blur_sigma = gaussian_blur_sigma
-        self.p_percentile = p_percentile
-        self.thresholding_soft_multiplier = thresholding_soft_multiplier
-        self.thresholding_with_row_max = thresholding_with_row_max
-        self.stop_eigenvalue = stop_eigenvalue
-        self.refinement_sequence = refinement_sequence
+  def predict(self, embeddings):
+    """Perform spectral clustering on data embeddings.
 
-    def _get_refinement_operator(self, name):
-        """Get the refinement operator.
+    The spectral clustering is performed on an affinity matrix.
 
-        Args:
-            name: operator class name as a string
+    Args:
+      embeddings: numpy array of shape (n_samples, n_features)
 
-        Returns:
-            object of the operator
+    Returns:
+      labels: numpy array of shape (n_samples,)
 
-        Raises:
-            ValueError: if name is an unknown refinement operation
-        """
-        if name == "CropDiagonal":
-            return refinement.CropDiagonal()
-        elif name == "GaussianBlur":
-            return refinement.GaussianBlur(self.gaussian_blur_sigma)
-        elif name == "RowWiseThreshold":
-            return refinement.RowWiseThreshold(
-                self.p_percentile,
-                self.thresholding_soft_multiplier,
-                self.thresholding_with_row_max)
-        elif name == "Symmetrize":
-            return refinement.Symmetrize()
-        elif name == "Diffuse":
-            return refinement.Diffuse()
-        elif name == "RowWiseNormalize":
-            return refinement.RowWiseNormalize()
-        else:
-            raise ValueError("Unknown refinement operation: {}".format(name))
+    Raises:
+      TypeError: if embeddings has wrong type
+      ValueError: if embeddings has wrong shape
+    """
+    if not isinstance(embeddings, np.ndarray):
+      raise TypeError("embeddings must be a numpy array")
+    if len(embeddings.shape) != 2:
+      raise ValueError("embeddings must be 2-dimensional")
 
-    def predict(self, X):
-        """Perform spectral clustering on data X.
+    # Compute affinity matrix.
+    affinity = utils.compute_affinity_matrix(embeddings)
 
-        Args:
-            X: numpy array of shape (n_samples, n_features)
+    if self.refinement_options:
+      # Perform refinement operations on the affinity matrix.
+      for refinement_name in self.refinement_options.refinement_sequence:
+        op = self._get_refinement_operator(refinement_name)
+        affinity = op.refine(affinity)
 
-        Returns:
-            labels: numpy array of shape (n_samples,)
+    if not self.laplacian_type:
+      # Perform eigen decomposion.
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
+      # Get number of clusters.
+      k = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+    if self.laplacian_type:
+      # Compute Laplacian matrix
+      laplacian_norm = utils.compute_laplacian(
+          affinity, lp_type=self.laplacian_type)
+      # Perform eigen decomposion. Eigen values are sorted in an ascending order
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
+          laplacian_norm, descend=False)
+      # Get number of clusters. Eigen values are sorted in an ascending order
+      k = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, descend=False)
 
-        Raises:
-            TypeError: if X has wrong type
-            ValueError: if X has wrong shape
-        """
-        if not isinstance(X, np.ndarray):
-            raise TypeError("X must be a numpy array")
-        if len(X.shape) != 2:
-            raise ValueError("X must be 2-dimensional")
-        #  Compute affinity matrix.
-        affinity = utils.compute_affinity_matrix(X)
+    if self.min_clusters is not None:
+      k = max(k, self.min_clusters)
 
-        # Refinement opertions on the affinity matrix.
-        for refinement_name in self.refinement_sequence:
-            op = self._get_refinement_operator(refinement_name)
-            affinity = op.refine(affinity)
+    # Get spectral embeddings.
+    spectral_embeddings = eigenvectors[:, :k]
 
-        # Perform eigen decomposion.
-        (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-            affinity)
-        # Get number of clusters.
-        k = utils.compute_number_of_clusters(
-            eigenvalues, self.max_clusters, self.stop_eigenvalue)
-        if self.min_clusters is not None:
-            k = max(k, self.min_clusters)
+    if self.row_wise_renorm:
+      # Perfrom row wise re-normalization.
+      rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
+      spectral_embeddings = spectral_embeddings / np.reshape(
+          rows_norm, (spectral_embeddings.shape[0], 1))
 
-        # Get spectral embeddings.
-        spectral_embeddings = eigenvectors[:, :k]
-
-        # Run K-Means++ on spectral embeddings.
-        # Note: The correct way should be using a K-Means implementation
-        # that supports customized distance measure such as cosine distance.
-        # This implemention from scikit-learn does NOT, which is inconsistent
-        # with the paper.
-        kmeans_clusterer = KMeans(
-            n_clusters=k,
-            init="k-means++",
-            max_iter=300,
-            random_state=0)
-        labels = kmeans_clusterer.fit_predict(spectral_embeddings)
-        return labels
+    # Run K-means on spectral embeddings.
+    labels = custom_distance_kmeans.run_kmeans(
+        spectral_embeddings,
+        n_clusters=k,
+        custom_dist=self.custom_dist,
+        max_iter=self.max_iter)
+    return labels

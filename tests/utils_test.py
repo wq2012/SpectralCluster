@@ -1,64 +1,105 @@
-import numpy as np
 import unittest
+
+import numpy as np
 from spectralcluster import utils
 
 
 class TestComputeAffinityMatrix(unittest.TestCase):
-    """Tests for the compute_affinity_matrix function."""
+  """Tests for the compute_affinity_matrix function."""
 
-    def test_4by2_matrix(self):
-        X = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
-        affinity = utils.compute_affinity_matrix(X)
-        expected = np.array(
-            [[1,  0.5, 1,  0, ],
-             [0.5, 1, 0.5, 0.5],
-             [1, 0.5, 1, 0],
-             [0, 0.5, 0, 1]])
-        self.assertTrue(np.array_equal(expected, affinity))
+  def test_4by2_matrix(self):
+    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    expected = np.array([[1, 0.5, 1, 0], [0.5, 1, 0.5, 0.5], [1, 0.5, 1, 0],
+                         [0, 0.5, 0, 1]])
+    self.assertTrue(np.array_equal(expected, affinity))
+
+
+class TestComputeLaplacian(unittest.TestCase):
+  """Tests for the compute_laplacian function."""
+
+  def test_laplacian(self):
+    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    laplacian = utils.compute_laplacian(affinity, lp_type="unnormalized")
+    expected = np.array([[1.5, -0.5, -1, 0], [-0.5, 1.5, -0.5, -0.5],
+                         [-1, -0.5, 1.5, 0], [0, -0.5, 0, 0.5]])
+    self.assertTrue(np.array_equal(expected, laplacian))
+
+  def test_normalized_laplacian(self):
+    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    laplacian_norm = utils.compute_laplacian(affinity, lp_type="graph_cut")
+    expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.26],
+                         [-0.4, -0.2, 0.6, 0], [0, -0.26, 0, 0.33]])
+    self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
+
+  def test_random_walk_normalized_laplacian(self):
+    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    laplacian_norm = utils.compute_laplacian(affinity, lp_type="random_walk")
+    expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.2],
+                         [-0.4, -0.2, 0.6, 0], [0, -0.33, 0, 0.33]])
+    self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
 
 
 class TestComputeSortedEigenvectors(unittest.TestCase):
-    """Tests for the compute_sorted_eigenvectors function."""
+  """Tests for the compute_sorted_eigenvectors function."""
 
-    def test_3by2_matrix(self):
-        X = np.array([[1, 2], [3, 4], [1, 3]])
-        affinity = utils.compute_affinity_matrix(X)
-        w, v = utils.compute_sorted_eigenvectors(affinity)
-        self.assertEqual((3, ), w.shape)
-        self.assertEqual((3, 3), v.shape)
-        self.assertGreater(w[0], w[1])
-        self.assertGreater(w[1], w[2])
+  def test_3by2_matrix(self):
+    matrix = np.array([[1, 2], [3, 4], [1, 3]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    w, v = utils.compute_sorted_eigenvectors(affinity)
+    self.assertEqual((3,), w.shape)
+    self.assertEqual((3, 3), v.shape)
+    self.assertGreater(w[0], w[1])
+    self.assertGreater(w[1], w[2])
+
+  def test_ascend(self):
+    matrix = np.array([[1, 2], [3, 4], [1, 3]])
+    affinity = utils.compute_affinity_matrix(matrix)
+    w, v = utils.compute_sorted_eigenvectors(affinity, descend=False)
+    self.assertEqual((3,), w.shape)
+    self.assertEqual((3, 3), v.shape)
+    self.assertLess(w[0], w[1])
+    self.assertLess(w[1], w[2])
 
 
 class TestComputeNumberOfClusters(unittest.TestCase):
-    """Tests for the compute_number_of_clusters function."""
+  """Tests for the compute_number_of_clusters function."""
 
-    def test_5_values(self):
-        eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
-        result = utils.compute_number_of_clusters(eigenvalues)
-        self.assertEqual(3, result)
+  def test_5_values(self):
+    eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
+    result = utils.compute_number_of_clusters(eigenvalues)
+    self.assertEqual(3, result)
 
-    def test_max_clusters(self):
-        max_clusters = 2
-        eigenvalues = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5])
+  def test_max_clusters(self):
+    max_clusters = 2
+    eigenvalues = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5])
 
-        result_1 = utils.compute_number_of_clusters(eigenvalues)
-        self.assertEqual(5, result_1)
+    result_1 = utils.compute_number_of_clusters(eigenvalues)
+    self.assertEqual(5, result_1)
 
-        result_2 = utils.compute_number_of_clusters(
-            eigenvalues, max_clusters=max_clusters)
-        self.assertEqual(max_clusters, result_2)
+    result_2 = utils.compute_number_of_clusters(
+        eigenvalues, max_clusters=max_clusters)
+    self.assertEqual(max_clusters, result_2)
+
+  def test_ascend(self):
+    eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
+    result = utils.compute_number_of_clusters(
+        eigenvalues, max_clusters=3, descend=False)
+    self.assertEqual(2, result)
 
 
 class TestEnforceOrderedLabels(unittest.TestCase):
-    """Tests for the enforce_ordered_labels function."""
+  """Tests for the enforce_ordered_labels function."""
 
-    def test_small_array(self):
-        labels = np.array([2, 2, 1, 0, 3, 3, 1])
-        expected = np.array([0, 0, 1, 2, 3, 3, 1])
-        result = utils.enforce_ordered_labels(labels)
-        self.assertTrue(np.array_equal(expected, result))
+  def test_small_array(self):
+    labels = np.array([2, 2, 1, 0, 3, 3, 1])
+    expected = np.array([0, 0, 1, 2, 3, 3, 1])
+    result = utils.enforce_ordered_labels(labels)
+    self.assertTrue(np.array_equal(expected, result))
 
 
 if __name__ == "__main__":
-    unittest.main()
+  unittest.main()
