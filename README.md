@@ -1,6 +1,12 @@
 # Spectral Clustering
 [![Build Status](https://travis-ci.org/wq2012/SpectralCluster.svg?branch=master)](https://travis-ci.org/wq2012/SpectralCluster) ![Python application](https://github.com/wq2012/SpectralCluster/workflows/Python%20application/badge.svg) [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster) [![Downloads](https://pepy.tech/badge/spectralcluster)](https://pepy.tech/project/spectralcluster) [![codecov](https://codecov.io/gh/wq2012/SpectralCluster/branch/master/graph/badge.svg)](https://codecov.io/gh/wq2012/SpectralCluster) [![Documentation](https://img.shields.io/badge/api-documentation-blue.svg)](https://wq2012.github.io/SpectralCluster)
 
+## Note
+
+We are currently adding new functionalities to this library to open source
+some algorithms to appear in a new paper. We are updating the APIs as well.
+If you depend on our old API, please use an old version of this library.
+
 ## Overview
 
 This is a Python re-implementation of the spectral clustering algorithm in the
