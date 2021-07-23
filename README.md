@@ -103,10 +103,6 @@ In the new version of this library, we support different types of Laplacian matr
 * Graph cut Laplacian: L' = D^{-1/2} L D^{-1/2}
 * Random walk Laplacian: L' = D^{-1} L
 
-**Question:** Why don't you just use the standard Laplacian matrix?
-
-**Answer:** Our Laplacian matrix is less sensitive (thus more robust) to the Gaussian blur operation.
-
 ### Cosine vs. Euclidean distance
 
 **Question:** Your paper says the K-Means should be based on Cosine distance, but this repository is using Euclidean distance. Do you have a Cosine distance version?
