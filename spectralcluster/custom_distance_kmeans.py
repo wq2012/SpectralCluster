@@ -53,7 +53,6 @@ class CustomKMeans(object):
                centroids=None,
                max_iter=10,
                tol=.001,
-               pnorm=2,
                custom_dist="cosine"):
     """Constructor of the clusterer.
 
@@ -66,7 +65,6 @@ class CustomKMeans(object):
         the input samples. if not, centroids are randomly initialized
       max_iter: maximum number of iterations of the k-means algorithm to run
       tol: the relative increment in the results before declaring convergence
-      pnorm: the p-norm to apply (for Minkowski, weighted and unweighted)
       custom_dist: str or callable. custom distance measure to use. if a string,
         "cosine", "euclidean", "mahalanobis", or any other distance functions
         defined in scipy.spatial.distance can be used
@@ -75,7 +73,6 @@ class CustomKMeans(object):
     self.centroids = centroids
     self.max_iter = max_iter
     self.tol = tol
-    self.pnorm = pnorm
     self.custom_dist = custom_dist
 
   def _init_centroids(self, embeddings):
@@ -125,7 +122,7 @@ class CustomKMeans(object):
       # Compute distances to all centroids and assign each sample a label
       # corresponding to the nearest centroid
       dist_to_all_centroids = distance.cdist(
-          embeddings, self.centroids, metric=self.custom_dist, p=self.pnorm)
+          embeddings, self.centroids, metric=self.custom_dist)
       labels = dist_to_all_centroids.argmin(axis=1)
       distances = dist_to_all_centroids[sample_ids, labels]
       mean_distance = np.mean(distances)
