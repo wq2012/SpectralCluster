@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.3" />
 <title>spectralcluster.utils API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Utility functions." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -22,87 +22,173 @@
 <h1 class="title">Module <code>spectralcluster.utils</code></h1>
 </header>
 <section id="section-intro">
+<p>Utility functions.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+<pre><code class="python">&#34;&#34;&#34;Utility functions.&#34;&#34;&#34;
 
 import numpy as np
 
-
-def compute_affinity_matrix(X):
-    &#34;&#34;&#34;Compute the affinity matrix from data.
-
-    Note that the range of affinity is [0,1].
-
-    Args:
-        X: numpy array of shape (n_samples, n_features)
-
-    Returns:
-        affinity: numpy array of shape (n_samples, n_samples)
-    &#34;&#34;&#34;
-    # Normalize the data.
-    l2_norms = np.linalg.norm(X, axis=1)
-    X_normalized = X / l2_norms[:, None]
-    # Compute cosine similarities. Range is [-1,1].
-    cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
-    # Compute the affinity. Range is [0,1].
-    # Note that this step is not mentioned in the paper!
-    affinity = (cosine_similarities + 1.0) / 2.0
-    return affinity
+EPS = 1e-10
 
 
-def compute_sorted_eigenvectors(A):
-    &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
+def compute_affinity_matrix(embeddings):
+  &#34;&#34;&#34;Compute the affinity matrix from data.
 
-    Args:
-        A: the matrix to perform eigen analysis with shape (M, M)
+  Note that the range of affinity is [0, 1].
 
-    Returns:
-        w: sorted eigenvalues of shape (M,)
-        v: sorted eigenvectors, where v[;, i] corresponds to ith largest
-           eigenvalue
-    &#34;&#34;&#34;
-    # Eigen decomposition.
-    eigenvalues, eigenvectors = np.linalg.eig(A)
-    eigenvalues = eigenvalues.real
-    eigenvectors = eigenvectors.real
+  Args:
+    embeddings: numpy array of shape (n_samples, n_features)
+
+  Returns:
+    affinity: numpy array of shape (n_samples, n_samples)
+  &#34;&#34;&#34;
+  # Normalize the data.
+  l2_norms = np.linalg.norm(embeddings, axis=1)
+  embeddings_normalized = embeddings / l2_norms[:, None]
+  # Compute cosine similarities. Range is [-1,1].
+  cosine_similarities = np.matmul(embeddings_normalized,
+                                  np.transpose(embeddings_normalized))
+  # Compute the affinity. Range is [0,1].
+  # Note that this step is not mentioned in the paper!
+  affinity = (cosine_similarities + 1.0) / 2.0
+
+  return affinity
+
+
+def compute_laplacian(affinity, lp_type=&#34;graph_cut&#34;, eps=EPS):
+  &#34;&#34;&#34;Compute the Laplacian matrix.
+
+  Args:
+    affinity: the affinity matrix of input data
+    lp_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
+      &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;, compute
+      the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
+      &#34;random_walk&#34;, compute the random walk view normalized laplacian, D^{-1}L
+    eps: a small value for numerial stability
+
+  Returns:
+    laplacian: unnormalized graph laplacian
+    laplacian_norm: normalized graph laplacian
+  &#34;&#34;&#34;
+  degree = np.diag(np.sum(affinity, axis=1))
+  laplacian = degree - affinity
+  if lp_type == &#34;unnormalized&#34;:
+    return laplacian
+  elif lp_type == &#34;random_walk&#34;:
+    # Random walk normalized version
+    degree_norm = np.diag(1 / (np.diag(degree) + eps))
+    laplacian_norm = degree_norm.dot(laplacian)
+    return laplacian_norm
+  elif lp_type == &#34;graph_cut&#34;:
+    # Graph cut normalized version
+    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + eps))
+    laplacian_norm = degree_norm.dot(laplacian).dot(degree_norm)
+    return laplacian_norm
+  else:
+    raise ValueError(
+        &#34;The lp_type should be &#39;unnormalized&#39;, &#39;random_walk&#39;, or &#39;graph_cut&#39;.&#34;)
+
+
+def compute_sorted_eigenvectors(input_matrix, descend=True):
+  &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
+
+  Args:
+    input_matrix: the matrix to perform eigen analysis with shape (M, M)
+    descend: sort eigenvalues in a descending order. Default is True
+
+  Returns:
+    w: sorted eigenvalues of shape (M,)
+    v: sorted eigenvectors, where v[;, i] corresponds to ith largest
+       eigenvalue
+  &#34;&#34;&#34;
+  # Eigen decomposition.
+  eigenvalues, eigenvectors = np.linalg.eig(input_matrix)
+  eigenvalues = eigenvalues.real
+  eigenvectors = eigenvectors.real
+  if descend:
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
-    # Re-order.
-    w = eigenvalues[index_array]
-    v = eigenvectors[:, index_array]
-    return w, v
+  else:
+    # Sort from smallest to largest.
+    index_array = np.argsort(eigenvalues)
+  # Re-order.
+  w = eigenvalues[index_array]
+  v = eigenvectors[:, index_array]
+  return w, v
 
 
-def compute_number_of_clusters(
-        eigenvalues, max_clusters=None, stop_eigenvalue=1e-2):
-    &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
+def compute_number_of_clusters(eigenvalues,
+                               max_clusters=None,
+                               stop_eigenvalue=1e-2,
+                               descend=True,
+                               eps=EPS):
+  &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
-    Args:
-        eigenvalues: sorted eigenvalues of the affinity matrix
-        max_clusters: max number of clusters allowed
-        stop_eigenvalue: we do not look at eigen values smaller than this
+  Use maximum EigenGap principle to find the number of clusters. The eigenvalues
+  and eigenvectors are sorted in a descending order.
 
-    Returns:
-        number of clusters as an integer
-    &#34;&#34;&#34;
-    max_delta = 0
-    max_delta_index = 0
-    range_end = len(eigenvalues)
-    if max_clusters and max_clusters + 1 &lt; range_end:
-        range_end = max_clusters + 1
+  Args:
+    eigenvalues: sorted eigenvalues of the affinity matrix
+    max_clusters: max number of clusters allowed
+    stop_eigenvalue: we do not look at eigen values smaller than this
+    descend: sort eigenvalues in a descending order. Default is True
+    eps: a small value for numerial stability
+
+  Returns:
+    number of clusters as an integer
+  &#34;&#34;&#34;
+  max_delta = 0
+  max_delta_index = 0
+  range_end = len(eigenvalues)
+  if max_clusters and max_clusters + 1 &lt; range_end:
+    range_end = max_clusters + 1
+
+  if not descend:
+    # The first eigen value is always 0 in an ascending order
+    for i in range(1, range_end - 1):
+      delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      if delta &gt; max_delta:
+        max_delta = delta
+        max_delta_index = i + 1  # Index i means i+1 clusters
+    return max_delta_index
+  else:
     for i in range(1, range_end):
-        if eigenvalues[i - 1] &lt; stop_eigenvalue:
-            break
-        delta = eigenvalues[i - 1] / eigenvalues[i]
-        if delta &gt; max_delta:
-            max_delta = delta
-            max_delta_index = i
-    return max_delta_index</code></pre>
+      if eigenvalues[i - 1] &lt; stop_eigenvalue:
+        break
+      delta = eigenvalues[i - 1] / eigenvalues[i]
+      if delta &gt; max_delta:
+        max_delta = delta
+        max_delta_index = i
+    return max_delta_index
+
+
+def enforce_ordered_labels(labels):
+  &#34;&#34;&#34;Transform the label sequence to an ordered form.
+
+  This is the same type of label sequence used in the paper &#34;Discriminative
+  neural clustering for speaker diarisation&#34;. This makes the label sequence
+  permutation invariant.
+
+  Args:
+    labels: an array of integers
+
+  Returns:
+    new_labels: an array of integers, where it starts with 0 and smaller
+      labels always appear first
+  &#34;&#34;&#34;
+  new_labels = labels.copy()
+  max_label = -1
+  label_map = {}
+  for element in labels.tolist():
+    if element not in label_map:
+      max_label += 1
+      label_map[element] = max_label
+  for key in label_map:
+    new_labels[labels == key] = label_map[key]
+  return new_labels</code></pre>
 </details>
 </section>
 <section>
@@ -113,14 +199,14 @@ def compute_number_of_clusters(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="spectralcluster.utils.compute_affinity_matrix"><code class="name flex">
-<span>def <span class="ident">compute_affinity_matrix</span></span>(<span>X)</span>
+<span>def <span class="ident">compute_affinity_matrix</span></span>(<span>embeddings)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute the affinity matrix from data.</p>
-<p>Note that the range of affinity is [0,1].</p>
+<p>Note that the range of affinity is [0, 1].</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>X</code></strong></dt>
+<dt><strong><code>embeddings</code></strong></dt>
 <dd>numpy array of shape (n_samples, n_features)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -132,33 +218,99 @@ def compute_number_of_clusters(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_affinity_matrix(X):
-    &#34;&#34;&#34;Compute the affinity matrix from data.
+<pre><code class="python">def compute_affinity_matrix(embeddings):
+  &#34;&#34;&#34;Compute the affinity matrix from data.
 
-    Note that the range of affinity is [0,1].
+  Note that the range of affinity is [0, 1].
 
-    Args:
-        X: numpy array of shape (n_samples, n_features)
+  Args:
+    embeddings: numpy array of shape (n_samples, n_features)
 
-    Returns:
-        affinity: numpy array of shape (n_samples, n_samples)
-    &#34;&#34;&#34;
-    # Normalize the data.
-    l2_norms = np.linalg.norm(X, axis=1)
-    X_normalized = X / l2_norms[:, None]
-    # Compute cosine similarities. Range is [-1,1].
-    cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
-    # Compute the affinity. Range is [0,1].
-    # Note that this step is not mentioned in the paper!
-    affinity = (cosine_similarities + 1.0) / 2.0
-    return affinity</code></pre>
+  Returns:
+    affinity: numpy array of shape (n_samples, n_samples)
+  &#34;&#34;&#34;
+  # Normalize the data.
+  l2_norms = np.linalg.norm(embeddings, axis=1)
+  embeddings_normalized = embeddings / l2_norms[:, None]
+  # Compute cosine similarities. Range is [-1,1].
+  cosine_similarities = np.matmul(embeddings_normalized,
+                                  np.transpose(embeddings_normalized))
+  # Compute the affinity. Range is [0,1].
+  # Note that this step is not mentioned in the paper!
+  affinity = (cosine_similarities + 1.0) / 2.0
+
+  return affinity</code></pre>
+</details>
+</dd>
+<dt id="spectralcluster.utils.compute_laplacian"><code class="name flex">
+<span>def <span class="ident">compute_laplacian</span></span>(<span>affinity, lp_type='graph_cut', eps=1e-10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the Laplacian matrix.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>affinity</code></strong></dt>
+<dd>the affinity matrix of input data</dd>
+<dt><strong><code>lp_type</code></strong></dt>
+<dd>str. "unnormalized", "graph_cut", or "random_walk". if
+"unnormalized", compute the unnormalied laplacian. if "graph_cut", compute
+the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
+"random_walk", compute the random walk view normalized laplacian, D^{-1}L</dd>
+<dt><strong><code>eps</code></strong></dt>
+<dd>a small value for numerial stability</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>laplacian</code></dt>
+<dd>unnormalized graph laplacian</dd>
+<dt><code>laplacian_norm</code></dt>
+<dd>normalized graph laplacian</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_laplacian(affinity, lp_type=&#34;graph_cut&#34;, eps=EPS):
+  &#34;&#34;&#34;Compute the Laplacian matrix.
+
+  Args:
+    affinity: the affinity matrix of input data
+    lp_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
+      &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;, compute
+      the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
+      &#34;random_walk&#34;, compute the random walk view normalized laplacian, D^{-1}L
+    eps: a small value for numerial stability
+
+  Returns:
+    laplacian: unnormalized graph laplacian
+    laplacian_norm: normalized graph laplacian
+  &#34;&#34;&#34;
+  degree = np.diag(np.sum(affinity, axis=1))
+  laplacian = degree - affinity
+  if lp_type == &#34;unnormalized&#34;:
+    return laplacian
+  elif lp_type == &#34;random_walk&#34;:
+    # Random walk normalized version
+    degree_norm = np.diag(1 / (np.diag(degree) + eps))
+    laplacian_norm = degree_norm.dot(laplacian)
+    return laplacian_norm
+  elif lp_type == &#34;graph_cut&#34;:
+    # Graph cut normalized version
+    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + eps))
+    laplacian_norm = degree_norm.dot(laplacian).dot(degree_norm)
+    return laplacian_norm
+  else:
+    raise ValueError(
+        &#34;The lp_type should be &#39;unnormalized&#39;, &#39;random_walk&#39;, or &#39;graph_cut&#39;.&#34;)</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_number_of_clusters"><code class="name flex">
-<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues, max_clusters=None, stop_eigenvalue=0.01)</span>
+<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues, max_clusters=None, stop_eigenvalue=0.01, descend=True, eps=1e-10)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute number of clusters using EigenGap principle.</p>
+<p>Use maximum EigenGap principle to find the number of clusters. The eigenvalues
+and eigenvectors are sorted in a descending order.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>eigenvalues</code></strong></dt>
@@ -167,6 +319,10 @@ def compute_number_of_clusters(
 <dd>max number of clusters allowed</dd>
 <dt><strong><code>stop_eigenvalue</code></strong></dt>
 <dd>we do not look at eigen values smaller than this</dd>
+<dt><strong><code>descend</code></strong></dt>
+<dd>sort eigenvalues in a descending order. Default is True</dd>
+<dt><strong><code>eps</code></strong></dt>
+<dd>a small value for numerial stability</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>number of clusters as an integer</p></div>
@@ -174,42 +330,62 @@ def compute_number_of_clusters(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_number_of_clusters(
-        eigenvalues, max_clusters=None, stop_eigenvalue=1e-2):
-    &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
+<pre><code class="python">def compute_number_of_clusters(eigenvalues,
+                               max_clusters=None,
+                               stop_eigenvalue=1e-2,
+                               descend=True,
+                               eps=EPS):
+  &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
-    Args:
-        eigenvalues: sorted eigenvalues of the affinity matrix
-        max_clusters: max number of clusters allowed
-        stop_eigenvalue: we do not look at eigen values smaller than this
+  Use maximum EigenGap principle to find the number of clusters. The eigenvalues
+  and eigenvectors are sorted in a descending order.
 
-    Returns:
-        number of clusters as an integer
-    &#34;&#34;&#34;
-    max_delta = 0
-    max_delta_index = 0
-    range_end = len(eigenvalues)
-    if max_clusters and max_clusters + 1 &lt; range_end:
-        range_end = max_clusters + 1
+  Args:
+    eigenvalues: sorted eigenvalues of the affinity matrix
+    max_clusters: max number of clusters allowed
+    stop_eigenvalue: we do not look at eigen values smaller than this
+    descend: sort eigenvalues in a descending order. Default is True
+    eps: a small value for numerial stability
+
+  Returns:
+    number of clusters as an integer
+  &#34;&#34;&#34;
+  max_delta = 0
+  max_delta_index = 0
+  range_end = len(eigenvalues)
+  if max_clusters and max_clusters + 1 &lt; range_end:
+    range_end = max_clusters + 1
+
+  if not descend:
+    # The first eigen value is always 0 in an ascending order
+    for i in range(1, range_end - 1):
+      delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      if delta &gt; max_delta:
+        max_delta = delta
+        max_delta_index = i + 1  # Index i means i+1 clusters
+    return max_delta_index
+  else:
     for i in range(1, range_end):
-        if eigenvalues[i - 1] &lt; stop_eigenvalue:
-            break
-        delta = eigenvalues[i - 1] / eigenvalues[i]
-        if delta &gt; max_delta:
-            max_delta = delta
-            max_delta_index = i
+      if eigenvalues[i - 1] &lt; stop_eigenvalue:
+        break
+      delta = eigenvalues[i - 1] / eigenvalues[i]
+      if delta &gt; max_delta:
+        max_delta = delta
+        max_delta_index = i
     return max_delta_index</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_sorted_eigenvectors"><code class="name flex">
-<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>A)</span>
+<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>input_matrix, descend=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sort eigenvectors by the real part of eigenvalues.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>A</code></strong></dt>
+<dt><strong><code>input_matrix</code></strong></dt>
 <dd>the matrix to perform eigen analysis with shape (M, M)</dd>
+<dt><strong><code>descend</code></strong></dt>
+<dd>sort eigenvalues in a descending order. Default is True</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -223,27 +399,81 @@ eigenvalue</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_sorted_eigenvectors(A):
-    &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
+<pre><code class="python">def compute_sorted_eigenvectors(input_matrix, descend=True):
+  &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
 
-    Args:
-        A: the matrix to perform eigen analysis with shape (M, M)
+  Args:
+    input_matrix: the matrix to perform eigen analysis with shape (M, M)
+    descend: sort eigenvalues in a descending order. Default is True
 
-    Returns:
-        w: sorted eigenvalues of shape (M,)
-        v: sorted eigenvectors, where v[;, i] corresponds to ith largest
-           eigenvalue
-    &#34;&#34;&#34;
-    # Eigen decomposition.
-    eigenvalues, eigenvectors = np.linalg.eig(A)
-    eigenvalues = eigenvalues.real
-    eigenvectors = eigenvectors.real
+  Returns:
+    w: sorted eigenvalues of shape (M,)
+    v: sorted eigenvectors, where v[;, i] corresponds to ith largest
+       eigenvalue
+  &#34;&#34;&#34;
+  # Eigen decomposition.
+  eigenvalues, eigenvectors = np.linalg.eig(input_matrix)
+  eigenvalues = eigenvalues.real
+  eigenvectors = eigenvectors.real
+  if descend:
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
-    # Re-order.
-    w = eigenvalues[index_array]
-    v = eigenvectors[:, index_array]
-    return w, v</code></pre>
+  else:
+    # Sort from smallest to largest.
+    index_array = np.argsort(eigenvalues)
+  # Re-order.
+  w = eigenvalues[index_array]
+  v = eigenvectors[:, index_array]
+  return w, v</code></pre>
+</details>
+</dd>
+<dt id="spectralcluster.utils.enforce_ordered_labels"><code class="name flex">
+<span>def <span class="ident">enforce_ordered_labels</span></span>(<span>labels)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform the label sequence to an ordered form.</p>
+<p>This is the same type of label sequence used in the paper "Discriminative
+neural clustering for speaker diarisation". This makes the label sequence
+permutation invariant.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>labels</code></strong></dt>
+<dd>an array of integers</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>new_labels</code></dt>
+<dd>an array of integers, where it starts with 0 and smaller
+labels always appear first</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def enforce_ordered_labels(labels):
+  &#34;&#34;&#34;Transform the label sequence to an ordered form.
+
+  This is the same type of label sequence used in the paper &#34;Discriminative
+  neural clustering for speaker diarisation&#34;. This makes the label sequence
+  permutation invariant.
+
+  Args:
+    labels: an array of integers
+
+  Returns:
+    new_labels: an array of integers, where it starts with 0 and smaller
+      labels always appear first
+  &#34;&#34;&#34;
+  new_labels = labels.copy()
+  max_label = -1
+  label_map = {}
+  for element in labels.tolist():
+    if element not in label_map:
+      max_label += 1
+      label_map[element] = max_label
+  for key in label_map:
+    new_labels[labels == key] = label_map[key]
+  return new_labels</code></pre>
 </details>
 </dd>
 </dl>
@@ -265,8 +495,10 @@ eigenvalue</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="spectralcluster.utils.compute_affinity_matrix" href="#spectralcluster.utils.compute_affinity_matrix">compute_affinity_matrix</a></code></li>
+<li><code><a title="spectralcluster.utils.compute_laplacian" href="#spectralcluster.utils.compute_laplacian">compute_laplacian</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_number_of_clusters" href="#spectralcluster.utils.compute_number_of_clusters">compute_number_of_clusters</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_sorted_eigenvectors" href="#spectralcluster.utils.compute_sorted_eigenvectors">compute_sorted_eigenvectors</a></code></li>
+<li><code><a title="spectralcluster.utils.enforce_ordered_labels" href="#spectralcluster.utils.enforce_ordered_labels">enforce_ordered_labels</a></code></li>
 </ul>
 </li>
 </ul>

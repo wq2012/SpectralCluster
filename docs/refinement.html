@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.3" />
 <title>spectralcluster.refinement API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Affinity matrix refinemnet operations." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -22,135 +22,175 @@
 <h1 class="title">Module <code>spectralcluster.refinement</code></h1>
 </header>
 <section id="section-intro">
+<p>Affinity matrix refinemnet operations.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+<pre><code class="python">&#34;&#34;&#34;Affinity matrix refinemnet operations.&#34;&#34;&#34;
 
 import abc
-from scipy.ndimage import gaussian_filter
 import numpy as np
+from scipy.ndimage import gaussian_filter
+
+DEFAULT_REFINEMENT_SEQUENCE = [
+    &#34;CropDiagonal&#34;,
+    &#34;GaussianBlur&#34;,
+    &#34;RowWiseThreshold&#34;,
+    &#34;Symmetrize&#34;,
+    &#34;Diffuse&#34;,
+    &#34;RowWiseNormalize&#34;,
+]
+
+
+class RefinementOptions(object):
+  &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
+
+  def __init__(self,
+               gaussian_blur_sigma=1,
+               p_percentile=0.95,
+               thresholding_soft_multiplier=0.01,
+               thresholding_with_row_max=True,
+               refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
+    &#34;&#34;&#34;Initialization of the refinement arguments.
+
+    Args:
+      gaussian_blur_sigma: sigma value of the Gaussian blur operation
+      p_percentile: the p-percentile for the row wise thresholding
+      thresholding_soft_multiplier: the multiplier for soft threhsold, if this
+        value is 0, then it&#39;s a hard thresholding
+      thresholding_with_row_max: if true, we use row_max * p_percentile as row
+        wise threshold, instead of doing a percentile-based thresholding
+      refinement_sequence: a list of strings for the sequence of refinement
+        operations to apply on the affinity matrix
+    &#34;&#34;&#34;
+    self.gaussian_blur_sigma = gaussian_blur_sigma
+    self.p_percentile = p_percentile
+    self.thresholding_soft_multiplier = thresholding_soft_multiplier
+    self.thresholding_with_row_max = thresholding_with_row_max
+    self.refinement_sequence = refinement_sequence
 
 
 class AffinityRefinementOperation(metaclass=abc.ABCMeta):
-    def check_input(self, X):
-        &#34;&#34;&#34;Check the input to the refine() method.
+  &#34;&#34;&#34;Refinement of the affinity matrix.&#34;&#34;&#34;
 
-        Args:
-            X: the input to the refine() method
+  def check_input(self, affinity):
+    &#34;&#34;&#34;Check the input to the refine() method.
 
-        Raises:
-            TypeError: if X has wrong type
-            ValueError: if X has wrong shape, etc.
-        &#34;&#34;&#34;
-        if not isinstance(X, np.ndarray):
-            raise TypeError(&#34;X must be a numpy array&#34;)
-        shape = X.shape
-        if len(shape) != 2:
-            raise ValueError(&#34;X must be 2-dimensional&#34;)
-        if shape[0] != shape[1]:
-            raise ValueError(&#34;X must be a square matrix&#34;)
+    Args:
+      affinity: the input affinity matrix.
 
-    @abc.abstractmethod
-    def refine(self, X):
-        &#34;&#34;&#34;Perform the refinement operation.
+    Raises:
+      TypeError: if affinity has wrong type
+      ValueError: if affinity has wrong shape, etc.
+    &#34;&#34;&#34;
+    if not isinstance(affinity, np.ndarray):
+      raise TypeError(&#34;affinity must be a numpy array&#34;)
+    shape = affinity.shape
+    if len(shape) != 2:
+      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+    if shape[0] != shape[1]:
+      raise ValueError(&#34;affinity must be a square matrix&#34;)
 
-        Args:
-            X: the affinity matrix, of size (n_samples, n_samples)
+  @abc.abstractmethod
+  def refine(self, affinity):
+    &#34;&#34;&#34;An abstract method to perform the refinement operation.
 
-        Returns:
-            a matrix of the same size as X
-        &#34;&#34;&#34;
-        pass
+    Args:
+        affinity: the affinity matrix, of size (n_samples, n_samples)
+
+    Returns:
+        a matrix of the same size as affinity
+    &#34;&#34;&#34;
+    pass
 
 
 class CropDiagonal(AffinityRefinementOperation):
-    &#34;&#34;&#34;Crop the diagonal.
+  &#34;&#34;&#34;Crop the diagonal.
 
-    Replace diagonal element by the max non-diagonal value of row.
-    After this operation, the matrix has similar properties to a standard
-    Laplacian matrix.
-    This also helps to avoid the bias during Gaussian blur and normalization.
-    &#34;&#34;&#34;
+  Replace diagonal element by the max non-diagonal value of row.
+  After this operation, the matrix has similar properties to a standard
+  Laplacian matrix. This also helps to avoid the bias during Gaussian blur and
+  normalization.
+  &#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
-        np.fill_diagonal(Y, 0.0)
-        di = np.diag_indices(Y.shape[0])
-        Y[di] = Y.max(axis=1)
-        return Y
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
+    np.fill_diagonal(refined_affinity, 0.0)
+    di = np.diag_indices(refined_affinity.shape[0])
+    refined_affinity[di] = refined_affinity.max(axis=1)
+    return refined_affinity
 
 
 class GaussianBlur(AffinityRefinementOperation):
-    &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
+  &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
 
-    def __init__(self, sigma=1):
-        self.sigma = sigma
+  def __init__(self, sigma=1):
+    self.sigma = sigma
 
-    def refine(self, X):
-        self.check_input(X)
-        return gaussian_filter(X, sigma=self.sigma)
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return gaussian_filter(affinity, sigma=self.sigma)
 
 
 class RowWiseThreshold(AffinityRefinementOperation):
-    &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
+  &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
 
-    def __init__(self,
-                 p_percentile=0.95,
-                 thresholding_soft_multiplier=0.01,
-                 thresholding_with_row_max=False):
-        self.p_percentile = p_percentile
-        self.multiplier = thresholding_soft_multiplier
-        self.thresholding_with_row_max = thresholding_with_row_max
+  def __init__(self,
+               p_percentile=0.95,
+               thresholding_soft_multiplier=0.01,
+               thresholding_with_row_max=False):
+    self.p_percentile = p_percentile
+    self.multiplier = thresholding_soft_multiplier
+    self.thresholding_with_row_max = thresholding_with_row_max
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
 
-        if self.thresholding_with_row_max:
-            # row_max based thresholding
-            row_max = Y.max(axis=1)
-            row_max = np.expand_dims(row_max, axis=1)
-            is_smaller = Y &lt; (row_max * self.p_percentile)
-        else:
-            # percentile based thresholding
-            row_percentile = np.percentile(Y, self.p_percentile * 100, axis=1)
-            row_percentile = np.expand_dims(row_percentile, axis=1)
-            is_smaller = Y &lt; row_percentile
+    if self.thresholding_with_row_max:
+      # Row_max based thresholding
+      row_max = refined_affinity.max(axis=1)
+      row_max = np.expand_dims(row_max, axis=1)
+      is_smaller = refined_affinity &lt; (row_max * self.p_percentile)
+    else:
+      # Percentile based thresholding
+      row_percentile = np.percentile(
+          refined_affinity, self.p_percentile * 100, axis=1)
+      row_percentile = np.expand_dims(row_percentile, axis=1)
+      is_smaller = refined_affinity &lt; row_percentile
 
-        Y = (Y * np.invert(is_smaller)) + (Y * self.multiplier * is_smaller)
-        return Y
+    refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
+        refined_affinity * self.multiplier * is_smaller)
+    return refined_affinity
 
 
 class Symmetrize(AffinityRefinementOperation):
-    &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        return np.maximum(X, np.transpose(X))
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return np.maximum(affinity, np.transpose(affinity))
 
 
 class Diffuse(AffinityRefinementOperation):
-    &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        return np.matmul(X, np.transpose(X))
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return np.matmul(affinity, np.transpose(affinity))
 
 
 class RowWiseNormalize(AffinityRefinementOperation):
-    &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
-        row_max = Y.max(axis=1)
-        Y /= np.expand_dims(row_max, axis=1)
-        return Y</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
+    row_max = refined_affinity.max(axis=1)
+    refined_affinity /= np.expand_dims(row_max, axis=1)
+    return refined_affinity</code></pre>
 </details>
 </section>
 <section>
@@ -166,41 +206,43 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <span>class <span class="ident">AffinityRefinementOperation</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Refinement of the affinity matrix.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AffinityRefinementOperation(metaclass=abc.ABCMeta):
-    def check_input(self, X):
-        &#34;&#34;&#34;Check the input to the refine() method.
+  &#34;&#34;&#34;Refinement of the affinity matrix.&#34;&#34;&#34;
 
-        Args:
-            X: the input to the refine() method
+  def check_input(self, affinity):
+    &#34;&#34;&#34;Check the input to the refine() method.
 
-        Raises:
-            TypeError: if X has wrong type
-            ValueError: if X has wrong shape, etc.
-        &#34;&#34;&#34;
-        if not isinstance(X, np.ndarray):
-            raise TypeError(&#34;X must be a numpy array&#34;)
-        shape = X.shape
-        if len(shape) != 2:
-            raise ValueError(&#34;X must be 2-dimensional&#34;)
-        if shape[0] != shape[1]:
-            raise ValueError(&#34;X must be a square matrix&#34;)
+    Args:
+      affinity: the input affinity matrix.
 
-    @abc.abstractmethod
-    def refine(self, X):
-        &#34;&#34;&#34;Perform the refinement operation.
+    Raises:
+      TypeError: if affinity has wrong type
+      ValueError: if affinity has wrong shape, etc.
+    &#34;&#34;&#34;
+    if not isinstance(affinity, np.ndarray):
+      raise TypeError(&#34;affinity must be a numpy array&#34;)
+    shape = affinity.shape
+    if len(shape) != 2:
+      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+    if shape[0] != shape[1]:
+      raise ValueError(&#34;affinity must be a square matrix&#34;)
 
-        Args:
-            X: the affinity matrix, of size (n_samples, n_samples)
+  @abc.abstractmethod
+  def refine(self, affinity):
+    &#34;&#34;&#34;An abstract method to perform the refinement operation.
 
-        Returns:
-            a matrix of the same size as X
-        &#34;&#34;&#34;
-        pass</code></pre>
+    Args:
+        affinity: the affinity matrix, of size (n_samples, n_samples)
+
+    Returns:
+        a matrix of the same size as affinity
+    &#34;&#34;&#34;
+    pass</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -214,72 +256,72 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.refinement.AffinityRefinementOperation.check_input"><code class="name flex">
-<span>def <span class="ident">check_input</span></span>(<span>self, X)</span>
+<span>def <span class="ident">check_input</span></span>(<span>self, affinity)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check the input to the refine() method.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>X</code></strong></dt>
-<dd>the input to the refine() method</dd>
+<dt><strong><code>affinity</code></strong></dt>
+<dd>the input affinity matrix.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>TypeError</code></dt>
-<dd>if X has wrong type</dd>
+<dd>if affinity has wrong type</dd>
 <dt><code>ValueError</code></dt>
-<dd>if X has wrong shape, etc.</dd>
+<dd>if affinity has wrong shape, etc.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_input(self, X):
-    &#34;&#34;&#34;Check the input to the refine() method.
+<pre><code class="python">def check_input(self, affinity):
+  &#34;&#34;&#34;Check the input to the refine() method.
 
-    Args:
-        X: the input to the refine() method
+  Args:
+    affinity: the input affinity matrix.
 
-    Raises:
-        TypeError: if X has wrong type
-        ValueError: if X has wrong shape, etc.
-    &#34;&#34;&#34;
-    if not isinstance(X, np.ndarray):
-        raise TypeError(&#34;X must be a numpy array&#34;)
-    shape = X.shape
-    if len(shape) != 2:
-        raise ValueError(&#34;X must be 2-dimensional&#34;)
-    if shape[0] != shape[1]:
-        raise ValueError(&#34;X must be a square matrix&#34;)</code></pre>
+  Raises:
+    TypeError: if affinity has wrong type
+    ValueError: if affinity has wrong shape, etc.
+  &#34;&#34;&#34;
+  if not isinstance(affinity, np.ndarray):
+    raise TypeError(&#34;affinity must be a numpy array&#34;)
+  shape = affinity.shape
+  if len(shape) != 2:
+    raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+  if shape[0] != shape[1]:
+    raise ValueError(&#34;affinity must be a square matrix&#34;)</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.refinement.AffinityRefinementOperation.refine"><code class="name flex">
-<span>def <span class="ident">refine</span></span>(<span>self, X)</span>
+<span>def <span class="ident">refine</span></span>(<span>self, affinity)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Perform the refinement operation.</p>
+<div class="desc"><p>An abstract method to perform the refinement operation.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>X</code></strong></dt>
+<dt><strong><code>affinity</code></strong></dt>
 <dd>the affinity matrix, of size (n_samples, n_samples)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>a matrix of the same size as X</p></div>
+<p>a matrix of the same size as affinity</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def refine(self, X):
-    &#34;&#34;&#34;Perform the refinement operation.
+def refine(self, affinity):
+  &#34;&#34;&#34;An abstract method to perform the refinement operation.
 
-    Args:
-        X: the affinity matrix, of size (n_samples, n_samples)
+  Args:
+      affinity: the affinity matrix, of size (n_samples, n_samples)
 
-    Returns:
-        a matrix of the same size as X
-    &#34;&#34;&#34;
-    pass</code></pre>
+  Returns:
+      a matrix of the same size as affinity
+  &#34;&#34;&#34;
+  pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -291,28 +333,28 @@ def refine(self, X):
 <div class="desc"><p>Crop the diagonal.</p>
 <p>Replace diagonal element by the max non-diagonal value of row.
 After this operation, the matrix has similar properties to a standard
-Laplacian matrix.
-This also helps to avoid the bias during Gaussian blur and normalization.</p></div>
+Laplacian matrix. This also helps to avoid the bias during Gaussian blur and
+normalization.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CropDiagonal(AffinityRefinementOperation):
-    &#34;&#34;&#34;Crop the diagonal.
+  &#34;&#34;&#34;Crop the diagonal.
 
-    Replace diagonal element by the max non-diagonal value of row.
-    After this operation, the matrix has similar properties to a standard
-    Laplacian matrix.
-    This also helps to avoid the bias during Gaussian blur and normalization.
-    &#34;&#34;&#34;
+  Replace diagonal element by the max non-diagonal value of row.
+  After this operation, the matrix has similar properties to a standard
+  Laplacian matrix. This also helps to avoid the bias during Gaussian blur and
+  normalization.
+  &#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
-        np.fill_diagonal(Y, 0.0)
-        di = np.diag_indices(Y.shape[0])
-        Y[di] = Y.max(axis=1)
-        return Y</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
+    np.fill_diagonal(refined_affinity, 0.0)
+    di = np.diag_indices(refined_affinity.shape[0])
+    refined_affinity[di] = refined_affinity.max(axis=1)
+    return refined_affinity</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -338,11 +380,11 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Diffuse(AffinityRefinementOperation):
-    &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        return np.matmul(X, np.transpose(X))</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return np.matmul(affinity, np.transpose(affinity))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -369,14 +411,14 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GaussianBlur(AffinityRefinementOperation):
-    &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
+  &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
 
-    def __init__(self, sigma=1):
-        self.sigma = sigma
+  def __init__(self, sigma=1):
+    self.sigma = sigma
 
-    def refine(self, X):
-        self.check_input(X)
-        return gaussian_filter(X, sigma=self.sigma)</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return gaussian_filter(affinity, sigma=self.sigma)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -392,6 +434,61 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 </li>
 </ul>
 </dd>
+<dt id="spectralcluster.refinement.RefinementOptions"><code class="flex name class">
+<span>class <span class="ident">RefinementOptions</span></span>
+<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=True, refinement_sequence=['CropDiagonal', 'GaussianBlur', 'RowWiseThreshold', 'Symmetrize', 'Diffuse', 'RowWiseNormalize'])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Refinement options for the affinity matrix.</p>
+<p>Initialization of the refinement arguments.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>gaussian_blur_sigma</code></strong></dt>
+<dd>sigma value of the Gaussian blur operation</dd>
+<dt><strong><code>p_percentile</code></strong></dt>
+<dd>the p-percentile for the row wise thresholding</dd>
+<dt><strong><code>thresholding_soft_multiplier</code></strong></dt>
+<dd>the multiplier for soft threhsold, if this
+value is 0, then it's a hard thresholding</dd>
+<dt><strong><code>thresholding_with_row_max</code></strong></dt>
+<dd>if true, we use row_max * p_percentile as row
+wise threshold, instead of doing a percentile-based thresholding</dd>
+<dt><strong><code>refinement_sequence</code></strong></dt>
+<dd>a list of strings for the sequence of refinement
+operations to apply on the affinity matrix</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RefinementOptions(object):
+  &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
+
+  def __init__(self,
+               gaussian_blur_sigma=1,
+               p_percentile=0.95,
+               thresholding_soft_multiplier=0.01,
+               thresholding_with_row_max=True,
+               refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
+    &#34;&#34;&#34;Initialization of the refinement arguments.
+
+    Args:
+      gaussian_blur_sigma: sigma value of the Gaussian blur operation
+      p_percentile: the p-percentile for the row wise thresholding
+      thresholding_soft_multiplier: the multiplier for soft threhsold, if this
+        value is 0, then it&#39;s a hard thresholding
+      thresholding_with_row_max: if true, we use row_max * p_percentile as row
+        wise threshold, instead of doing a percentile-based thresholding
+      refinement_sequence: a list of strings for the sequence of refinement
+        operations to apply on the affinity matrix
+    &#34;&#34;&#34;
+    self.gaussian_blur_sigma = gaussian_blur_sigma
+    self.p_percentile = p_percentile
+    self.thresholding_soft_multiplier = thresholding_soft_multiplier
+    self.thresholding_with_row_max = thresholding_with_row_max
+    self.refinement_sequence = refinement_sequence</code></pre>
+</details>
+</dd>
 <dt id="spectralcluster.refinement.RowWiseNormalize"><code class="flex name class">
 <span>class <span class="ident">RowWiseNormalize</span></span>
 </code></dt>
@@ -402,14 +499,14 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RowWiseNormalize(AffinityRefinementOperation):
-    &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
-        row_max = Y.max(axis=1)
-        Y /= np.expand_dims(row_max, axis=1)
-        return Y</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
+    row_max = refined_affinity.max(axis=1)
+    refined_affinity /= np.expand_dims(row_max, axis=1)
+    return refined_affinity</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -436,33 +533,35 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RowWiseThreshold(AffinityRefinementOperation):
-    &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
+  &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
 
-    def __init__(self,
-                 p_percentile=0.95,
-                 thresholding_soft_multiplier=0.01,
-                 thresholding_with_row_max=False):
-        self.p_percentile = p_percentile
-        self.multiplier = thresholding_soft_multiplier
-        self.thresholding_with_row_max = thresholding_with_row_max
+  def __init__(self,
+               p_percentile=0.95,
+               thresholding_soft_multiplier=0.01,
+               thresholding_with_row_max=False):
+    self.p_percentile = p_percentile
+    self.multiplier = thresholding_soft_multiplier
+    self.thresholding_with_row_max = thresholding_with_row_max
 
-    def refine(self, X):
-        self.check_input(X)
-        Y = np.copy(X)
+  def refine(self, affinity):
+    self.check_input(affinity)
+    refined_affinity = np.copy(affinity)
 
-        if self.thresholding_with_row_max:
-            # row_max based thresholding
-            row_max = Y.max(axis=1)
-            row_max = np.expand_dims(row_max, axis=1)
-            is_smaller = Y &lt; (row_max * self.p_percentile)
-        else:
-            # percentile based thresholding
-            row_percentile = np.percentile(Y, self.p_percentile * 100, axis=1)
-            row_percentile = np.expand_dims(row_percentile, axis=1)
-            is_smaller = Y &lt; row_percentile
+    if self.thresholding_with_row_max:
+      # Row_max based thresholding
+      row_max = refined_affinity.max(axis=1)
+      row_max = np.expand_dims(row_max, axis=1)
+      is_smaller = refined_affinity &lt; (row_max * self.p_percentile)
+    else:
+      # Percentile based thresholding
+      row_percentile = np.percentile(
+          refined_affinity, self.p_percentile * 100, axis=1)
+      row_percentile = np.expand_dims(row_percentile, axis=1)
+      is_smaller = refined_affinity &lt; row_percentile
 
-        Y = (Y * np.invert(is_smaller)) + (Y * self.multiplier * is_smaller)
-        return Y</code></pre>
+    refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
+        refined_affinity * self.multiplier * is_smaller)
+    return refined_affinity</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -488,11 +587,11 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Symmetrize(AffinityRefinementOperation):
-    &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
+  &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
-    def refine(self, X):
-        self.check_input(X)
-        return np.maximum(X, np.transpose(X))</code></pre>
+  def refine(self, affinity):
+    self.check_input(affinity)
+    return np.maximum(affinity, np.transpose(affinity))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -539,6 +638,9 @@ This also helps to avoid the bias during Gaussian blur and normalization.</p></d
 </li>
 <li>
 <h4><code><a title="spectralcluster.refinement.GaussianBlur" href="#spectralcluster.refinement.GaussianBlur">GaussianBlur</a></code></h4>
+</li>
+<li>
+<h4><code><a title="spectralcluster.refinement.RefinementOptions" href="#spectralcluster.refinement.RefinementOptions">RefinementOptions</a></code></h4>
 </li>
 <li>
 <h4><code><a title="spectralcluster.refinement.RowWiseNormalize" href="#spectralcluster.refinement.RowWiseNormalize">RowWiseNormalize</a></code></h4>

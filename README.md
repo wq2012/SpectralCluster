@@ -3,9 +3,9 @@
 
 ## Note
 
-We are currently adding new functionalities to this library to open source
-some algorithms to appear in a new paper. We are updating the APIs as well.
-If you depend on our old API, please use an old version of this library.
+We are currently adding new functionalities to this library to include
+some algorithms to appear in an upcoming paper. We are updating the APIs as
+well. If you depend on our old API, please use an older version of this library.
 
 ## Overview
 
@@ -16,11 +16,9 @@ paper [Speaker Diarization with LSTM](https://google.github.io/speaker-id/public
 
 ## Disclaimer
 
-**This is not the original implementation used by the paper.**
+**This is not a Google product.**
 
-Specifically, in this implementation, we use the K-Means from
-[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html),
-which does NOT support customized distance measure like cosine distance.
+**This is not the original C++ implementation used by the paper.**
 
 ## Dependencies
 
@@ -50,11 +48,16 @@ spectral clustering:
 ```python
 from spectralcluster import SpectralClusterer
 
+refinement_options = RefinementOptions(
+  gaussian_blur_sigma=1,
+  p_percentile=0.95,
+  thresholding_soft_multiplier=0.01,
+  thresholding_with_row_max=True)
+
 clusterer = SpectralClusterer(
-    min_clusters=2,
-    max_clusters=100,
-    p_percentile=0.95,
-    gaussian_blur_sigma=1)
+  min_clusters=2,
+  max_clusters=100,
+  refinement_options=refinement_options)
 
 labels = clusterer.predict(X)
 ```
@@ -64,6 +67,9 @@ and the returned `labels` is a numpy array of shape `(n_samples,)`.
 
 For the complete list of parameters of the clusterer, see
 `spectralcluster/spectral_clusterer.py`.
+
+For the complete list of refinement options, see
+`spectralcluster/refinement.py`.
 
 [![youtube_screenshot](resources/youtube_screenshot.jpg)](https://youtu.be/pjxGPZQeeO4)
 
@@ -88,7 +94,14 @@ Our paper is cited as:
 
 **Question:** Why are you performing eigen-decomposition directly on the similarity matrix instead of its Laplacian matrix? ([source](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9053122))
 
-**Answer:** No, we are not performing eigen-decomposition directly on the similarity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the similarity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix.
+**Answer:** No, we are not performing eigen-decomposition directly on the similarity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the similarity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix, and it is also less sensitive (thus more robust) to the Gaussian blur operation than a standard Laplacian matrix.
+
+In the new version of this library, we support different types of Laplacian matrix now, including:
+
+* None Laplacian (similarity matrix): W
+* Unnormalized Laplacian: L = D - W
+* Graph cut Laplacian: L' = D^{-1/2} L D^{-1/2}
+* Random walk Laplacian: L' = D^{-1} L
 
 **Question:** Why don't you just use the standard Laplacian matrix?
 
@@ -98,9 +111,7 @@ Our paper is cited as:
 
 **Question:** Your paper says the K-Means should be based on Cosine distance, but this repository is using Euclidean distance. Do you have a Cosine distance version?
 
-**Answer:** You can find a variant of this repository using Cosine distance for K-means instead of
-Euclidean distance here:
-[FlorianKrey/DNC](https://github.com/FlorianKrey/DNC)
+**Answer:** We support Cosine distance now! Just set `custom_dist="cosine"` when initializing your `SpectralClusterer` object.
 
 ## Misc
 

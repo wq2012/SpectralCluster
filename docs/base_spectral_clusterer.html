@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.3" />
-<title>spectralcluster.spectral_clusterer API documentation</title>
-<meta name="description" content="A spectral clusterer class to perform clustering." />
+<title>spectralcluster.base_spectral_clusterer API documentation</title>
+<meta name="description" content="Base class to perform spectral clustering." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -19,24 +19,22 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>spectralcluster.spectral_clusterer</code></h1>
+<h1 class="title">Module <code>spectralcluster.base_spectral_clusterer</code></h1>
 </header>
 <section id="section-intro">
-<p>A spectral clusterer class to perform clustering.</p>
+<p>Base class to perform spectral clustering.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;A spectral clusterer class to perform clustering.&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Base class to perform spectral clustering.&#34;&#34;&#34;
 
-import numpy as np
-from spectralcluster import base_spectral_clusterer
-from spectralcluster import custom_distance_kmeans
-from spectralcluster import utils
+import abc
+from spectralcluster import refinement
 
 
-class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
-  &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
+class BaseSpectralClusterer(object):
+  &#34;&#34;&#34;A base class for spectral clustering.&#34;&#34;&#34;
 
   def __init__(self,
                min_clusters=None,
@@ -71,20 +69,55 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
         functions defined in scipy.spatial.distance can be used
       max_iter: the maximum number of iterations for the custom k-means
     &#34;&#34;&#34;
-    super().__init__(
-        min_clusters=min_clusters,
-        max_clusters=max_clusters,
-        refinement_options=refinement_options,
-        laplacian_type=laplacian_type,
-        stop_eigenvalue=stop_eigenvalue,
-        row_wise_renorm=row_wise_renorm,
-        custom_dist=custom_dist,
-        max_iter=max_iter)
+    self.min_clusters = min_clusters
+    self.max_clusters = max_clusters
+    if not refinement_options:
+      self.refinement_options = refinement.RefinementOptions()
+    else:
+      self.refinement_options = refinement_options
+    self.laplacian_type = laplacian_type
+    self.row_wise_renorm = row_wise_renorm
+    self.stop_eigenvalue = stop_eigenvalue
+    self.custom_dist = custom_dist
+    self.max_iter = max_iter
 
+  def _get_refinement_operator(self, name):
+    &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
+
+    Args:
+      name: operator class name as a string
+
+    Returns:
+      object of the operator
+
+    Raises:
+      ValueError: if name is an unknown refinement operation
+    &#34;&#34;&#34;
+    if name == &#34;CropDiagonal&#34;:
+      return refinement.CropDiagonal()
+    elif name == &#34;GaussianBlur&#34;:
+      return refinement.GaussianBlur(
+          self.refinement_options.gaussian_blur_sigma)
+    elif name == &#34;RowWiseThreshold&#34;:
+      return refinement.RowWiseThreshold(
+          self.refinement_options.p_percentile,
+          self.refinement_options.thresholding_soft_multiplier,
+          self.refinement_options.thresholding_with_row_max)
+    elif name == &#34;Symmetrize&#34;:
+      return refinement.Symmetrize()
+    elif name == &#34;Diffuse&#34;:
+      return refinement.Diffuse()
+    elif name == &#34;RowWiseNormalize&#34;:
+      return refinement.RowWiseNormalize()
+    else:
+      raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))
+
+  @abc.abstractmethod
   def predict(self, embeddings):
-    &#34;&#34;&#34;Perform spectral clustering on data embeddings.
+    &#34;&#34;&#34;An abstract method for clustering speaker embeddings.
 
-    The spectral clustering is performed on an affinity matrix.
+    Implementations of this method are in charge of clustering the speaker
+    embeddings and assigning labels to them.
 
     Args:
       embeddings: numpy array of shape (n_samples, n_features)
@@ -96,56 +129,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
     &#34;&#34;&#34;
-    if not isinstance(embeddings, np.ndarray):
-      raise TypeError(&#34;embeddings must be a numpy array&#34;)
-    if len(embeddings.shape) != 2:
-      raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
-
-    # Compute affinity matrix.
-    affinity = utils.compute_affinity_matrix(embeddings)
-
-    if self.refinement_options:
-      # Perform refinement operations on the affinity matrix.
-      for refinement_name in self.refinement_options.refinement_sequence:
-        op = self._get_refinement_operator(refinement_name)
-        affinity = op.refine(affinity)
-
-    if not self.laplacian_type:
-      # Perform eigen decomposion.
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-      # Get number of clusters.
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-    if self.laplacian_type:
-      # Compute Laplacian matrix
-      laplacian_norm = utils.compute_laplacian(
-          affinity, lp_type=self.laplacian_type)
-      # Perform eigen decomposion. Eigen values are sorted in an ascending order
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-          laplacian_norm, descend=False)
-      # Get number of clusters. Eigen values are sorted in an ascending order
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
-
-    if self.min_clusters is not None:
-      k = max(k, self.min_clusters)
-
-    # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :k]
-
-    if self.row_wise_renorm:
-      # Perfrom row wise re-normalization.
-      rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
-      spectral_embeddings = spectral_embeddings / np.reshape(
-          rows_norm, (spectral_embeddings.shape[0], 1))
-
-    # Run K-means on spectral embeddings.
-    labels = custom_distance_kmeans.run_kmeans(
-        spectral_embeddings,
-        n_clusters=k,
-        custom_dist=self.custom_dist,
-        max_iter=self.max_iter)
-    return labels</code></pre>
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -157,12 +141,12 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
-<span>class <span class="ident">SpectralClusterer</span></span>
+<dt id="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer"><code class="flex name class">
+<span>class <span class="ident">BaseSpectralClusterer</span></span>
 <span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Spectral clustering class.</p>
+<div class="desc"><p>A base class for spectral clustering.</p>
 <p>Constructor of the clusterer.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -199,8 +183,8 @@ functions defined in scipy.spatial.distance can be used</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
-  &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
+<pre><code class="python">class BaseSpectralClusterer(object):
+  &#34;&#34;&#34;A base class for spectral clustering.&#34;&#34;&#34;
 
   def __init__(self,
                min_clusters=None,
@@ -235,20 +219,55 @@ functions defined in scipy.spatial.distance can be used</dd>
         functions defined in scipy.spatial.distance can be used
       max_iter: the maximum number of iterations for the custom k-means
     &#34;&#34;&#34;
-    super().__init__(
-        min_clusters=min_clusters,
-        max_clusters=max_clusters,
-        refinement_options=refinement_options,
-        laplacian_type=laplacian_type,
-        stop_eigenvalue=stop_eigenvalue,
-        row_wise_renorm=row_wise_renorm,
-        custom_dist=custom_dist,
-        max_iter=max_iter)
+    self.min_clusters = min_clusters
+    self.max_clusters = max_clusters
+    if not refinement_options:
+      self.refinement_options = refinement.RefinementOptions()
+    else:
+      self.refinement_options = refinement_options
+    self.laplacian_type = laplacian_type
+    self.row_wise_renorm = row_wise_renorm
+    self.stop_eigenvalue = stop_eigenvalue
+    self.custom_dist = custom_dist
+    self.max_iter = max_iter
 
+  def _get_refinement_operator(self, name):
+    &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
+
+    Args:
+      name: operator class name as a string
+
+    Returns:
+      object of the operator
+
+    Raises:
+      ValueError: if name is an unknown refinement operation
+    &#34;&#34;&#34;
+    if name == &#34;CropDiagonal&#34;:
+      return refinement.CropDiagonal()
+    elif name == &#34;GaussianBlur&#34;:
+      return refinement.GaussianBlur(
+          self.refinement_options.gaussian_blur_sigma)
+    elif name == &#34;RowWiseThreshold&#34;:
+      return refinement.RowWiseThreshold(
+          self.refinement_options.p_percentile,
+          self.refinement_options.thresholding_soft_multiplier,
+          self.refinement_options.thresholding_with_row_max)
+    elif name == &#34;Symmetrize&#34;:
+      return refinement.Symmetrize()
+    elif name == &#34;Diffuse&#34;:
+      return refinement.Diffuse()
+    elif name == &#34;RowWiseNormalize&#34;:
+      return refinement.RowWiseNormalize()
+    else:
+      raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))
+
+  @abc.abstractmethod
   def predict(self, embeddings):
-    &#34;&#34;&#34;Perform spectral clustering on data embeddings.
+    &#34;&#34;&#34;An abstract method for clustering speaker embeddings.
 
-    The spectral clustering is performed on an affinity matrix.
+    Implementations of this method are in charge of clustering the speaker
+    embeddings and assigning labels to them.
 
     Args:
       embeddings: numpy array of shape (n_samples, n_features)
@@ -260,69 +279,21 @@ functions defined in scipy.spatial.distance can be used</dd>
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
     &#34;&#34;&#34;
-    if not isinstance(embeddings, np.ndarray):
-      raise TypeError(&#34;embeddings must be a numpy array&#34;)
-    if len(embeddings.shape) != 2:
-      raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
-
-    # Compute affinity matrix.
-    affinity = utils.compute_affinity_matrix(embeddings)
-
-    if self.refinement_options:
-      # Perform refinement operations on the affinity matrix.
-      for refinement_name in self.refinement_options.refinement_sequence:
-        op = self._get_refinement_operator(refinement_name)
-        affinity = op.refine(affinity)
-
-    if not self.laplacian_type:
-      # Perform eigen decomposion.
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-      # Get number of clusters.
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-    if self.laplacian_type:
-      # Compute Laplacian matrix
-      laplacian_norm = utils.compute_laplacian(
-          affinity, lp_type=self.laplacian_type)
-      # Perform eigen decomposion. Eigen values are sorted in an ascending order
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-          laplacian_norm, descend=False)
-      # Get number of clusters. Eigen values are sorted in an ascending order
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
-
-    if self.min_clusters is not None:
-      k = max(k, self.min_clusters)
-
-    # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :k]
-
-    if self.row_wise_renorm:
-      # Perfrom row wise re-normalization.
-      rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
-      spectral_embeddings = spectral_embeddings / np.reshape(
-          rows_norm, (spectral_embeddings.shape[0], 1))
-
-    # Run K-means on spectral embeddings.
-    labels = custom_distance_kmeans.run_kmeans(
-        spectral_embeddings,
-        n_clusters=k,
-        custom_dist=self.custom_dist,
-        max_iter=self.max_iter)
-    return labels</code></pre>
+    pass</code></pre>
 </details>
-<h3>Ancestors</h3>
+<h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer" href="base_spectral_clusterer.html#spectralcluster.base_spectral_clusterer.BaseSpectralClusterer">BaseSpectralClusterer</a></li>
+<li><a title="spectralcluster.spectral_clusterer.SpectralClusterer" href="spectral_clusterer.html#spectralcluster.spectral_clusterer.SpectralClusterer">SpectralClusterer</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="spectralcluster.spectral_clusterer.SpectralClusterer.predict"><code class="name flex">
+<dt id="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, embeddings)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Perform spectral clustering on data embeddings.</p>
-<p>The spectral clustering is performed on an affinity matrix.</p>
+<div class="desc"><p>An abstract method for clustering speaker embeddings.</p>
+<p>Implementations of this method are in charge of clustering the speaker
+embeddings and assigning labels to them.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>embeddings</code></strong></dt>
@@ -344,10 +315,12 @@ functions defined in scipy.spatial.distance can be used</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, embeddings):
-  &#34;&#34;&#34;Perform spectral clustering on data embeddings.
+<pre><code class="python">@abc.abstractmethod
+def predict(self, embeddings):
+  &#34;&#34;&#34;An abstract method for clustering speaker embeddings.
 
-  The spectral clustering is performed on an affinity matrix.
+  Implementations of this method are in charge of clustering the speaker
+  embeddings and assigning labels to them.
 
   Args:
     embeddings: numpy array of shape (n_samples, n_features)
@@ -359,56 +332,7 @@ functions defined in scipy.spatial.distance can be used</dd>
     TypeError: if embeddings has wrong type
     ValueError: if embeddings has wrong shape
   &#34;&#34;&#34;
-  if not isinstance(embeddings, np.ndarray):
-    raise TypeError(&#34;embeddings must be a numpy array&#34;)
-  if len(embeddings.shape) != 2:
-    raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
-
-  # Compute affinity matrix.
-  affinity = utils.compute_affinity_matrix(embeddings)
-
-  if self.refinement_options:
-    # Perform refinement operations on the affinity matrix.
-    for refinement_name in self.refinement_options.refinement_sequence:
-      op = self._get_refinement_operator(refinement_name)
-      affinity = op.refine(affinity)
-
-  if not self.laplacian_type:
-    # Perform eigen decomposion.
-    (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-    # Get number of clusters.
-    k = utils.compute_number_of_clusters(
-        eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-  if self.laplacian_type:
-    # Compute Laplacian matrix
-    laplacian_norm = utils.compute_laplacian(
-        affinity, lp_type=self.laplacian_type)
-    # Perform eigen decomposion. Eigen values are sorted in an ascending order
-    (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-        laplacian_norm, descend=False)
-    # Get number of clusters. Eigen values are sorted in an ascending order
-    k = utils.compute_number_of_clusters(
-        eigenvalues, self.max_clusters, descend=False)
-
-  if self.min_clusters is not None:
-    k = max(k, self.min_clusters)
-
-  # Get spectral embeddings.
-  spectral_embeddings = eigenvectors[:, :k]
-
-  if self.row_wise_renorm:
-    # Perfrom row wise re-normalization.
-    rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
-    spectral_embeddings = spectral_embeddings / np.reshape(
-        rows_norm, (spectral_embeddings.shape[0], 1))
-
-  # Run K-means on spectral embeddings.
-  labels = custom_distance_kmeans.run_kmeans(
-      spectral_embeddings,
-      n_clusters=k,
-      custom_dist=self.custom_dist,
-      max_iter=self.max_iter)
-  return labels</code></pre>
+  pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -430,9 +354,9 @@ functions defined in scipy.spatial.distance can be used</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="spectralcluster.spectral_clusterer.SpectralClusterer" href="#spectralcluster.spectral_clusterer.SpectralClusterer">SpectralClusterer</a></code></h4>
+<h4><code><a title="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer" href="#spectralcluster.base_spectral_clusterer.BaseSpectralClusterer">BaseSpectralClusterer</a></code></h4>
 <ul class="">
-<li><code><a title="spectralcluster.spectral_clusterer.SpectralClusterer.predict" href="#spectralcluster.spectral_clusterer.SpectralClusterer.predict">predict</a></code></li>
+<li><code><a title="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer.predict" href="#spectralcluster.base_spectral_clusterer.BaseSpectralClusterer.predict">predict</a></code></li>
 </ul>
 </li>
 </ul>
