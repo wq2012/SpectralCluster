@@ -54,7 +54,6 @@ from spectralcluster import DEFAULT_REFINEMENT_SEQUENCE
 refinement_options = RefinementOptions(
     gaussian_blur_sigma=1,
     p_percentile=0.95,
-    use_autotune=False,
     thresholding_soft_multiplier=0.01,
     thresholding_with_row_max=True,
     refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE)
