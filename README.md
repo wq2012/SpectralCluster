@@ -92,13 +92,13 @@ Our paper is cited as:
 
 ### Laplacian matrix
 
-**Question:** Why are you performing eigen-decomposition directly on the similarity matrix instead of its Laplacian matrix? ([source](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9053122))
+**Question:** Why are you performing eigen-decomposition directly on the affinity matrix instead of its Laplacian matrix? ([source](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9053122))
 
-**Answer:** No, we are not performing eigen-decomposition directly on the similarity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the similarity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix, and it is also less sensitive (thus more robust) to the Gaussian blur operation than a standard Laplacian matrix.
+**Answer:** No, we are not performing eigen-decomposition directly on the affinity matrix. In the sequence of refinement operations, the first operation is `CropDiagonal`, which replaces each diagonal element of the affinity matrix by the max non-diagonal value of the row. After this operation, the matrix has similar properties to a standard Laplacian matrix, and it is also less sensitive (thus more robust) to the Gaussian blur operation than a standard Laplacian matrix.
 
 In the new version of this library, we support different types of Laplacian matrix now, including:
 
-* None Laplacian (similarity matrix): W
+* None Laplacian (affinity matrix): W
 * Unnormalized Laplacian: L = D - W
 * Graph cut Laplacian: L' = D^{-1/2} L D^{-1/2}
 * Random walk Laplacian: L' = D^{-1} L
