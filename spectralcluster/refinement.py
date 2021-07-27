@@ -20,7 +20,6 @@ class RefinementOptions(object):
   def __init__(self,
                gaussian_blur_sigma=1,
                p_percentile=0.95,
-               use_autotune=False,
                thresholding_soft_multiplier=0.01,
                thresholding_with_row_max=True,
                refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
@@ -29,8 +28,6 @@ class RefinementOptions(object):
     Args:
       gaussian_blur_sigma: sigma value of the Gaussian blur operation
       p_percentile: the p-percentile for the row wise thresholding
-      use_autotune: if True, we use an auto-tuning method to automatically
-        select a p_percentile
       thresholding_soft_multiplier: the multiplier for soft threhsold, if this
         value is 0, then it's a hard thresholding
       thresholding_with_row_max: if true, we use row_max * p_percentile as row
@@ -40,7 +37,6 @@ class RefinementOptions(object):
     """
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
-    self.use_autotune = use_autotune
     self.thresholding_soft_multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
     self.refinement_sequence = refinement_sequence

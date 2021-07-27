@@ -8,10 +8,10 @@ MIN_SEARCH_STEP = 1e-04
 class AutoTune(object):
   """AutoTune Class.
 
-  Note: This auto-tuning method is implemented based on the reference paper:
+  This auto-tuning method is implemented based on this paper:
   Park, Tae Jin, et al. "Auto-tuning spectral clustering for speaker
   diarization using normalized maximum eigengap." IEEE Signal Processing Letter
-  2019
+  2019.
   """
 
   def __init__(self,

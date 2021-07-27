@@ -44,7 +44,6 @@ class TestAutotune(unittest.TestCase):
     ])
     refinement_sequence = []
     refinement_options = refinement.RefinementOptions(
-        use_autotune=True,
         thresholding_with_row_max=False,
         refinement_sequence=refinement_sequence)
     auto_tune = autotune.AutoTune(

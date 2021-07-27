@@ -82,8 +82,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
           eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-
-    if self.laplacian_type:
+    else:
       # Compute Laplacian matrix
       laplacian_norm = utils.compute_laplacian(
           affinity, laplacian_type=self.laplacian_type)
@@ -120,10 +119,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
     # Compute affinity matrix.
     affinity = utils.compute_affinity_matrix(embeddings)
 
-    if self.refinement_options.use_autotune:
+    if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
-      if not self.autotune:
-        raise ValueError("autotune is not defined")
 
       def p_percentile_to_ratio(p_percentile):
         """compute the `ratio` given a `p_percentile` value."""
