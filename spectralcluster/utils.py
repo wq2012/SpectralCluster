@@ -29,12 +29,12 @@ def compute_affinity_matrix(embeddings):
   return affinity
 
 
-def compute_laplacian(affinity, lp_type="graph_cut", eps=EPS):
+def compute_laplacian(affinity, laplacian_type="graph_cut", eps=EPS):
   """Compute the Laplacian matrix.
 
   Args:
     affinity: the affinity matrix of input data
-    lp_type: str. "unnormalized", "graph_cut", or "random_walk". if
+    laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
       "unnormalized", compute the unnormalied laplacian. if "graph_cut", compute
       the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
       "random_walk", compute the random walk view normalized laplacian, D^{-1}L
@@ -46,21 +46,22 @@ def compute_laplacian(affinity, lp_type="graph_cut", eps=EPS):
   """
   degree = np.diag(np.sum(affinity, axis=1))
   laplacian = degree - affinity
-  if lp_type == "unnormalized":
+  if laplacian_type == "unnormalized":
     return laplacian
-  elif lp_type == "random_walk":
+  elif laplacian_type == "random_walk":
     # Random walk normalized version
     degree_norm = np.diag(1 / (np.diag(degree) + eps))
     laplacian_norm = degree_norm.dot(laplacian)
     return laplacian_norm
-  elif lp_type == "graph_cut":
+  elif laplacian_type == "graph_cut":
     # Graph cut normalized version
     degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + eps))
     laplacian_norm = degree_norm.dot(laplacian).dot(degree_norm)
     return laplacian_norm
   else:
     raise ValueError(
-        "The lp_type should be 'unnormalized', 'random_walk', or 'graph_cut'.")
+        "The laplacian_type should be 'unnormalized', 'random_walk', or "
+        "'graph_cut'.")
 
 
 def compute_sorted_eigenvectors(input_matrix, descend=True):
@@ -98,8 +99,7 @@ def compute_number_of_clusters(eigenvalues,
                                eps=EPS):
   """Compute number of clusters using EigenGap principle.
 
-  Use maximum EigenGap principle to find the number of clusters. The eigenvalues
-  and eigenvectors are sorted in a descending order.
+  Use maximum EigenGap principle to find the number of clusters.
 
   Args:
     eigenvalues: sorted eigenvalues of the affinity matrix
@@ -109,7 +109,8 @@ def compute_number_of_clusters(eigenvalues,
     eps: a small value for numerial stability
 
   Returns:
-    number of clusters as an integer
+    max_delta_index: number of clusters as an integer
+    max_delta_norm: normalized maximum eigen gap
   """
   max_delta = 0
   max_delta_index = 0
@@ -124,7 +125,6 @@ def compute_number_of_clusters(eigenvalues,
       if delta > max_delta:
         max_delta = delta
         max_delta_index = i + 1  # Index i means i+1 clusters
-    return max_delta_index
   else:
     for i in range(1, range_end):
       if eigenvalues[i - 1] < stop_eigenvalue:
@@ -133,7 +133,9 @@ def compute_number_of_clusters(eigenvalues,
       if delta > max_delta:
         max_delta = delta
         max_delta_index = i
-    return max_delta_index
+  # normalized maximum eigen gap
+  max_delta_norm = max_delta / np.max(eigenvalues)
+  return max_delta_index, max_delta_norm
 
 
 def enforce_ordered_labels(labels):
