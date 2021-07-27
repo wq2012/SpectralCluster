@@ -29,7 +29,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
-      autotune: an AutoTune object to automatically search hyper-parameters
+      autotune: an AutoTune object to automatically search p_percentile
       laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
         "unnormalized", compute the unnormalied laplacian. if "graph_cut",
         compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
@@ -121,6 +121,10 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
+      if "RowWiseThreshold" not in self.refinement_options.refinement_sequence:
+        raise ValueError(
+            "AutoTune is only effective when the refinement sequence"
+            "contains RowWiseThreshold")
 
       def p_percentile_to_ratio(p_percentile):
         """compute the `ratio` given a `p_percentile` value."""
