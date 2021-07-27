@@ -128,8 +128,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       def p_percentile_to_ratio(p_percentile):
         """compute the `ratio` given a `p_percentile` value."""
         self.refinement_options.p_percentile = p_percentile
-        eigenvectors, n_clusters, max_delta_norm = self._compute_eigenvectors_ncluster(
-            affinity)
+        (eigenvectors, n_clusters,
+         max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
         ratio = (1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 

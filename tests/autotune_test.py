@@ -56,7 +56,7 @@ class TestAutotune(unittest.TestCase):
         max_clusters=2,
         refinement_options=refinement_options,
         autotune=auto_tune,
-        laplacian_type='graph_cut',
+        laplacian_type="graph_cut",
         row_wise_renorm=True)
 
     affinity = utils.compute_affinity_matrix(matrix)
@@ -64,8 +64,8 @@ class TestAutotune(unittest.TestCase):
     def p_percentile_to_ratio(p_percentile):
       """compute the `ratio` given a `p_percentile` value."""
       clusterer.refinement_options.p_percentile = p_percentile
-      eigenvectors, n_clusters, max_delta_norm = clusterer._compute_eigenvectors_ncluster(
-          affinity)
+      (eigenvectors, n_clusters,
+       max_delta_norm) = clusterer._compute_eigenvectors_ncluster(affinity)
       ratio = (1 - p_percentile) / max_delta_norm
       return ratio, eigenvectors, n_clusters
 
@@ -77,5 +77,5 @@ class TestAutotune(unittest.TestCase):
     self.assertEqual(p_percentile, 0.95)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

@@ -151,5 +151,6 @@ class TestSpectralClusterer(unittest.TestCase):
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
     self.assertTrue(np.array_equal(expected, labels))
 
+
 if __name__ == "__main__":
   unittest.main()
