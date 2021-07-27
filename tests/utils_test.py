@@ -21,7 +21,7 @@ class TestComputeLaplacian(unittest.TestCase):
   def test_laplacian(self):
     matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
     affinity = utils.compute_affinity_matrix(matrix)
-    laplacian = utils.compute_laplacian(affinity, lp_type="unnormalized")
+    laplacian = utils.compute_laplacian(affinity, laplacian_type="unnormalized")
     expected = np.array([[1.5, -0.5, -1, 0], [-0.5, 1.5, -0.5, -0.5],
                          [-1, -0.5, 1.5, 0], [0, -0.5, 0, 0.5]])
     self.assertTrue(np.array_equal(expected, laplacian))
@@ -29,7 +29,8 @@ class TestComputeLaplacian(unittest.TestCase):
   def test_normalized_laplacian(self):
     matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
     affinity = utils.compute_affinity_matrix(matrix)
-    laplacian_norm = utils.compute_laplacian(affinity, lp_type="graph_cut")
+    laplacian_norm = utils.compute_laplacian(
+        affinity, laplacian_type="graph_cut")
     expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.26],
                          [-0.4, -0.2, 0.6, 0], [0, -0.26, 0, 0.33]])
     self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
@@ -37,7 +38,8 @@ class TestComputeLaplacian(unittest.TestCase):
   def test_random_walk_normalized_laplacian(self):
     matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
     affinity = utils.compute_affinity_matrix(matrix)
-    laplacian_norm = utils.compute_laplacian(affinity, lp_type="random_walk")
+    laplacian_norm = utils.compute_laplacian(
+        affinity, laplacian_type="random_walk")
     expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.2],
                          [-0.4, -0.2, 0.6, 0], [0, -0.33, 0, 0.33]])
     self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
@@ -70,25 +72,29 @@ class TestComputeNumberOfClusters(unittest.TestCase):
 
   def test_5_values(self):
     eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
-    result = utils.compute_number_of_clusters(eigenvalues)
+    result, max_delta_norm = utils.compute_number_of_clusters(eigenvalues)
     self.assertEqual(3, result)
+    self.assertTrue(np.allclose(4.0, max_delta_norm, atol=0.01))
 
   def test_max_clusters(self):
     max_clusters = 2
     eigenvalues = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.5])
 
-    result_1 = utils.compute_number_of_clusters(eigenvalues)
+    result_1, max_delta_norm_1 = utils.compute_number_of_clusters(eigenvalues)
     self.assertEqual(5, result_1)
+    self.assertTrue(np.allclose(1.2, max_delta_norm_1, atol=0.01))
 
-    result_2 = utils.compute_number_of_clusters(
+    result_2, max_delta_norm_2 = utils.compute_number_of_clusters(
         eigenvalues, max_clusters=max_clusters)
     self.assertEqual(max_clusters, result_2)
+    self.assertTrue(np.allclose(1.125, max_delta_norm_2, atol=0.01))
 
   def test_ascend(self):
     eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
-    result = utils.compute_number_of_clusters(
+    result, max_delta_norm = utils.compute_number_of_clusters(
         eigenvalues, max_clusters=3, descend=False)
     self.assertEqual(2, result)
+    self.assertTrue(np.allclose(0.88, max_delta_norm, atol=0.01))
 
 
 class TestEnforceOrderedLabels(unittest.TestCase):

@@ -11,6 +11,7 @@ class BaseSpectralClusterer(object):
                min_clusters=None,
                max_clusters=None,
                refinement_options=None,
+               autotune=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -26,6 +27,7 @@ class BaseSpectralClusterer(object):
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
+      autotune: an AutoTune object to automatically search hyper-parameters
       laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
         "unnormalized", compute the unnormalied laplacian. if "graph_cut",
         compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
@@ -46,6 +48,7 @@ class BaseSpectralClusterer(object):
       self.refinement_options = refinement.RefinementOptions()
     else:
       self.refinement_options = refinement_options
+    self.autotune = autotune
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
