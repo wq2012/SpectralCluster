@@ -32,4 +32,3 @@ jobs:
       run: |
         pip install codecov
         bash run_tests.sh
-        codecov
