@@ -75,7 +75,7 @@ def run_kmeans(spectral_embeddings, n_clusters, custom_dist, max_iter):
   return labels
 
 
-class CustomKMeans(object):
+class CustomKMeans:
   &#34;&#34;&#34;Class CustomKMeans performs KMeans clustering.&#34;&#34;&#34;
 
   def __init__(self,
@@ -279,7 +279,7 @@ defined in scipy.spatial.distance can be used</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CustomKMeans(object):
+<pre><code class="python">class CustomKMeans:
   &#34;&#34;&#34;Class CustomKMeans performs KMeans clustering.&#34;&#34;&#34;
 
   def __init__(self,

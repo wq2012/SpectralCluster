@@ -30,20 +30,41 @@
 <pre><code class="python">&#34;&#34;&#34;Affinity matrix refinemnet operations.&#34;&#34;&#34;
 
 import abc
+import enum
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
+
+class RefinementName(enum.Enum):
+  &#34;&#34;&#34;The names of the refinement operations.&#34;&#34;&#34;
+  CropDiagonal = 1
+  GaussianBlur = 2
+  RowWiseThreshold = 3
+  Symmetrize = 4
+  Diffuse = 5
+  RowWiseNormalize = 6
+
+
 DEFAULT_REFINEMENT_SEQUENCE = [
-    &#34;CropDiagonal&#34;,
-    &#34;GaussianBlur&#34;,
-    &#34;RowWiseThreshold&#34;,
-    &#34;Symmetrize&#34;,
-    &#34;Diffuse&#34;,
-    &#34;RowWiseNormalize&#34;,
+    RefinementName.CropDiagonal,
+    RefinementName.GaussianBlur,
+    RefinementName.RowWiseThreshold,
+    RefinementName.Symmetrize,
+    RefinementName.Diffuse,
+    RefinementName.RowWiseNormalize,
 ]
 
 
-class RefinementOptions(object):
+class SymmetrizeType(enum.Enum):
+  &#34;&#34;&#34;Different types of symmetrization operation.&#34;&#34;&#34;
+  # We use max(A, A^T)
+  Max = 1
+
+  # We use 1/2(A + A^T)
+  Average = 2
+
+
+class RefinementOptions:
   &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
 
   def __init__(self,
@@ -51,6 +72,9 @@ class RefinementOptions(object):
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
                thresholding_with_row_max=True,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False,
+               symmetrize_type=SymmetrizeType.Max,
                refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
@@ -61,13 +85,22 @@ class RefinementOptions(object):
         value is 0, then it&#39;s a hard thresholding
       thresholding_with_row_max: if true, we use row_max * p_percentile as row
         wise threshold, instead of doing a percentile-based thresholding
-      refinement_sequence: a list of strings for the sequence of refinement
-        operations to apply on the affinity matrix
+      thresholding_with_binarization: if true, we set values larger than the
+        threshold to 1
+      thresholding_preserve_diagonal: if true, in the row wise thresholding
+        operation, we firstly set diagonals of the affinity matrix to 0, and set
+        the diagonals back to 1 in the end
+      symmetrize_type: a SymmetrizeType
+      refinement_sequence: a list of RefinementName for the sequence of
+        refinement operations to apply on the affinity matrix
     &#34;&#34;&#34;
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
     self.thresholding_soft_multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
+    self.symmetrize_type = symmetrize_type
     self.refinement_sequence = refinement_sequence
 
 
@@ -140,15 +173,20 @@ class RowWiseThreshold(AffinityRefinementOperation):
   def __init__(self,
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
-               thresholding_with_row_max=False):
+               thresholding_with_row_max=False,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
   def refine(self, affinity):
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
-
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 0.0)
     if self.thresholding_with_row_max:
       # Row_max based thresholding
       row_max = refined_affinity.max(axis=1)
@@ -160,18 +198,35 @@ class RowWiseThreshold(AffinityRefinementOperation):
           refined_affinity, self.p_percentile * 100, axis=1)
       row_percentile = np.expand_dims(row_percentile, axis=1)
       is_smaller = refined_affinity &lt; row_percentile
-
-    refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
-        refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_with_binarization:
+      # For values larger than the threshold, we binarize them to 1
+      refined_affinity = (np.ones_like(
+          (refined_affinity)) * np.invert(is_smaller)) + (
+              refined_affinity * self.multiplier * is_smaller)
+    else:
+      refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
+          refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 1.0)
     return refined_affinity
 
 
 class Symmetrize(AffinityRefinementOperation):
   &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
+  def __init__(self, symmetrize_type=SymmetrizeType.Max):
+    self.symmetrize_type = symmetrize_type
+
   def refine(self, affinity):
     self.check_input(affinity)
-    return np.maximum(affinity, np.transpose(affinity))
+    if not isinstance(self.symmetrize_type, SymmetrizeType):
+      raise TypeError(&#34;symmetrize_type must be a SymmetrizeType&#34;)
+    elif self.symmetrize_type == SymmetrizeType.Max:
+      return np.maximum(affinity, np.transpose(affinity))
+    elif self.symmetrize_type == SymmetrizeType.Average:
+      return 0.5 * (affinity + np.transpose(affinity))
+    else:
+      raise ValueError(&#34;Unsupported symmetrize_type.&#34;)
 
 
 class Diffuse(AffinityRefinementOperation):
@@ -434,9 +489,60 @@ normalization.</p></div>
 </li>
 </ul>
 </dd>
+<dt id="spectralcluster.refinement.RefinementName"><code class="flex name class">
+<span>class <span class="ident">RefinementName</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The names of the refinement operations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RefinementName(enum.Enum):
+  &#34;&#34;&#34;The names of the refinement operations.&#34;&#34;&#34;
+  CropDiagonal = 1
+  GaussianBlur = 2
+  RowWiseThreshold = 3
+  Symmetrize = 4
+  Diffuse = 5
+  RowWiseNormalize = 6</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.refinement.RefinementName.CropDiagonal"><code class="name">var <span class="ident">CropDiagonal</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.RefinementName.Diffuse"><code class="name">var <span class="ident">Diffuse</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.RefinementName.GaussianBlur"><code class="name">var <span class="ident">GaussianBlur</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.RefinementName.RowWiseNormalize"><code class="name">var <span class="ident">RowWiseNormalize</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.RefinementName.RowWiseThreshold"><code class="name">var <span class="ident">RowWiseThreshold</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.RefinementName.Symmetrize"><code class="name">var <span class="ident">Symmetrize</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="spectralcluster.refinement.RefinementOptions"><code class="flex name class">
 <span>class <span class="ident">RefinementOptions</span></span>
-<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=True, refinement_sequence=['CropDiagonal', 'GaussianBlur', 'RowWiseThreshold', 'Symmetrize', 'Diffuse', 'RowWiseNormalize'])</span>
+<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=True, thresholding_with_binarization=False, thresholding_preserve_diagonal=False, symmetrize_type=SymmetrizeType.Max, refinement_sequence=[&lt;RefinementName.CropDiagonal: 1&gt;, &lt;RefinementName.GaussianBlur: 2&gt;, &lt;RefinementName.RowWiseThreshold: 3&gt;, &lt;RefinementName.Symmetrize: 4&gt;, &lt;RefinementName.Diffuse: 5&gt;, &lt;RefinementName.RowWiseNormalize: 6&gt;])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Refinement options for the affinity matrix.</p>
@@ -453,15 +559,24 @@ value is 0, then it's a hard thresholding</dd>
 <dt><strong><code>thresholding_with_row_max</code></strong></dt>
 <dd>if true, we use row_max * p_percentile as row
 wise threshold, instead of doing a percentile-based thresholding</dd>
+<dt><strong><code>thresholding_with_binarization</code></strong></dt>
+<dd>if true, we set values larger than the
+threshold to 1</dd>
+<dt><strong><code>thresholding_preserve_diagonal</code></strong></dt>
+<dd>if true, in the row wise thresholding
+operation, we firstly set diagonals of the affinity matrix to 0, and set
+the diagonals back to 1 in the end</dd>
+<dt><strong><code>symmetrize_type</code></strong></dt>
+<dd>a SymmetrizeType</dd>
 <dt><strong><code>refinement_sequence</code></strong></dt>
-<dd>a list of strings for the sequence of refinement
-operations to apply on the affinity matrix</dd>
+<dd>a list of RefinementName for the sequence of
+refinement operations to apply on the affinity matrix</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RefinementOptions(object):
+<pre><code class="python">class RefinementOptions:
   &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
 
   def __init__(self,
@@ -469,6 +584,9 @@ operations to apply on the affinity matrix</dd>
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
                thresholding_with_row_max=True,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False,
+               symmetrize_type=SymmetrizeType.Max,
                refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
@@ -479,13 +597,22 @@ operations to apply on the affinity matrix</dd>
         value is 0, then it&#39;s a hard thresholding
       thresholding_with_row_max: if true, we use row_max * p_percentile as row
         wise threshold, instead of doing a percentile-based thresholding
-      refinement_sequence: a list of strings for the sequence of refinement
-        operations to apply on the affinity matrix
+      thresholding_with_binarization: if true, we set values larger than the
+        threshold to 1
+      thresholding_preserve_diagonal: if true, in the row wise thresholding
+        operation, we firstly set diagonals of the affinity matrix to 0, and set
+        the diagonals back to 1 in the end
+      symmetrize_type: a SymmetrizeType
+      refinement_sequence: a list of RefinementName for the sequence of
+        refinement operations to apply on the affinity matrix
     &#34;&#34;&#34;
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
     self.thresholding_soft_multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
+    self.symmetrize_type = symmetrize_type
     self.refinement_sequence = refinement_sequence</code></pre>
 </details>
 </dd>
@@ -524,7 +651,7 @@ operations to apply on the affinity matrix</dd>
 </dd>
 <dt id="spectralcluster.refinement.RowWiseThreshold"><code class="flex name class">
 <span>class <span class="ident">RowWiseThreshold</span></span>
-<span>(</span><span>p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=False)</span>
+<span>(</span><span>p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=False, thresholding_with_binarization=False, thresholding_preserve_diagonal=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply row wise thresholding.</p></div>
@@ -538,15 +665,20 @@ operations to apply on the affinity matrix</dd>
   def __init__(self,
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
-               thresholding_with_row_max=False):
+               thresholding_with_row_max=False,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
   def refine(self, affinity):
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
-
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 0.0)
     if self.thresholding_with_row_max:
       # Row_max based thresholding
       row_max = refined_affinity.max(axis=1)
@@ -558,9 +690,16 @@ operations to apply on the affinity matrix</dd>
           refined_affinity, self.p_percentile * 100, axis=1)
       row_percentile = np.expand_dims(row_percentile, axis=1)
       is_smaller = refined_affinity &lt; row_percentile
-
-    refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
-        refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_with_binarization:
+      # For values larger than the threshold, we binarize them to 1
+      refined_affinity = (np.ones_like(
+          (refined_affinity)) * np.invert(is_smaller)) + (
+              refined_affinity * self.multiplier * is_smaller)
+    else:
+      refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
+          refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 1.0)
     return refined_affinity</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -579,6 +718,7 @@ operations to apply on the affinity matrix</dd>
 </dd>
 <dt id="spectralcluster.refinement.Symmetrize"><code class="flex name class">
 <span>class <span class="ident">Symmetrize</span></span>
+<span>(</span><span>symmetrize_type=SymmetrizeType.Max)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Symmetrization operation.</p></div>
@@ -589,9 +729,19 @@ operations to apply on the affinity matrix</dd>
 <pre><code class="python">class Symmetrize(AffinityRefinementOperation):
   &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
+  def __init__(self, symmetrize_type=SymmetrizeType.Max):
+    self.symmetrize_type = symmetrize_type
+
   def refine(self, affinity):
     self.check_input(affinity)
-    return np.maximum(affinity, np.transpose(affinity))</code></pre>
+    if not isinstance(self.symmetrize_type, SymmetrizeType):
+      raise TypeError(&#34;symmetrize_type must be a SymmetrizeType&#34;)
+    elif self.symmetrize_type == SymmetrizeType.Max:
+      return np.maximum(affinity, np.transpose(affinity))
+    elif self.symmetrize_type == SymmetrizeType.Average:
+      return 0.5 * (affinity + np.transpose(affinity))
+    else:
+      raise ValueError(&#34;Unsupported symmetrize_type.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -606,6 +756,40 @@ operations to apply on the affinity matrix</dd>
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="spectralcluster.refinement.SymmetrizeType"><code class="flex name class">
+<span>class <span class="ident">SymmetrizeType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Different types of symmetrization operation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SymmetrizeType(enum.Enum):
+  &#34;&#34;&#34;Different types of symmetrization operation.&#34;&#34;&#34;
+  # We use max(A, A^T)
+  Max = 1
+
+  # We use 1/2(A + A^T)
+  Average = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.refinement.SymmetrizeType.Average"><code class="name">var <span class="ident">Average</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.refinement.SymmetrizeType.Max"><code class="name">var <span class="ident">Max</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -640,6 +824,17 @@ operations to apply on the affinity matrix</dd>
 <h4><code><a title="spectralcluster.refinement.GaussianBlur" href="#spectralcluster.refinement.GaussianBlur">GaussianBlur</a></code></h4>
 </li>
 <li>
+<h4><code><a title="spectralcluster.refinement.RefinementName" href="#spectralcluster.refinement.RefinementName">RefinementName</a></code></h4>
+<ul class="two-column">
+<li><code><a title="spectralcluster.refinement.RefinementName.CropDiagonal" href="#spectralcluster.refinement.RefinementName.CropDiagonal">CropDiagonal</a></code></li>
+<li><code><a title="spectralcluster.refinement.RefinementName.Diffuse" href="#spectralcluster.refinement.RefinementName.Diffuse">Diffuse</a></code></li>
+<li><code><a title="spectralcluster.refinement.RefinementName.GaussianBlur" href="#spectralcluster.refinement.RefinementName.GaussianBlur">GaussianBlur</a></code></li>
+<li><code><a title="spectralcluster.refinement.RefinementName.RowWiseNormalize" href="#spectralcluster.refinement.RefinementName.RowWiseNormalize">RowWiseNormalize</a></code></li>
+<li><code><a title="spectralcluster.refinement.RefinementName.RowWiseThreshold" href="#spectralcluster.refinement.RefinementName.RowWiseThreshold">RowWiseThreshold</a></code></li>
+<li><code><a title="spectralcluster.refinement.RefinementName.Symmetrize" href="#spectralcluster.refinement.RefinementName.Symmetrize">Symmetrize</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="spectralcluster.refinement.RefinementOptions" href="#spectralcluster.refinement.RefinementOptions">RefinementOptions</a></code></h4>
 </li>
 <li>
@@ -650,6 +845,13 @@ operations to apply on the affinity matrix</dd>
 </li>
 <li>
 <h4><code><a title="spectralcluster.refinement.Symmetrize" href="#spectralcluster.refinement.Symmetrize">Symmetrize</a></code></h4>
+</li>
+<li>
+<h4><code><a title="spectralcluster.refinement.SymmetrizeType" href="#spectralcluster.refinement.SymmetrizeType">SymmetrizeType</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.refinement.SymmetrizeType.Average" href="#spectralcluster.refinement.SymmetrizeType.Average">Average</a></code></li>
+<li><code><a title="spectralcluster.refinement.SymmetrizeType.Max" href="#spectralcluster.refinement.SymmetrizeType.Max">Max</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

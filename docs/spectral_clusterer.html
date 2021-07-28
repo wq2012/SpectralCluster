@@ -32,7 +32,11 @@
 import numpy as np
 from spectralcluster import base_spectral_clusterer
 from spectralcluster import custom_distance_kmeans
+from spectralcluster import laplacian
+from spectralcluster import refinement
 from spectralcluster import utils
+
+RefinementName = refinement.RefinementName
 
 
 class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
@@ -42,6 +46,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
                min_clusters=None,
                max_clusters=None,
                refinement_options=None,
+               autotune=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -57,11 +62,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
-      laplacian_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
-        &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;,
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        &#34;random_walk&#34;, compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      autotune: an AutoTune object to automatically search p_percentile
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -75,11 +77,52 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
         min_clusters=min_clusters,
         max_clusters=max_clusters,
         refinement_options=refinement_options,
+        autotune=autotune,
         laplacian_type=laplacian_type,
         stop_eigenvalue=stop_eigenvalue,
         row_wise_renorm=row_wise_renorm,
         custom_dist=custom_dist,
         max_iter=max_iter)
+
+  def _compute_eigenvectors_ncluster(self, affinity):
+    &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
+
+    Perform affinity refinement, eigen decomposition and sort eigenvectors by
+    the real part of eigenvalues. Estimate the number of clusters using EigenGap
+    principle.
+
+    Args:
+      affinity: the affinity matrix of input data
+
+    Returns:
+      eigenvectors: sorted eigenvectors. numpy array of shape
+      (n_samples, n_samples)
+      n_clusters: number of clusters as an integer
+      max_delta_norm: normalized maximum eigen gap
+    &#34;&#34;&#34;
+    # Perform refinement operations on the affinity matrix.
+    for refinement_name in self.refinement_options.refinement_sequence:
+      op = self._get_refinement_operator(refinement_name)
+      affinity = op.refine(affinity)
+
+    if not self.laplacian_type:
+      # Perform eigen decomposion.
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
+      # Get number of clusters.
+      n_clusters, max_delta_norm = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+    else:
+      # Compute Laplacian matrix
+      laplacian_norm = laplacian.compute_laplacian(
+          affinity, laplacian_type=self.laplacian_type)
+      # Perform eigen decomposion. Eigen values are sorted in an ascending
+      # order
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
+          laplacian_norm, descend=False)
+      # Get number of clusters. Eigen values are sorted in an ascending order
+      n_clusters, max_delta_norm = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, descend=False)
+    return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings):
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
@@ -96,6 +139,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
     &#34;&#34;&#34;
+
     if not isinstance(embeddings, np.ndarray):
       raise TypeError(&#34;embeddings must be a numpy array&#34;)
     if len(embeddings.shape) != 2:
@@ -104,34 +148,33 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
     # Compute affinity matrix.
     affinity = utils.compute_affinity_matrix(embeddings)
 
-    if self.refinement_options:
-      # Perform refinement operations on the affinity matrix.
-      for refinement_name in self.refinement_options.refinement_sequence:
-        op = self._get_refinement_operator(refinement_name)
-        affinity = op.refine(affinity)
+    if self.autotune:
+      # Use Auto-tuning method to find a good p_percentile.
+      if (RefinementName.RowWiseThreshold
+          not in self.refinement_options.refinement_sequence):
+        raise ValueError(
+            &#34;AutoTune is only effective when the refinement sequence&#34;
+            &#34;contains RowWiseThreshold&#34;)
 
-    if not self.laplacian_type:
-      # Perform eigen decomposion.
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-      # Get number of clusters.
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-    if self.laplacian_type:
-      # Compute Laplacian matrix
-      laplacian_norm = utils.compute_laplacian(
-          affinity, lp_type=self.laplacian_type)
-      # Perform eigen decomposion. Eigen values are sorted in an ascending order
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-          laplacian_norm, descend=False)
-      # Get number of clusters. Eigen values are sorted in an ascending order
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
+      def p_percentile_to_ratio(p_percentile):
+        &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+        self.refinement_options.p_percentile = p_percentile
+        (eigenvectors, n_clusters,
+         max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+        ratio = (1 - p_percentile) / max_delta_norm
+        return ratio, eigenvectors, n_clusters
+
+      eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
+    else:
+      # Do not use Auto-tune.
+      eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
+          affinity)
 
     if self.min_clusters is not None:
-      k = max(k, self.min_clusters)
+      n_clusters = max(n_clusters, self.min_clusters)
 
     # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :k]
+    spectral_embeddings = eigenvectors[:, :n_clusters]
 
     if self.row_wise_renorm:
       # Perfrom row wise re-normalization.
@@ -142,7 +185,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
     # Run K-means on spectral embeddings.
     labels = custom_distance_kmeans.run_kmeans(
         spectral_embeddings,
-        n_clusters=k,
+        n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
     return labels</code></pre>
@@ -159,7 +202,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -176,12 +219,10 @@ clusters</dd>
 <dt><strong><code>refinement_options</code></strong></dt>
 <dd>a RefinementOptions object that contains refinement
 arguments for the affinity matrix</dd>
+<dt><strong><code>autotune</code></strong></dt>
+<dd>an AutoTune object to automatically search p_percentile</dd>
 <dt><strong><code>laplacian_type</code></strong></dt>
-<dd>str. "unnormalized", "graph_cut", or "random_walk". if
-"unnormalized", compute the unnormalied laplacian. if "graph_cut",
-compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-"random_walk", compute the random walk view normalized laplacian,
-D^{-1}L. If None, we do not use a laplacian matrix</dd>
+<dd>a LaplacianType. If None, we do not use a laplacian matrix</dd>
 <dt><strong><code>stop_eigenvalue</code></strong></dt>
 <dd>when computing the number of clusters using Eigen Gap, we
 do not look at eigen values smaller than this value</dd>
@@ -206,6 +247,7 @@ functions defined in scipy.spatial.distance can be used</dd>
                min_clusters=None,
                max_clusters=None,
                refinement_options=None,
+               autotune=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -221,11 +263,8 @@ functions defined in scipy.spatial.distance can be used</dd>
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
-      laplacian_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
-        &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;,
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        &#34;random_walk&#34;, compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      autotune: an AutoTune object to automatically search p_percentile
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -239,11 +278,52 @@ functions defined in scipy.spatial.distance can be used</dd>
         min_clusters=min_clusters,
         max_clusters=max_clusters,
         refinement_options=refinement_options,
+        autotune=autotune,
         laplacian_type=laplacian_type,
         stop_eigenvalue=stop_eigenvalue,
         row_wise_renorm=row_wise_renorm,
         custom_dist=custom_dist,
         max_iter=max_iter)
+
+  def _compute_eigenvectors_ncluster(self, affinity):
+    &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
+
+    Perform affinity refinement, eigen decomposition and sort eigenvectors by
+    the real part of eigenvalues. Estimate the number of clusters using EigenGap
+    principle.
+
+    Args:
+      affinity: the affinity matrix of input data
+
+    Returns:
+      eigenvectors: sorted eigenvectors. numpy array of shape
+      (n_samples, n_samples)
+      n_clusters: number of clusters as an integer
+      max_delta_norm: normalized maximum eigen gap
+    &#34;&#34;&#34;
+    # Perform refinement operations on the affinity matrix.
+    for refinement_name in self.refinement_options.refinement_sequence:
+      op = self._get_refinement_operator(refinement_name)
+      affinity = op.refine(affinity)
+
+    if not self.laplacian_type:
+      # Perform eigen decomposion.
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
+      # Get number of clusters.
+      n_clusters, max_delta_norm = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+    else:
+      # Compute Laplacian matrix
+      laplacian_norm = laplacian.compute_laplacian(
+          affinity, laplacian_type=self.laplacian_type)
+      # Perform eigen decomposion. Eigen values are sorted in an ascending
+      # order
+      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
+          laplacian_norm, descend=False)
+      # Get number of clusters. Eigen values are sorted in an ascending order
+      n_clusters, max_delta_norm = utils.compute_number_of_clusters(
+          eigenvalues, self.max_clusters, descend=False)
+    return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings):
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
@@ -260,6 +340,7 @@ functions defined in scipy.spatial.distance can be used</dd>
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
     &#34;&#34;&#34;
+
     if not isinstance(embeddings, np.ndarray):
       raise TypeError(&#34;embeddings must be a numpy array&#34;)
     if len(embeddings.shape) != 2:
@@ -268,34 +349,33 @@ functions defined in scipy.spatial.distance can be used</dd>
     # Compute affinity matrix.
     affinity = utils.compute_affinity_matrix(embeddings)
 
-    if self.refinement_options:
-      # Perform refinement operations on the affinity matrix.
-      for refinement_name in self.refinement_options.refinement_sequence:
-        op = self._get_refinement_operator(refinement_name)
-        affinity = op.refine(affinity)
+    if self.autotune:
+      # Use Auto-tuning method to find a good p_percentile.
+      if (RefinementName.RowWiseThreshold
+          not in self.refinement_options.refinement_sequence):
+        raise ValueError(
+            &#34;AutoTune is only effective when the refinement sequence&#34;
+            &#34;contains RowWiseThreshold&#34;)
 
-    if not self.laplacian_type:
-      # Perform eigen decomposion.
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-      # Get number of clusters.
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-    if self.laplacian_type:
-      # Compute Laplacian matrix
-      laplacian_norm = utils.compute_laplacian(
-          affinity, lp_type=self.laplacian_type)
-      # Perform eigen decomposion. Eigen values are sorted in an ascending order
-      (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-          laplacian_norm, descend=False)
-      # Get number of clusters. Eigen values are sorted in an ascending order
-      k = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
+      def p_percentile_to_ratio(p_percentile):
+        &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+        self.refinement_options.p_percentile = p_percentile
+        (eigenvectors, n_clusters,
+         max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+        ratio = (1 - p_percentile) / max_delta_norm
+        return ratio, eigenvectors, n_clusters
+
+      eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
+    else:
+      # Do not use Auto-tune.
+      eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
+          affinity)
 
     if self.min_clusters is not None:
-      k = max(k, self.min_clusters)
+      n_clusters = max(n_clusters, self.min_clusters)
 
     # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :k]
+    spectral_embeddings = eigenvectors[:, :n_clusters]
 
     if self.row_wise_renorm:
       # Perfrom row wise re-normalization.
@@ -306,7 +386,7 @@ functions defined in scipy.spatial.distance can be used</dd>
     # Run K-means on spectral embeddings.
     labels = custom_distance_kmeans.run_kmeans(
         spectral_embeddings,
-        n_clusters=k,
+        n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
     return labels</code></pre>
@@ -359,6 +439,7 @@ functions defined in scipy.spatial.distance can be used</dd>
     TypeError: if embeddings has wrong type
     ValueError: if embeddings has wrong shape
   &#34;&#34;&#34;
+
   if not isinstance(embeddings, np.ndarray):
     raise TypeError(&#34;embeddings must be a numpy array&#34;)
   if len(embeddings.shape) != 2:
@@ -367,34 +448,33 @@ functions defined in scipy.spatial.distance can be used</dd>
   # Compute affinity matrix.
   affinity = utils.compute_affinity_matrix(embeddings)
 
-  if self.refinement_options:
-    # Perform refinement operations on the affinity matrix.
-    for refinement_name in self.refinement_options.refinement_sequence:
-      op = self._get_refinement_operator(refinement_name)
-      affinity = op.refine(affinity)
+  if self.autotune:
+    # Use Auto-tuning method to find a good p_percentile.
+    if (RefinementName.RowWiseThreshold
+        not in self.refinement_options.refinement_sequence):
+      raise ValueError(
+          &#34;AutoTune is only effective when the refinement sequence&#34;
+          &#34;contains RowWiseThreshold&#34;)
 
-  if not self.laplacian_type:
-    # Perform eigen decomposion.
-    (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
-    # Get number of clusters.
-    k = utils.compute_number_of_clusters(
-        eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
-  if self.laplacian_type:
-    # Compute Laplacian matrix
-    laplacian_norm = utils.compute_laplacian(
-        affinity, lp_type=self.laplacian_type)
-    # Perform eigen decomposion. Eigen values are sorted in an ascending order
-    (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
-        laplacian_norm, descend=False)
-    # Get number of clusters. Eigen values are sorted in an ascending order
-    k = utils.compute_number_of_clusters(
-        eigenvalues, self.max_clusters, descend=False)
+    def p_percentile_to_ratio(p_percentile):
+      &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+      self.refinement_options.p_percentile = p_percentile
+      (eigenvectors, n_clusters,
+       max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+      ratio = (1 - p_percentile) / max_delta_norm
+      return ratio, eigenvectors, n_clusters
+
+    eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
+  else:
+    # Do not use Auto-tune.
+    eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
+        affinity)
 
   if self.min_clusters is not None:
-    k = max(k, self.min_clusters)
+    n_clusters = max(n_clusters, self.min_clusters)
 
   # Get spectral embeddings.
-  spectral_embeddings = eigenvectors[:, :k]
+  spectral_embeddings = eigenvectors[:, :n_clusters]
 
   if self.row_wise_renorm:
     # Perfrom row wise re-normalization.
@@ -405,7 +485,7 @@ functions defined in scipy.spatial.distance can be used</dd>
   # Run K-means on spectral embeddings.
   labels = custom_distance_kmeans.run_kmeans(
       spectral_embeddings,
-      n_clusters=k,
+      n_clusters=n_clusters,
       custom_dist=self.custom_dist,
       max_iter=self.max_iter)
   return labels</code></pre>

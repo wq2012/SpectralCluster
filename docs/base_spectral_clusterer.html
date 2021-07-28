@@ -32,14 +32,17 @@
 import abc
 from spectralcluster import refinement
 
+RefinementName = refinement.RefinementName
 
-class BaseSpectralClusterer(object):
+
+class BaseSpectralClusterer:
   &#34;&#34;&#34;A base class for spectral clustering.&#34;&#34;&#34;
 
   def __init__(self,
                min_clusters=None,
                max_clusters=None,
                refinement_options=None,
+               autotune=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -55,11 +58,8 @@ class BaseSpectralClusterer(object):
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
-      laplacian_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
-        &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;,
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        &#34;random_walk&#34;, compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      autotune: an AutoTune object to automatically search hyper-parameters
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -75,6 +75,7 @@ class BaseSpectralClusterer(object):
       self.refinement_options = refinement.RefinementOptions()
     else:
       self.refinement_options = refinement_options
+    self.autotune = autotune
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
@@ -85,29 +86,34 @@ class BaseSpectralClusterer(object):
     &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
 
     Args:
-      name: operator class name as a string
+      name: a RefinementName
 
     Returns:
       object of the operator
 
     Raises:
+      TypeError: if name is not a RefinementName
       ValueError: if name is an unknown refinement operation
     &#34;&#34;&#34;
-    if name == &#34;CropDiagonal&#34;:
+    if not isinstance(name, RefinementName):
+      raise TypeError(&#34;name must be a RefinementName&#34;)
+    elif name == RefinementName.CropDiagonal:
       return refinement.CropDiagonal()
-    elif name == &#34;GaussianBlur&#34;:
+    elif name == RefinementName.GaussianBlur:
       return refinement.GaussianBlur(
           self.refinement_options.gaussian_blur_sigma)
-    elif name == &#34;RowWiseThreshold&#34;:
+    elif name == RefinementName.RowWiseThreshold:
       return refinement.RowWiseThreshold(
           self.refinement_options.p_percentile,
           self.refinement_options.thresholding_soft_multiplier,
-          self.refinement_options.thresholding_with_row_max)
-    elif name == &#34;Symmetrize&#34;:
-      return refinement.Symmetrize()
-    elif name == &#34;Diffuse&#34;:
+          self.refinement_options.thresholding_with_row_max,
+          self.refinement_options.thresholding_with_binarization,
+          self.refinement_options.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return refinement.Symmetrize(self.refinement_options.symmetrize_type)
+    elif name == RefinementName.Diffuse:
       return refinement.Diffuse()
-    elif name == &#34;RowWiseNormalize&#34;:
+    elif name == RefinementName.RowWiseNormalize:
       return refinement.RowWiseNormalize()
     else:
       raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))
@@ -143,7 +149,7 @@ class BaseSpectralClusterer(object):
 <dl>
 <dt id="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">BaseSpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A base class for spectral clustering.</p>
@@ -160,12 +166,10 @@ clusters</dd>
 <dt><strong><code>refinement_options</code></strong></dt>
 <dd>a RefinementOptions object that contains refinement
 arguments for the affinity matrix</dd>
+<dt><strong><code>autotune</code></strong></dt>
+<dd>an AutoTune object to automatically search hyper-parameters</dd>
 <dt><strong><code>laplacian_type</code></strong></dt>
-<dd>str. "unnormalized", "graph_cut", or "random_walk". if
-"unnormalized", compute the unnormalied laplacian. if "graph_cut",
-compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-"random_walk", compute the random walk view normalized laplacian,
-D^{-1}L. If None, we do not use a laplacian matrix</dd>
+<dd>a LaplacianType. If None, we do not use a laplacian matrix</dd>
 <dt><strong><code>stop_eigenvalue</code></strong></dt>
 <dd>when computing the number of clusters using Eigen Gap, we
 do not look at eigen values smaller than this value</dd>
@@ -183,13 +187,14 @@ functions defined in scipy.spatial.distance can be used</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseSpectralClusterer(object):
+<pre><code class="python">class BaseSpectralClusterer:
   &#34;&#34;&#34;A base class for spectral clustering.&#34;&#34;&#34;
 
   def __init__(self,
                min_clusters=None,
                max_clusters=None,
                refinement_options=None,
+               autotune=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -205,11 +210,8 @@ functions defined in scipy.spatial.distance can be used</dd>
         clusters
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
-      laplacian_type: str. &#34;unnormalized&#34;, &#34;graph_cut&#34;, or &#34;random_walk&#34;. if
-        &#34;unnormalized&#34;, compute the unnormalied laplacian. if &#34;graph_cut&#34;,
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        &#34;random_walk&#34;, compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      autotune: an AutoTune object to automatically search hyper-parameters
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -225,6 +227,7 @@ functions defined in scipy.spatial.distance can be used</dd>
       self.refinement_options = refinement.RefinementOptions()
     else:
       self.refinement_options = refinement_options
+    self.autotune = autotune
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
@@ -235,29 +238,34 @@ functions defined in scipy.spatial.distance can be used</dd>
     &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
 
     Args:
-      name: operator class name as a string
+      name: a RefinementName
 
     Returns:
       object of the operator
 
     Raises:
+      TypeError: if name is not a RefinementName
       ValueError: if name is an unknown refinement operation
     &#34;&#34;&#34;
-    if name == &#34;CropDiagonal&#34;:
+    if not isinstance(name, RefinementName):
+      raise TypeError(&#34;name must be a RefinementName&#34;)
+    elif name == RefinementName.CropDiagonal:
       return refinement.CropDiagonal()
-    elif name == &#34;GaussianBlur&#34;:
+    elif name == RefinementName.GaussianBlur:
       return refinement.GaussianBlur(
           self.refinement_options.gaussian_blur_sigma)
-    elif name == &#34;RowWiseThreshold&#34;:
+    elif name == RefinementName.RowWiseThreshold:
       return refinement.RowWiseThreshold(
           self.refinement_options.p_percentile,
           self.refinement_options.thresholding_soft_multiplier,
-          self.refinement_options.thresholding_with_row_max)
-    elif name == &#34;Symmetrize&#34;:
-      return refinement.Symmetrize()
-    elif name == &#34;Diffuse&#34;:
+          self.refinement_options.thresholding_with_row_max,
+          self.refinement_options.thresholding_with_binarization,
+          self.refinement_options.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return refinement.Symmetrize(self.refinement_options.symmetrize_type)
+    elif name == RefinementName.Diffuse:
       return refinement.Diffuse()
-    elif name == &#34;RowWiseNormalize&#34;:
+    elif name == RefinementName.RowWiseNormalize:
       return refinement.RowWiseNormalize()
     else:
       raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))

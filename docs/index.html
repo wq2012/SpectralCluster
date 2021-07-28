@@ -29,17 +29,27 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;__init__ file.&#34;&#34;&#34;
 
+from . import autotune
+from . import laplacian
 from . import refinement
 from . import spectral_clusterer
 
 SpectralClusterer = spectral_clusterer.SpectralClusterer
 DEFAULT_REFINEMENT_SEQUENCE = refinement.DEFAULT_REFINEMENT_SEQUENCE
-RefinementOptions = refinement.RefinementOptions</code></pre>
+RefinementName = refinement.RefinementName
+RefinementOptions = refinement.RefinementOptions
+SymmetrizeType = refinement.SymmetrizeType
+AutoTune = autotune.AutoTune
+LaplacianType = laplacian.LaplacianType</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></dt>
+<dd>
+<div class="desc"><p>Auto-tuning hyper-parameters.</p></div>
+</dd>
 <dt><code class="name"><a title="spectralcluster.base_spectral_clusterer" href="base_spectral_clusterer.html">spectralcluster.base_spectral_clusterer</a></code></dt>
 <dd>
 <div class="desc"><p>Base class to perform spectral clustering.</p></div>
@@ -47,6 +57,10 @@ RefinementOptions = refinement.RefinementOptions</code></pre>
 <dt><code class="name"><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></dt>
 <dd>
 <div class="desc"><p>Implement custom kmeans …</p></div>
+</dd>
+<dt><code class="name"><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></dt>
+<dd>
+<div class="desc"><p>Laplacian matrix.</p></div>
 </dd>
 <dt><code class="name"><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></dt>
 <dd>
@@ -77,8 +91,10 @@ RefinementOptions = refinement.RefinementOptions</code></pre>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></li>
 <li><code><a title="spectralcluster.base_spectral_clusterer" href="base_spectral_clusterer.html">spectralcluster.base_spectral_clusterer</a></code></li>
 <li><code><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></li>
+<li><code><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></li>
 <li><code><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></li>
 <li><code><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></li>
 <li><code><a title="spectralcluster.utils" href="utils.html">spectralcluster.utils</a></code></li>
