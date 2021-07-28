@@ -15,36 +15,6 @@ class TestComputeAffinityMatrix(unittest.TestCase):
     self.assertTrue(np.array_equal(expected, affinity))
 
 
-class TestComputeLaplacian(unittest.TestCase):
-  """Tests for the compute_laplacian function."""
-
-  def test_laplacian(self):
-    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
-    affinity = utils.compute_affinity_matrix(matrix)
-    laplacian = utils.compute_laplacian(affinity, laplacian_type="unnormalized")
-    expected = np.array([[1.5, -0.5, -1, 0], [-0.5, 1.5, -0.5, -0.5],
-                         [-1, -0.5, 1.5, 0], [0, -0.5, 0, 0.5]])
-    self.assertTrue(np.array_equal(expected, laplacian))
-
-  def test_normalized_laplacian(self):
-    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
-    affinity = utils.compute_affinity_matrix(matrix)
-    laplacian_norm = utils.compute_laplacian(
-        affinity, laplacian_type="graph_cut")
-    expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.26],
-                         [-0.4, -0.2, 0.6, 0], [0, -0.26, 0, 0.33]])
-    self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
-
-  def test_random_walk_normalized_laplacian(self):
-    matrix = np.array([[3, 4], [-4, 3], [6, 8], [-3, -4]])
-    affinity = utils.compute_affinity_matrix(matrix)
-    laplacian_norm = utils.compute_laplacian(
-        affinity, laplacian_type="random_walk")
-    expected = np.array([[0.6, -0.2, -0.4, 0], [-0.2, 0.6, -0.2, -0.2],
-                         [-0.4, -0.2, 0.6, 0], [0, -0.33, 0, 0.33]])
-    self.assertTrue(np.allclose(expected, laplacian_norm, atol=0.01))
-
-
 class TestComputeSortedEigenvectors(unittest.TestCase):
   """Tests for the compute_sorted_eigenvectors function."""
 

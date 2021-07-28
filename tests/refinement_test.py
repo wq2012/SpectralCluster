@@ -2,6 +2,8 @@ import unittest
 import numpy as np
 from spectralcluster import refinement
 
+SymmetrizeType = refinement.SymmetrizeType
+
 
 class TestCropDiagonal(unittest.TestCase):
   """Tests for the CropDiagonal class."""
@@ -45,6 +47,27 @@ class TestRowWiseThreshold(unittest.TestCase):
     expected = np.array([[0.005, 2.0, 3.0], [3.0, 4.0, 5.0], [4.0, 2.0, 0.01]])
     self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
 
+  def test_3by3_matrix_binarization(self):
+    matrix = np.array([[0.5, 2.0, 3.0], [3.0, 4.0, 5.0], [4.0, 2.0, 1.0]])
+    adjusted_matrix = refinement.RowWiseThreshold(
+        p_percentile=0.5,
+        thresholding_soft_multiplier=0.01,
+        thresholding_with_row_max=True,
+        thresholding_with_binarization=True).refine(matrix)
+    expected = np.array([[0.005, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 0.01]])
+    self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
+
+  def test_3by3_matrix_preserve_diagonal(self):
+    matrix = np.array([[0.5, 2.0, 3.0], [3.0, 4.0, 5.0], [4.0, 2.0, 1.0]])
+    adjusted_matrix = refinement.RowWiseThreshold(
+        p_percentile=0.5,
+        thresholding_soft_multiplier=0.01,
+        thresholding_with_row_max=True,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True).refine(matrix)
+    expected = np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+    self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
+
 
 class TestSymmetrize(unittest.TestCase):
   """Tests for the Symmetrize class."""
@@ -53,6 +76,13 @@ class TestSymmetrize(unittest.TestCase):
     matrix = np.array([[1, 2, 3], [3, 4, 5], [4, 2, 1]])
     adjusted_matrix = refinement.Symmetrize().refine(matrix)
     expected = np.array([[1, 3, 4], [3, 4, 5], [4, 5, 1]])
+    self.assertTrue(np.array_equal(expected, adjusted_matrix))
+
+  def test_3by3_matrix_symmetrize_average(self):
+    matrix = np.array([[1, 2, 3], [3, 4, 5], [4, 2, 1]])
+    adjusted_matrix = refinement.Symmetrize(
+        symmetrize_type=SymmetrizeType.Average).refine(matrix)
+    expected = np.array([[1, 2.5, 3.5], [2.5, 4, 3.5], [3.5, 3.5, 1]])
     self.assertTrue(np.array_equal(expected, adjusted_matrix))
 
 

@@ -29,41 +29,6 @@ def compute_affinity_matrix(embeddings):
   return affinity
 
 
-def compute_laplacian(affinity, laplacian_type="graph_cut", eps=EPS):
-  """Compute the Laplacian matrix.
-
-  Args:
-    affinity: the affinity matrix of input data
-    laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
-      "unnormalized", compute the unnormalied laplacian. if "graph_cut", compute
-      the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-      "random_walk", compute the random walk view normalized laplacian, D^{-1}L
-    eps: a small value for numerial stability
-
-  Returns:
-    laplacian: unnormalized graph laplacian
-    laplacian_norm: normalized graph laplacian
-  """
-  degree = np.diag(np.sum(affinity, axis=1))
-  laplacian = degree - affinity
-  if laplacian_type == "unnormalized":
-    return laplacian
-  elif laplacian_type == "random_walk":
-    # Random walk normalized version
-    degree_norm = np.diag(1 / (np.diag(degree) + eps))
-    laplacian_norm = degree_norm.dot(laplacian)
-    return laplacian_norm
-  elif laplacian_type == "graph_cut":
-    # Graph cut normalized version
-    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + eps))
-    laplacian_norm = degree_norm.dot(laplacian).dot(degree_norm)
-    return laplacian_norm
-  else:
-    raise ValueError(
-        "The laplacian_type should be 'unnormalized', 'random_walk', or "
-        "'graph_cut'.")
-
-
 def compute_sorted_eigenvectors(input_matrix, descend=True):
   """Sort eigenvectors by the real part of eigenvalues.
 

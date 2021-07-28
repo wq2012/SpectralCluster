@@ -1,9 +1,13 @@
 import unittest
 import numpy as np
 from spectralcluster import autotune
+from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
+
+RefinementName = refinement.RefinementName
+LaplacianType = laplacian.LaplacianType
 
 
 class TestSpectralClusterer(unittest.TestCase):
@@ -63,7 +67,7 @@ class TestSpectralClusterer(unittest.TestCase):
     clusterer = spectral_clusterer.SpectralClusterer(
         max_clusters=2,
         refinement_options=refinement_options,
-        laplacian_type="graph_cut",
+        laplacian_type=LaplacianType.GraphCut,
         row_wise_renorm=True)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
@@ -84,7 +88,7 @@ class TestSpectralClusterer(unittest.TestCase):
     clusterer = spectral_clusterer.SpectralClusterer(
         max_clusters=4,
         refinement_options=refinement_options,
-        laplacian_type="graph_cut",
+        laplacian_type=LaplacianType.GraphCut,
         row_wise_renorm=True)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
@@ -101,7 +105,7 @@ class TestSpectralClusterer(unittest.TestCase):
         [0.0, 1.2],
     ])
 
-    refinement_sequence = ["RowWiseThreshold"]
+    refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
         thresholding_with_row_max=False,
         refinement_sequence=refinement_sequence)
@@ -114,7 +118,7 @@ class TestSpectralClusterer(unittest.TestCase):
         max_clusters=2,
         refinement_options=refinement_options,
         autotune=auto_tune,
-        laplacian_type="graph_cut",
+        laplacian_type=LaplacianType.GraphCut,
         row_wise_renorm=True)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
@@ -129,7 +133,7 @@ class TestSpectralClusterer(unittest.TestCase):
     noisy = np.random.rand(1000, 6) * 2 - 1
     matrix = matrix + noisy * 0.1
 
-    refinement_sequence = ["RowWiseThreshold"]
+    refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
         thresholding_with_row_max=False,
         refinement_sequence=refinement_sequence)
@@ -142,7 +146,7 @@ class TestSpectralClusterer(unittest.TestCase):
         max_clusters=4,
         refinement_options=refinement_options,
         autotune=auto_tune,
-        laplacian_type="graph_cut",
+        laplacian_type=LaplacianType.GraphCut,
         row_wise_renorm=True)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)

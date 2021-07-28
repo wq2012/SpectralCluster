@@ -1,9 +1,13 @@
 import unittest
 import numpy as np
 from spectralcluster import autotune
+from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
+
+RefinementName = refinement.RefinementName
+LaplacianType = laplacian.LaplacianType
 
 
 class TestAutotune(unittest.TestCase):
@@ -42,7 +46,7 @@ class TestAutotune(unittest.TestCase):
         [0.9, -0.1],
         [0.0, 1.2],
     ])
-    refinement_sequence = []
+    refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
         thresholding_with_row_max=False,
         refinement_sequence=refinement_sequence)
@@ -55,7 +59,7 @@ class TestAutotune(unittest.TestCase):
         max_clusters=2,
         refinement_options=refinement_options,
         autotune=auto_tune,
-        laplacian_type="graph_cut",
+        laplacian_type=LaplacianType.GraphCut,
         row_wise_renorm=True)
 
     affinity = utils.compute_affinity_matrix(matrix)
@@ -73,7 +77,7 @@ class TestAutotune(unittest.TestCase):
 
     self.assertEqual((6, 6), eigenvectors.shape)
     self.assertEqual(n_clusters, 2)
-    self.assertEqual(p_percentile, 0.95)
+    self.assertEqual(p_percentile, 0.6)
 
 
 if __name__ == "__main__":

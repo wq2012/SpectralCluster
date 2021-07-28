@@ -3,7 +3,11 @@
 import numpy as np
 from spectralcluster import base_spectral_clusterer
 from spectralcluster import custom_distance_kmeans
+from spectralcluster import laplacian
+from spectralcluster import refinement
 from spectralcluster import utils
+
+RefinementName = refinement.RefinementName
 
 
 class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
@@ -30,11 +34,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
       autotune: an AutoTune object to automatically search p_percentile
-      laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
-        "unnormalized", compute the unnormalied laplacian. if "graph_cut",
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        "random_walk", compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -84,7 +84,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
           eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
     else:
       # Compute Laplacian matrix
-      laplacian_norm = utils.compute_laplacian(
+      laplacian_norm = laplacian.compute_laplacian(
           affinity, laplacian_type=self.laplacian_type)
       # Perform eigen decomposion. Eigen values are sorted in an ascending
       # order
@@ -121,7 +121,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
-      if "RowWiseThreshold" not in self.refinement_options.refinement_sequence:
+      if (RefinementName.RowWiseThreshold
+          not in self.refinement_options.refinement_sequence):
         raise ValueError(
             "AutoTune is only effective when the refinement sequence"
             "contains RowWiseThreshold")

@@ -3,8 +3,10 @@
 import abc
 from spectralcluster import refinement
 
+RefinementName = refinement.RefinementName
 
-class BaseSpectralClusterer(object):
+
+class BaseSpectralClusterer:
   """A base class for spectral clustering."""
 
   def __init__(self,
@@ -28,11 +30,7 @@ class BaseSpectralClusterer(object):
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix
       autotune: an AutoTune object to automatically search hyper-parameters
-      laplacian_type: str. "unnormalized", "graph_cut", or "random_walk". if
-        "unnormalized", compute the unnormalied laplacian. if "graph_cut",
-        compute the graph cut view normalized laplacian, D^{-1/2}LD^{-1/2}. if
-        "random_walk", compute the random walk view normalized laplacian,
-        D^{-1}L. If None, we do not use a laplacian matrix
+      laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
@@ -59,29 +57,34 @@ class BaseSpectralClusterer(object):
     """Get the refinement operator for the affinity matrix.
 
     Args:
-      name: operator class name as a string
+      name: a RefinementName
 
     Returns:
       object of the operator
 
     Raises:
+      TypeError: if name is not a RefinementName
       ValueError: if name is an unknown refinement operation
     """
-    if name == "CropDiagonal":
+    if not isinstance(name, RefinementName):
+      raise TypeError("name must be a RefinementName")
+    elif name == RefinementName.CropDiagonal:
       return refinement.CropDiagonal()
-    elif name == "GaussianBlur":
+    elif name == RefinementName.GaussianBlur:
       return refinement.GaussianBlur(
           self.refinement_options.gaussian_blur_sigma)
-    elif name == "RowWiseThreshold":
+    elif name == RefinementName.RowWiseThreshold:
       return refinement.RowWiseThreshold(
           self.refinement_options.p_percentile,
           self.refinement_options.thresholding_soft_multiplier,
-          self.refinement_options.thresholding_with_row_max)
-    elif name == "Symmetrize":
-      return refinement.Symmetrize()
-    elif name == "Diffuse":
+          self.refinement_options.thresholding_with_row_max,
+          self.refinement_options.thresholding_with_binarization,
+          self.refinement_options.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return refinement.Symmetrize(self.refinement_options.symmetrize_type)
+    elif name == RefinementName.Diffuse:
       return refinement.Diffuse()
-    elif name == "RowWiseNormalize":
+    elif name == RefinementName.RowWiseNormalize:
       return refinement.RowWiseNormalize()
     else:
       raise ValueError("Unknown refinement operation: {}".format(name))

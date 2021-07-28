@@ -5,7 +5,7 @@ import numpy as np
 MIN_SEARCH_STEP = 1e-04
 
 
-class AutoTune(object):
+class AutoTune:
   """AutoTune Class.
 
   This auto-tuning method is implemented based on this paper:

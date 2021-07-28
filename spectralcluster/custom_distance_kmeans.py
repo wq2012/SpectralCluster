@@ -45,7 +45,7 @@ def run_kmeans(spectral_embeddings, n_clusters, custom_dist, max_iter):
   return labels
 
 
-class CustomKMeans(object):
+class CustomKMeans:
   """Class CustomKMeans performs KMeans clustering."""
 
   def __init__(self,

@@ -1,20 +1,41 @@
 """Affinity matrix refinemnet operations."""
 
 import abc
+import enum
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
+
+class RefinementName(enum.Enum):
+  """The names of the refinement operations."""
+  CropDiagonal = 1
+  GaussianBlur = 2
+  RowWiseThreshold = 3
+  Symmetrize = 4
+  Diffuse = 5
+  RowWiseNormalize = 6
+
+
 DEFAULT_REFINEMENT_SEQUENCE = [
-    "CropDiagonal",
-    "GaussianBlur",
-    "RowWiseThreshold",
-    "Symmetrize",
-    "Diffuse",
-    "RowWiseNormalize",
+    RefinementName.CropDiagonal,
+    RefinementName.GaussianBlur,
+    RefinementName.RowWiseThreshold,
+    RefinementName.Symmetrize,
+    RefinementName.Diffuse,
+    RefinementName.RowWiseNormalize,
 ]
 
 
-class RefinementOptions(object):
+class SymmetrizeType(enum.Enum):
+  """Different types of symmetrization operation."""
+  # We use max(A, A^T)
+  Max = 1
+
+  # We use 1/2(A + A^T)
+  Average = 2
+
+
+class RefinementOptions:
   """Refinement options for the affinity matrix."""
 
   def __init__(self,
@@ -22,6 +43,9 @@ class RefinementOptions(object):
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
                thresholding_with_row_max=True,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False,
+               symmetrize_type=SymmetrizeType.Max,
                refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
     """Initialization of the refinement arguments.
 
@@ -32,13 +56,22 @@ class RefinementOptions(object):
         value is 0, then it's a hard thresholding
       thresholding_with_row_max: if true, we use row_max * p_percentile as row
         wise threshold, instead of doing a percentile-based thresholding
-      refinement_sequence: a list of strings for the sequence of refinement
-        operations to apply on the affinity matrix
+      thresholding_with_binarization: if true, we set values larger than the
+        threshold to 1
+      thresholding_preserve_diagonal: if true, in the row wise thresholding
+        operation, we firstly set diagonals of the affinity matrix to 0, and set
+        the diagonals back to 1 in the end
+      symmetrize_type: a SymmetrizeType
+      refinement_sequence: a list of RefinementName for the sequence of
+        refinement operations to apply on the affinity matrix
     """
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
     self.thresholding_soft_multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
+    self.symmetrize_type = symmetrize_type
     self.refinement_sequence = refinement_sequence
 
 
@@ -111,15 +144,20 @@ class RowWiseThreshold(AffinityRefinementOperation):
   def __init__(self,
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
-               thresholding_with_row_max=False):
+               thresholding_with_row_max=False,
+               thresholding_with_binarization=False,
+               thresholding_preserve_diagonal=False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_with_binarization = thresholding_with_binarization
+    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
   def refine(self, affinity):
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
-
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 0.0)
     if self.thresholding_with_row_max:
       # Row_max based thresholding
       row_max = refined_affinity.max(axis=1)
@@ -131,18 +169,35 @@ class RowWiseThreshold(AffinityRefinementOperation):
           refined_affinity, self.p_percentile * 100, axis=1)
       row_percentile = np.expand_dims(row_percentile, axis=1)
       is_smaller = refined_affinity < row_percentile
-
-    refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
-        refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_with_binarization:
+      # For values larger than the threshold, we binarize them to 1
+      refined_affinity = (np.ones_like(
+          (refined_affinity)) * np.invert(is_smaller)) + (
+              refined_affinity * self.multiplier * is_smaller)
+    else:
+      refined_affinity = (refined_affinity * np.invert(is_smaller)) + (
+          refined_affinity * self.multiplier * is_smaller)
+    if self.thresholding_preserve_diagonal:
+      np.fill_diagonal(refined_affinity, 1.0)
     return refined_affinity
 
 
 class Symmetrize(AffinityRefinementOperation):
   """The Symmetrization operation."""
 
+  def __init__(self, symmetrize_type=SymmetrizeType.Max):
+    self.symmetrize_type = symmetrize_type
+
   def refine(self, affinity):
     self.check_input(affinity)
-    return np.maximum(affinity, np.transpose(affinity))
+    if not isinstance(self.symmetrize_type, SymmetrizeType):
+      raise TypeError("symmetrize_type must be a SymmetrizeType")
+    elif self.symmetrize_type == SymmetrizeType.Max:
+      return np.maximum(affinity, np.transpose(affinity))
+    elif self.symmetrize_type == SymmetrizeType.Average:
+      return 0.5 * (affinity + np.transpose(affinity))
+    else:
+      raise ValueError("Unsupported symmetrize_type.")
 
 
 class Diffuse(AffinityRefinementOperation):
