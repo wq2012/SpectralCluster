@@ -74,6 +74,40 @@ class RefinementOptions:
     self.symmetrize_type = symmetrize_type
     self.refinement_sequence = refinement_sequence
 
+  def get_refinement_operator(self, name):
+    """Get the refinement operator for the affinity matrix.
+
+    Args:
+      name: a RefinementName
+
+    Returns:
+      object of the operator
+
+    Raises:
+      TypeError: if name is not a RefinementName
+      ValueError: if name is an unknown refinement operation
+    """
+    if not isinstance(name, RefinementName):
+      raise TypeError("name must be a RefinementName")
+    elif name == RefinementName.CropDiagonal:
+      return CropDiagonal()
+    elif name == RefinementName.GaussianBlur:
+      return GaussianBlur(self.gaussian_blur_sigma)
+    elif name == RefinementName.RowWiseThreshold:
+      return RowWiseThreshold(self.p_percentile,
+                              self.thresholding_soft_multiplier,
+                              self.thresholding_with_row_max,
+                              self.thresholding_with_binarization,
+                              self.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return Symmetrize(self.symmetrize_type)
+    elif name == RefinementName.Diffuse:
+      return Diffuse()
+    elif name == RefinementName.RowWiseNormalize:
+      return RowWiseNormalize()
+    else:
+      raise ValueError("Unknown refinement operation: {}".format(name))
+
 
 class AffinityRefinementOperation(metaclass=abc.ABCMeta):
   """Refinement of the affinity matrix."""
