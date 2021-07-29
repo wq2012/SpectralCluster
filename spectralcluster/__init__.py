@@ -1,6 +1,7 @@
 """__init__ file."""
 
 from . import autotune
+from . import constraint
 from . import laplacian
 from . import refinement
 from . import spectral_clusterer
@@ -12,3 +13,6 @@ RefinementOptions = refinement.RefinementOptions
 SymmetrizeType = refinement.SymmetrizeType
 AutoTune = autotune.AutoTune
 LaplacianType = laplacian.LaplacianType
+ConstraintOptions = constraint.ConstraintOptions
+ConstraintName = constraint.ConstraintName
+IntegrationType = constraint.IntegrationType
