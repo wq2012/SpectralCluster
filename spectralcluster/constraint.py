@@ -24,15 +24,20 @@ class IntegrationType(enum.Enum):
 class ConstraintOptions:
   """Constraint options for constrained clustering methods."""
 
-  def __init__(self, constraint_name, apply_before_refinement, integration_type,
-               constraint_propagation_alpha):
+  def __init__(self,
+               constraint_name,
+               apply_before_refinement,
+               integration_type=None,
+               constraint_propagation_alpha=0.6):
     """Initialization of the constraint arguments.
 
     Args:
       constraint_name: a ConstraintName. Name of the constrained clustering
         method
       apply_before_refinement: if True, this operation is applied before the
-        affinity refinement
+        affinity refinement. It is suggested to set as True for the
+        ConstraintPropagation method and False for the AffinityIntegration
+        method
       integration_type: a IntegrationType. Integration type for the Affinity
         Integration method
       constraint_propagation_alpha: alpha value of the constraint propagation
