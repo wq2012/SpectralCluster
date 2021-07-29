@@ -1,13 +1,17 @@
 import unittest
 import numpy as np
 from spectralcluster import autotune
+from spectralcluster import constraint
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
 
 RefinementName = refinement.RefinementName
+SymmetrizeType = refinement.SymmetrizeType
 LaplacianType = laplacian.LaplacianType
+ConstraintName = constraint.ConstraintName
+IntegrationType = constraint.IntegrationType
 
 
 class TestSpectralClusterer(unittest.TestCase):
@@ -151,6 +155,93 @@ class TestSpectralClusterer(unittest.TestCase):
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
+    self.assertTrue(np.array_equal(expected, labels))
+
+  def test_6by2_matrix_affinity_integration(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+
+    constraint_matrix = np.array([
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1],
+        [0, 0, 1, 1, 1, 1],
+        [0, 0, 1, 1, 1, 1],
+        [0, 0, 1, 1, 1, 1],
+    ])
+
+    refinement_sequence = [
+        RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+    ]
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.95,
+        thresholding_with_row_max=False,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=refinement_sequence)
+    constraint_options = constraint.ConstraintOptions(
+        constraint_name=ConstraintName.AffinityIntegration,
+        apply_before_refinement=False,
+        integration_type=IntegrationType.Max)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=2,
+        refinement_options=refinement_options,
+        constraint_options=constraint_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = clusterer.predict(matrix, constraint_matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 1, 1, 1, 1])
+    self.assertTrue(np.array_equal(expected, labels))
+
+  def test_6by2_matrix_constraint_propagation(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+
+    constraint_matrix = np.array([
+        [1, 1, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, -1],
+        [0, 0, 0, 0, -1, 1],
+    ])
+    refinement_sequence = [
+        RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+    ]
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.95,
+        thresholding_with_row_max=False,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=refinement_sequence)
+    constraint_options = constraint.ConstraintOptions(
+        constraint_name=ConstraintName.ConstraintPropagation,
+        apply_before_refinement=True,
+        constraint_propagation_alpha=0.6)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=2,
+        refinement_options=refinement_options,
+        constraint_options=constraint_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = clusterer.predict(matrix, constraint_matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 1, 1, 0, 1])
     self.assertTrue(np.array_equal(expected, labels))
 
 
