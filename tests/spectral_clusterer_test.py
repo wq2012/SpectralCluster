@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from spectralcluster import autotune
+from spectralcluster import configs
 from spectralcluster import constraint
 from spectralcluster import laplacian
 from spectralcluster import refinement
@@ -12,6 +13,7 @@ SymmetrizeType = refinement.SymmetrizeType
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
 IntegrationType = constraint.IntegrationType
+ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE
 
 
 class TestSpectralClusterer(unittest.TestCase):
@@ -31,7 +33,9 @@ class TestSpectralClusterer(unittest.TestCase):
         [0.0, 1.2],
     ])
     refinement_options = refinement.RefinementOptions(
-        gaussian_blur_sigma=0, p_percentile=0.95)
+        gaussian_blur_sigma=0,
+        p_percentile=0.95,
+        refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
     clusterer = spectral_clusterer.SpectralClusterer(
         refinement_options=refinement_options)
     labels = clusterer.predict(matrix)
@@ -47,7 +51,9 @@ class TestSpectralClusterer(unittest.TestCase):
     noisy = np.random.rand(1000, 6) * 2 - 1
     matrix = matrix + noisy * 0.1
     refinement_options = refinement.RefinementOptions(
-        gaussian_blur_sigma=0, p_percentile=0.2)
+        gaussian_blur_sigma=0,
+        p_percentile=0.2,
+        refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
     clusterer = spectral_clusterer.SpectralClusterer(
         refinement_options=refinement_options, stop_eigenvalue=0.01)
     labels = clusterer.predict(matrix)

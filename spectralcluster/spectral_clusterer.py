@@ -52,8 +52,7 @@ class SpectralClusterer:
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
     if not refinement_options:
-      self.refinement_options = refinement.RefinementOptions(
-          refinement_sequence=[])
+      self.refinement_options = refinement.RefinementOptions()
     else:
       self.refinement_options = refinement_options
     self.autotune = autotune

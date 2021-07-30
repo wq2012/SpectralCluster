@@ -16,16 +16,6 @@ class RefinementName(enum.Enum):
   RowWiseNormalize = 6
 
 
-DEFAULT_REFINEMENT_SEQUENCE = [
-    RefinementName.CropDiagonal,
-    RefinementName.GaussianBlur,
-    RefinementName.RowWiseThreshold,
-    RefinementName.Symmetrize,
-    RefinementName.Diffuse,
-    RefinementName.RowWiseNormalize,
-]
-
-
 class SymmetrizeType(enum.Enum):
   """Different types of symmetrization operation."""
   # We use max(A, A^T)
@@ -46,7 +36,7 @@ class RefinementOptions:
                thresholding_with_binarization=False,
                thresholding_preserve_diagonal=False,
                symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
+               refinement_sequence=None):
     """Initialization of the refinement arguments.
 
     Args:
@@ -63,7 +53,8 @@ class RefinementOptions:
         the diagonals back to 1 in the end
       symmetrize_type: a SymmetrizeType
       refinement_sequence: a list of RefinementName for the sequence of
-        refinement operations to apply on the affinity matrix
+        refinement operations to apply on the affinity matrix. If None, we will
+        not refine
     """
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
@@ -72,7 +63,12 @@ class RefinementOptions:
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
     self.symmetrize_type = symmetrize_type
-    self.refinement_sequence = refinement_sequence
+    if refinement_sequence is None:
+      self.refinement_sequence = []
+    elif not isinstance(refinement_sequence, list):
+      raise TypeError("refinement_sequence must be a list of RefinementName")
+    else:
+      self.refinement_sequence = refinement_sequence
 
   def get_refinement_operator(self, name):
     """Get the refinement operator for the affinity matrix.
