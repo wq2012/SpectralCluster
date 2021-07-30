@@ -47,40 +47,60 @@ spectral clustering. The example below should be closest to the original C++
 implemention used my our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/).
 
 ```python
-from spectralcluster import SpectralClusterer
-from spectralcluster import RefinementOptions
-from spectralcluster import DEFAULT_REFINEMENT_SEQUENCE
+from spectralcluster import configs
 
-refinement_options = RefinementOptions(
-    gaussian_blur_sigma=1,
-    p_percentile=0.95,
-    thresholding_soft_multiplier=0.01,
-    thresholding_with_row_max=True,
-    refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE)
+labels = configs.icassp2018_clusterer.predict(X)
+```
+
+The input `X` is a numpy array of shape `(n_samples, n_features)`,
+and the returned `labels` is a numpy array of shape `(n_samples,)`.
+
+You can also create your own clusterer like this:
+
+```
+from spectralcluster import SpectralClusterer
 
 clusterer = SpectralClusterer(
     min_clusters=2,
     max_clusters=7,
     autotune=None,
     laplacian_type=None,
-    refinement_options=refinement_options,
+    refinement_options=None,
     custom_dist="cosine")
 
 labels = clusterer.predict(X)
 ```
 
-The input `X` is a numpy array of shape `(n_samples, n_features)`,
-and the returned `labels` is a numpy array of shape `(n_samples,)`.
-
 For the complete list of parameters of `SpectralClusterer`, see
 `spectralcluster/spectral_clusterer.py`.
 
-For the complete list of `RefinementOptions`, see
-`spectralcluster/refinement.py`.
-
-[![youtube_screenshot](resources/youtube_screenshot.jpg)](https://youtu.be/pjxGPZQeeO4)
+[![youtube_screenshot](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/youtube_screenshot.jpg)](https://youtu.be/pjxGPZQeeO4)
 
 ## Advanced features
+
+### Refinement operations
+
+In our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/), we apply a sequence of refinment operations on the affinity matrix, which is critical to the performance on the speaker diarization results.
+
+You can specify your refinment operations like this:
+
+```
+from spectralcluster import RefinementOptions
+from spectralcluster import ICASSP2018_REFINEMENT_SEQUENCE
+
+refinement_options = RefinementOptions(
+    gaussian_blur_sigma=1,
+    p_percentile=0.95,
+    thresholding_soft_multiplier=0.01,
+    thresholding_with_row_max=True,
+    refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
+```
+
+Then you can pass the `refinement_options` as an argument when creating your
+`SpectralClusterer` object.
+
+For the complete list of `RefinementOptions`, see
+`spectralcluster/refinement.py`.
 
 ### Laplacian matrix
 
@@ -127,6 +147,10 @@ autotune = AutoTune(
 
 For the complete list of parameters of `AutoTune`, see
 `spectralcluster/autotune.py`.
+
+### Constrained spectral clustering
+
+TODO: To be added.
 
 ## Citations
 

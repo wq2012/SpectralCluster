@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.3" />
-<title>spectralcluster API documentation</title>
-<meta name="description" content="__init__ file." />
+<title>spectralcluster.configs API documentation</title>
+<meta name="description" content="Example configurations." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -19,81 +19,51 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>spectralcluster</code></h1>
+<h1 class="title">Module <code>spectralcluster.configs</code></h1>
 </header>
 <section id="section-intro">
-<p><strong>init</strong> file.</p>
+<p>Example configurations.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;__init__ file.&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Example configurations.&#34;&#34;&#34;
 
-from . import autotune
-
-AutoTune = autotune.AutoTune
-
-from . import constraint
-
-ConstraintOptions = constraint.ConstraintOptions
-ConstraintName = constraint.ConstraintName
-IntegrationType = constraint.IntegrationType
-
-from . import laplacian
-
-LaplacianType = laplacian.LaplacianType
-
-from . import refinement
+from spectralcluster import refinement
+from spectralcluster import RefinementOptions
+from spectralcluster import SpectralClusterer
 
 RefinementName = refinement.RefinementName
-RefinementOptions = refinement.RefinementOptions
-SymmetrizeType = refinement.SymmetrizeType
 
-from . import spectral_clusterer
 
-SpectralClusterer = spectral_clusterer.SpectralClusterer
+# Configurations that are closest to the ICASSP2018 paper
+# &#34;Speaker Diarization with LSTM&#34;.
+ICASSP2018_REFINEMENT_SEQUENCE = [
+    RefinementName.CropDiagonal,
+    RefinementName.GaussianBlur,
+    RefinementName.RowWiseThreshold,
+    RefinementName.Symmetrize,
+    RefinementName.Diffuse,
+    RefinementName.RowWiseNormalize,
+]
 
-from . import configs
+icassp2018_refinement_options = RefinementOptions(
+    gaussian_blur_sigma=1,
+    p_percentile=0.95,
+    thresholding_soft_multiplier=0.01,
+    thresholding_with_row_max=True,
+    refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
 
-ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE</code></pre>
+icassp2018_clusterer = SpectralClusterer(
+    min_clusters=2,
+    max_clusters=7,
+    autotune=None,
+    laplacian_type=None,
+    refinement_options=icassp2018_refinement_options,
+    custom_dist=&#34;cosine&#34;)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></dt>
-<dd>
-<div class="desc"><p>Auto-tuning hyper-parameters.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.configs" href="configs.html">spectralcluster.configs</a></code></dt>
-<dd>
-<div class="desc"><p>Example configurations.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.constraint" href="constraint.html">spectralcluster.constraint</a></code></dt>
-<dd>
-<div class="desc"><p>Constraint information.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></dt>
-<dd>
-<div class="desc"><p>Implement custom kmeans …</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></dt>
-<dd>
-<div class="desc"><p>Laplacian matrix.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></dt>
-<dd>
-<div class="desc"><p>Affinity matrix refinemnet operations.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></dt>
-<dd>
-<div class="desc"><p>A spectral clusterer class to perform clustering.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.utils" href="utils.html">spectralcluster.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Utility functions.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -108,16 +78,9 @@ ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE</code></
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></li>
-<li><code><a title="spectralcluster.configs" href="configs.html">spectralcluster.configs</a></code></li>
-<li><code><a title="spectralcluster.constraint" href="constraint.html">spectralcluster.constraint</a></code></li>
-<li><code><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></li>
-<li><code><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></li>
-<li><code><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></li>
-<li><code><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></li>
-<li><code><a title="spectralcluster.utils" href="utils.html">spectralcluster.utils</a></code></li>
+<li><code><a title="spectralcluster" href="index.html">spectralcluster</a></code></li>
 </ul>
 </li>
 </ul>

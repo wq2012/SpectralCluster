@@ -45,16 +45,6 @@ class RefinementName(enum.Enum):
   RowWiseNormalize = 6
 
 
-DEFAULT_REFINEMENT_SEQUENCE = [
-    RefinementName.CropDiagonal,
-    RefinementName.GaussianBlur,
-    RefinementName.RowWiseThreshold,
-    RefinementName.Symmetrize,
-    RefinementName.Diffuse,
-    RefinementName.RowWiseNormalize,
-]
-
-
 class SymmetrizeType(enum.Enum):
   &#34;&#34;&#34;Different types of symmetrization operation.&#34;&#34;&#34;
   # We use max(A, A^T)
@@ -75,7 +65,7 @@ class RefinementOptions:
                thresholding_with_binarization=False,
                thresholding_preserve_diagonal=False,
                symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
+               refinement_sequence=None):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
     Args:
@@ -92,7 +82,8 @@ class RefinementOptions:
         the diagonals back to 1 in the end
       symmetrize_type: a SymmetrizeType
       refinement_sequence: a list of RefinementName for the sequence of
-        refinement operations to apply on the affinity matrix
+        refinement operations to apply on the affinity matrix. If None, we will
+        not refine
     &#34;&#34;&#34;
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
@@ -101,7 +92,46 @@ class RefinementOptions:
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
     self.symmetrize_type = symmetrize_type
-    self.refinement_sequence = refinement_sequence
+    if refinement_sequence is None:
+      self.refinement_sequence = []
+    elif not isinstance(refinement_sequence, list):
+      raise TypeError(&#34;refinement_sequence must be a list of RefinementName&#34;)
+    else:
+      self.refinement_sequence = refinement_sequence
+
+  def get_refinement_operator(self, name):
+    &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
+
+    Args:
+      name: a RefinementName
+
+    Returns:
+      object of the operator
+
+    Raises:
+      TypeError: if name is not a RefinementName
+      ValueError: if name is an unknown refinement operation
+    &#34;&#34;&#34;
+    if not isinstance(name, RefinementName):
+      raise TypeError(&#34;name must be a RefinementName&#34;)
+    elif name == RefinementName.CropDiagonal:
+      return CropDiagonal()
+    elif name == RefinementName.GaussianBlur:
+      return GaussianBlur(self.gaussian_blur_sigma)
+    elif name == RefinementName.RowWiseThreshold:
+      return RowWiseThreshold(self.p_percentile,
+                              self.thresholding_soft_multiplier,
+                              self.thresholding_with_row_max,
+                              self.thresholding_with_binarization,
+                              self.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return Symmetrize(self.symmetrize_type)
+    elif name == RefinementName.Diffuse:
+      return Diffuse()
+    elif name == RefinementName.RowWiseNormalize:
+      return RowWiseNormalize()
+    else:
+      raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))
 
 
 class AffinityRefinementOperation(metaclass=abc.ABCMeta):
@@ -542,7 +572,7 @@ normalization.</p></div>
 </dd>
 <dt id="spectralcluster.refinement.RefinementOptions"><code class="flex name class">
 <span>class <span class="ident">RefinementOptions</span></span>
-<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=True, thresholding_with_binarization=False, thresholding_preserve_diagonal=False, symmetrize_type=SymmetrizeType.Max, refinement_sequence=[&lt;RefinementName.CropDiagonal: 1&gt;, &lt;RefinementName.GaussianBlur: 2&gt;, &lt;RefinementName.RowWiseThreshold: 3&gt;, &lt;RefinementName.Symmetrize: 4&gt;, &lt;RefinementName.Diffuse: 5&gt;, &lt;RefinementName.RowWiseNormalize: 6&gt;])</span>
+<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_with_row_max=True, thresholding_with_binarization=False, thresholding_preserve_diagonal=False, symmetrize_type=SymmetrizeType.Max, refinement_sequence=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Refinement options for the affinity matrix.</p>
@@ -570,7 +600,8 @@ the diagonals back to 1 in the end</dd>
 <dd>a SymmetrizeType</dd>
 <dt><strong><code>refinement_sequence</code></strong></dt>
 <dd>a list of RefinementName for the sequence of
-refinement operations to apply on the affinity matrix</dd>
+refinement operations to apply on the affinity matrix. If None, we will
+not refine</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -587,7 +618,7 @@ refinement operations to apply on the affinity matrix</dd>
                thresholding_with_binarization=False,
                thresholding_preserve_diagonal=False,
                symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=DEFAULT_REFINEMENT_SEQUENCE):
+               refinement_sequence=None):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
     Args:
@@ -604,7 +635,8 @@ refinement operations to apply on the affinity matrix</dd>
         the diagonals back to 1 in the end
       symmetrize_type: a SymmetrizeType
       refinement_sequence: a list of RefinementName for the sequence of
-        refinement operations to apply on the affinity matrix
+        refinement operations to apply on the affinity matrix. If None, we will
+        not refine
     &#34;&#34;&#34;
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
@@ -613,8 +645,108 @@ refinement operations to apply on the affinity matrix</dd>
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
     self.symmetrize_type = symmetrize_type
-    self.refinement_sequence = refinement_sequence</code></pre>
+    if refinement_sequence is None:
+      self.refinement_sequence = []
+    elif not isinstance(refinement_sequence, list):
+      raise TypeError(&#34;refinement_sequence must be a list of RefinementName&#34;)
+    else:
+      self.refinement_sequence = refinement_sequence
+
+  def get_refinement_operator(self, name):
+    &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
+
+    Args:
+      name: a RefinementName
+
+    Returns:
+      object of the operator
+
+    Raises:
+      TypeError: if name is not a RefinementName
+      ValueError: if name is an unknown refinement operation
+    &#34;&#34;&#34;
+    if not isinstance(name, RefinementName):
+      raise TypeError(&#34;name must be a RefinementName&#34;)
+    elif name == RefinementName.CropDiagonal:
+      return CropDiagonal()
+    elif name == RefinementName.GaussianBlur:
+      return GaussianBlur(self.gaussian_blur_sigma)
+    elif name == RefinementName.RowWiseThreshold:
+      return RowWiseThreshold(self.p_percentile,
+                              self.thresholding_soft_multiplier,
+                              self.thresholding_with_row_max,
+                              self.thresholding_with_binarization,
+                              self.thresholding_preserve_diagonal)
+    elif name == RefinementName.Symmetrize:
+      return Symmetrize(self.symmetrize_type)
+    elif name == RefinementName.Diffuse:
+      return Diffuse()
+    elif name == RefinementName.RowWiseNormalize:
+      return RowWiseNormalize()
+    else:
+      raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))</code></pre>
 </details>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.refinement.RefinementOptions.get_refinement_operator"><code class="name flex">
+<span>def <span class="ident">get_refinement_operator</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the refinement operator for the affinity matrix.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>a RefinementName</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>object of the operator</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>if name is not a RefinementName</dd>
+<dt><code>ValueError</code></dt>
+<dd>if name is an unknown refinement operation</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_refinement_operator(self, name):
+  &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
+
+  Args:
+    name: a RefinementName
+
+  Returns:
+    object of the operator
+
+  Raises:
+    TypeError: if name is not a RefinementName
+    ValueError: if name is an unknown refinement operation
+  &#34;&#34;&#34;
+  if not isinstance(name, RefinementName):
+    raise TypeError(&#34;name must be a RefinementName&#34;)
+  elif name == RefinementName.CropDiagonal:
+    return CropDiagonal()
+  elif name == RefinementName.GaussianBlur:
+    return GaussianBlur(self.gaussian_blur_sigma)
+  elif name == RefinementName.RowWiseThreshold:
+    return RowWiseThreshold(self.p_percentile,
+                            self.thresholding_soft_multiplier,
+                            self.thresholding_with_row_max,
+                            self.thresholding_with_binarization,
+                            self.thresholding_preserve_diagonal)
+  elif name == RefinementName.Symmetrize:
+    return Symmetrize(self.symmetrize_type)
+  elif name == RefinementName.Diffuse:
+    return Diffuse()
+  elif name == RefinementName.RowWiseNormalize:
+    return RowWiseNormalize()
+  else:
+    raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="spectralcluster.refinement.RowWiseNormalize"><code class="flex name class">
 <span>class <span class="ident">RowWiseNormalize</span></span>
@@ -836,6 +968,9 @@ refinement operations to apply on the affinity matrix</dd>
 </li>
 <li>
 <h4><code><a title="spectralcluster.refinement.RefinementOptions" href="#spectralcluster.refinement.RefinementOptions">RefinementOptions</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.refinement.RefinementOptions.get_refinement_operator" href="#spectralcluster.refinement.RefinementOptions.get_refinement_operator">get_refinement_operator</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="spectralcluster.refinement.RowWiseNormalize" href="#spectralcluster.refinement.RowWiseNormalize">RowWiseNormalize</a></code></h4>

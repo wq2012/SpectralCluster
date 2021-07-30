@@ -30,16 +30,18 @@
 <pre><code class="python">&#34;&#34;&#34;A spectral clusterer class to perform clustering.&#34;&#34;&#34;
 
 import numpy as np
-from spectralcluster import base_spectral_clusterer
+from spectralcluster import constraint
 from spectralcluster import custom_distance_kmeans
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
 
 RefinementName = refinement.RefinementName
+LaplacianType = laplacian.LaplacianType
+ConstraintName = constraint.ConstraintName
 
 
-class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
+class SpectralClusterer:
   &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
 
   def __init__(self,
@@ -51,7 +53,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
                custom_dist=&#34;cosine&#34;,
-               max_iter=300):
+               max_iter=300,
+               constraint_options=None):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -61,30 +64,35 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
         None), can be used together with min_clusters to fix the number of
         clusters
       refinement_options: a RefinementOptions object that contains refinement
-        arguments for the affinity matrix
+        arguments for the affinity matrix. If None, we will not refine
       autotune: an AutoTune object to automatically search p_percentile
       laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
         spectral embeddings
-      custom_dist: str or callable. custom distance measure for k-means. if a
+      custom_dist: str or callable. custom distance measure for k-means. If a
         string, &#34;cosine&#34;, &#34;euclidean&#34;, &#34;mahalanobis&#34;, or any other distance
         functions defined in scipy.spatial.distance can be used
       max_iter: the maximum number of iterations for the custom k-means
+      constraint_options: a ConstraintOptions object that contains constraint
+        arguments
     &#34;&#34;&#34;
-    super().__init__(
-        min_clusters=min_clusters,
-        max_clusters=max_clusters,
-        refinement_options=refinement_options,
-        autotune=autotune,
-        laplacian_type=laplacian_type,
-        stop_eigenvalue=stop_eigenvalue,
-        row_wise_renorm=row_wise_renorm,
-        custom_dist=custom_dist,
-        max_iter=max_iter)
+    self.min_clusters = min_clusters
+    self.max_clusters = max_clusters
+    if not refinement_options:
+      self.refinement_options = refinement.RefinementOptions()
+    else:
+      self.refinement_options = refinement_options
+    self.autotune = autotune
+    self.laplacian_type = laplacian_type
+    self.row_wise_renorm = row_wise_renorm
+    self.stop_eigenvalue = stop_eigenvalue
+    self.custom_dist = custom_dist
+    self.max_iter = max_iter
+    self.constraint_options = constraint_options
 
-  def _compute_eigenvectors_ncluster(self, affinity):
+  def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -93,6 +101,8 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 
     Args:
       affinity: the affinity matrix of input data
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
 
     Returns:
       eigenvectors: sorted eigenvectors. numpy array of shape
@@ -100,12 +110,25 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
       n_clusters: number of clusters as an integer
       max_delta_norm: normalized maximum eigen gap
     &#34;&#34;&#34;
+    if (self.constraint_options and
+        self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation before refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
     # Perform refinement operations on the affinity matrix.
     for refinement_name in self.refinement_options.refinement_sequence:
-      op = self._get_refinement_operator(refinement_name)
-      affinity = op.refine(affinity)
+      refinement_operator = self.refinement_options.get_refinement_operator(
+          refinement_name)
+      affinity = refinement_operator.refine(affinity)
 
-    if not self.laplacian_type:
+    if (self.constraint_options and
+        not self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation after refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
+    if not self.laplacian_type or self.laplacian_type == LaplacianType.Affinity:
       # Perform eigen decomposion.
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
@@ -124,13 +147,15 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
           eigenvalues, self.max_clusters, descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
-  def predict(self, embeddings):
+  def predict(self, embeddings, constraint_matrix=None):
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
     The spectral clustering is performed on an affinity matrix.
 
     Args:
       embeddings: numpy array of shape (n_samples, n_features)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
 
     Returns:
       labels: numpy array of shape (n_samples,)
@@ -157,10 +182,11 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
             &#34;contains RowWiseThreshold&#34;)
 
       def p_percentile_to_ratio(p_percentile):
-        &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+        &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
-         max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+         max_delta_norm) = self._compute_eigenvectors_ncluster(
+             affinity, constraint_matrix)
         ratio = (1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 
@@ -168,7 +194,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
     else:
       # Do not use Auto-tune.
       eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
-          affinity)
+          affinity, constraint_matrix)
 
     if self.min_clusters is not None:
       n_clusters = max(n_clusters, self.min_clusters)
@@ -202,7 +228,7 @@ class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -218,7 +244,7 @@ None), can be used together with min_clusters to fix the number of
 clusters</dd>
 <dt><strong><code>refinement_options</code></strong></dt>
 <dd>a RefinementOptions object that contains refinement
-arguments for the affinity matrix</dd>
+arguments for the affinity matrix. If None, we will not refine</dd>
 <dt><strong><code>autotune</code></strong></dt>
 <dd>an AutoTune object to automatically search p_percentile</dd>
 <dt><strong><code>laplacian_type</code></strong></dt>
@@ -230,17 +256,20 @@ do not look at eigen values smaller than this value</dd>
 <dd>if True, perform row-wise re-normalization on the
 spectral embeddings</dd>
 <dt><strong><code>custom_dist</code></strong></dt>
-<dd>str or callable. custom distance measure for k-means. if a
+<dd>str or callable. custom distance measure for k-means. If a
 string, "cosine", "euclidean", "mahalanobis", or any other distance
 functions defined in scipy.spatial.distance can be used</dd>
 <dt><strong><code>max_iter</code></strong></dt>
 <dd>the maximum number of iterations for the custom k-means</dd>
+<dt><strong><code>constraint_options</code></strong></dt>
+<dd>a ConstraintOptions object that contains constraint
+arguments</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SpectralClusterer(base_spectral_clusterer.BaseSpectralClusterer):
+<pre><code class="python">class SpectralClusterer:
   &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
 
   def __init__(self,
@@ -252,7 +281,8 @@ functions defined in scipy.spatial.distance can be used</dd>
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
                custom_dist=&#34;cosine&#34;,
-               max_iter=300):
+               max_iter=300,
+               constraint_options=None):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -262,30 +292,35 @@ functions defined in scipy.spatial.distance can be used</dd>
         None), can be used together with min_clusters to fix the number of
         clusters
       refinement_options: a RefinementOptions object that contains refinement
-        arguments for the affinity matrix
+        arguments for the affinity matrix. If None, we will not refine
       autotune: an AutoTune object to automatically search p_percentile
       laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
       row_wise_renorm: if True, perform row-wise re-normalization on the
         spectral embeddings
-      custom_dist: str or callable. custom distance measure for k-means. if a
+      custom_dist: str or callable. custom distance measure for k-means. If a
         string, &#34;cosine&#34;, &#34;euclidean&#34;, &#34;mahalanobis&#34;, or any other distance
         functions defined in scipy.spatial.distance can be used
       max_iter: the maximum number of iterations for the custom k-means
+      constraint_options: a ConstraintOptions object that contains constraint
+        arguments
     &#34;&#34;&#34;
-    super().__init__(
-        min_clusters=min_clusters,
-        max_clusters=max_clusters,
-        refinement_options=refinement_options,
-        autotune=autotune,
-        laplacian_type=laplacian_type,
-        stop_eigenvalue=stop_eigenvalue,
-        row_wise_renorm=row_wise_renorm,
-        custom_dist=custom_dist,
-        max_iter=max_iter)
+    self.min_clusters = min_clusters
+    self.max_clusters = max_clusters
+    if not refinement_options:
+      self.refinement_options = refinement.RefinementOptions()
+    else:
+      self.refinement_options = refinement_options
+    self.autotune = autotune
+    self.laplacian_type = laplacian_type
+    self.row_wise_renorm = row_wise_renorm
+    self.stop_eigenvalue = stop_eigenvalue
+    self.custom_dist = custom_dist
+    self.max_iter = max_iter
+    self.constraint_options = constraint_options
 
-  def _compute_eigenvectors_ncluster(self, affinity):
+  def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -294,6 +329,8 @@ functions defined in scipy.spatial.distance can be used</dd>
 
     Args:
       affinity: the affinity matrix of input data
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
 
     Returns:
       eigenvectors: sorted eigenvectors. numpy array of shape
@@ -301,12 +338,25 @@ functions defined in scipy.spatial.distance can be used</dd>
       n_clusters: number of clusters as an integer
       max_delta_norm: normalized maximum eigen gap
     &#34;&#34;&#34;
+    if (self.constraint_options and
+        self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation before refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
     # Perform refinement operations on the affinity matrix.
     for refinement_name in self.refinement_options.refinement_sequence:
-      op = self._get_refinement_operator(refinement_name)
-      affinity = op.refine(affinity)
+      refinement_operator = self.refinement_options.get_refinement_operator(
+          refinement_name)
+      affinity = refinement_operator.refine(affinity)
 
-    if not self.laplacian_type:
+    if (self.constraint_options and
+        not self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation after refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
+    if not self.laplacian_type or self.laplacian_type == LaplacianType.Affinity:
       # Perform eigen decomposion.
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
@@ -325,13 +375,15 @@ functions defined in scipy.spatial.distance can be used</dd>
           eigenvalues, self.max_clusters, descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
-  def predict(self, embeddings):
+  def predict(self, embeddings, constraint_matrix=None):
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
     The spectral clustering is performed on an affinity matrix.
 
     Args:
       embeddings: numpy array of shape (n_samples, n_features)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
 
     Returns:
       labels: numpy array of shape (n_samples,)
@@ -358,10 +410,11 @@ functions defined in scipy.spatial.distance can be used</dd>
             &#34;contains RowWiseThreshold&#34;)
 
       def p_percentile_to_ratio(p_percentile):
-        &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+        &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
-         max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+         max_delta_norm) = self._compute_eigenvectors_ncluster(
+             affinity, constraint_matrix)
         ratio = (1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 
@@ -369,7 +422,7 @@ functions defined in scipy.spatial.distance can be used</dd>
     else:
       # Do not use Auto-tune.
       eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
-          affinity)
+          affinity, constraint_matrix)
 
     if self.min_clusters is not None:
       n_clusters = max(n_clusters, self.min_clusters)
@@ -391,14 +444,10 @@ functions defined in scipy.spatial.distance can be used</dd>
         max_iter=self.max_iter)
     return labels</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="spectralcluster.base_spectral_clusterer.BaseSpectralClusterer" href="base_spectral_clusterer.html#spectralcluster.base_spectral_clusterer.BaseSpectralClusterer">BaseSpectralClusterer</a></li>
-</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, embeddings)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, embeddings, constraint_matrix=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perform spectral clustering on data embeddings.</p>
@@ -407,6 +456,9 @@ functions defined in scipy.spatial.distance can be used</dd>
 <dl>
 <dt><strong><code>embeddings</code></strong></dt>
 <dd>numpy array of shape (n_samples, n_features)</dd>
+<dt><strong><code>constraint_matrix</code></strong></dt>
+<dd>numpy array of shape (n_samples, n_samples). The
+constraint matrix with prior information</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -424,13 +476,15 @@ functions defined in scipy.spatial.distance can be used</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, embeddings):
+<pre><code class="python">def predict(self, embeddings, constraint_matrix=None):
   &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
   The spectral clustering is performed on an affinity matrix.
 
   Args:
     embeddings: numpy array of shape (n_samples, n_features)
+    constraint_matrix: numpy array of shape (n_samples, n_samples). The
+      constraint matrix with prior information
 
   Returns:
     labels: numpy array of shape (n_samples,)
@@ -457,10 +511,11 @@ functions defined in scipy.spatial.distance can be used</dd>
           &#34;contains RowWiseThreshold&#34;)
 
     def p_percentile_to_ratio(p_percentile):
-      &#34;&#34;&#34;compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
+      &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
       self.refinement_options.p_percentile = p_percentile
       (eigenvectors, n_clusters,
-       max_delta_norm) = self._compute_eigenvectors_ncluster(affinity)
+       max_delta_norm) = self._compute_eigenvectors_ncluster(
+           affinity, constraint_matrix)
       ratio = (1 - p_percentile) / max_delta_norm
       return ratio, eigenvectors, n_clusters
 
@@ -468,7 +523,7 @@ functions defined in scipy.spatial.distance can be used</dd>
   else:
     # Do not use Auto-tune.
     eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(
-        affinity)
+        affinity, constraint_matrix)
 
   if self.min_clusters is not None:
     n_clusters = max(n_clusters, self.min_clusters)

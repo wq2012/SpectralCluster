@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>spectralcluster.constraint API documentation</title>
+<meta name="description" content="Constraint information." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>spectralcluster.constraint</code></h1>
+</header>
+<section id="section-intro">
+<p>Constraint information.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Constraint information.&#34;&#34;&#34;
+import abc
+import enum
+import numpy as np
+
+EPS = 1e-10
+
+
+class ConstraintName(enum.Enum):
+  &#34;&#34;&#34;The names of constrained operations.&#34;&#34;&#34;
+  # The Affinity Integration method
+  AffinityIntegration = 1
+
+  # The Constraint Propagation method
+  ConstraintPropagation = 2
+
+
+class IntegrationType(enum.Enum):
+  &#34;&#34;&#34;The integration types for the Affinity Integration method.&#34;&#34;&#34;
+  Max = 1
+  Average = 2
+
+
+class ConstraintOptions:
+  &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
+
+  def __init__(self,
+               constraint_name,
+               apply_before_refinement,
+               integration_type=None,
+               constraint_propagation_alpha=0.6):
+    &#34;&#34;&#34;Initialization of the constraint arguments.
+
+    Args:
+      constraint_name: a ConstraintName. Name of the constrained clustering
+        method
+      apply_before_refinement: if True, this operation is applied before the
+        affinity refinement. It is suggested to set as True for the
+        ConstraintPropagation method and False for the AffinityIntegration
+        method
+      integration_type: a IntegrationType. Integration type for the Affinity
+        Integration method
+      constraint_propagation_alpha: alpha value of the constraint propagation
+        method
+    &#34;&#34;&#34;
+    if not isinstance(constraint_name, ConstraintName):
+      raise TypeError(&#34;constraint_name must be a ConstraintName&#34;)
+    elif constraint_name == ConstraintName.AffinityIntegration:
+      self.constraint_operator = AffinityIntegration(integration_type)
+    elif constraint_name == ConstraintName.ConstraintPropagation:
+      self.constraint_operator = ConstraintPropagation(
+          constraint_propagation_alpha)
+    else:
+      raise ValueError(
+          &#34;Unsupported constrained name: {}&#34;.format(constraint_name))
+    self.apply_before_refinement = apply_before_refinement
+
+
+class ConstraintOperation(metaclass=abc.ABCMeta):
+  &#34;&#34;&#34;Constraint operation class.&#34;&#34;&#34;
+
+  def check_input(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Check the input to the adjust_affinity method.
+
+    Args:
+      affinity: the input affinity matrix.
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Raises:
+      TypeError: if affinity or constraint matrix has wrong type
+      ValueError: if affinity or constraint matrix has wrong shape, etc.
+    &#34;&#34;&#34;
+    if not isinstance(affinity, np.ndarray):
+      raise TypeError(&#34;affinity must be a numpy array&#34;)
+    if not isinstance(constraint_matrix, np.ndarray):
+      raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
+    if len(affinity.shape) != 2:
+      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+    if affinity.shape[0] != affinity.shape[1]:
+      raise ValueError(&#34;affinity must be a square matrix&#34;)
+    if len(constraint_matrix.shape) != 2:
+      raise ValueError(&#34;constraint matrix must be 2-dimensional&#34;)
+    if constraint_matrix.shape[0] != constraint_matrix.shape[1]:
+      raise ValueError(&#34;constraint matrix must be a square matrix&#34;)
+    if affinity.shape != constraint_matrix.shape:
+      raise ValueError(
+          &#34;affinity and constraint matrix must have the same shape&#34;)
+
+  @abc.abstractmethod
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;An abstract method to perform the constraint operation.
+
+    Args:
+      affinity: the affinity matrix, of size (n_samples, n_samples)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Returns:
+      a matrix of the same size as affinity
+    &#34;&#34;&#34;
+    pass
+
+
+class AffinityIntegration(ConstraintOperation):
+  &#34;&#34;&#34;The Affinity Integration method.
+
+  Basic operations to integrate the affinity matrix with given pairwise
+  constraints in the constraint matrix. Current integration types include `Max`
+  and `Average`.
+  &#34;&#34;&#34;
+
+  def __init__(self, integration_type=IntegrationType.Max):
+    self.integration_type = integration_type
+
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+    self.check_input(affinity, constraint_matrix)
+    if not isinstance(self.integration_type, IntegrationType):
+      raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
+    elif self.integration_type == IntegrationType.Max:
+      return np.maximum(affinity, constraint_matrix)
+    elif self.integration_type == IntegrationType.Average:
+      return 0.5 * (affinity + constraint_matrix)
+    else:
+      raise ValueError(&#34;Unsupported integration type: {}&#34;.format(
+          self.integration_type))
+
+
+class ConstraintPropagation(ConstraintOperation):
+  &#34;&#34;&#34;The Constraint Propagation method.
+
+  The pairwise constraints are firstly propagated throughout the whole graph by
+  two independent horizontal and vertical propagations. The final propagated
+  constraint matrix is applied to adjust the affinity matrix.
+
+  Reference:
+  [1] Lu, Zhiwu, and IP, Horace HS. &#34;Constrained spectral clustering via
+  exhaustive and efficient constraint propagation.&#34; ECCV 2010
+  [2] Lu, Zhiwu, and Peng, Yuxin. &#34;Exhaustive and efficient constraint
+  propagation: A graph-based learning approach and its applications.&#34; IJCV 2013
+  &#34;&#34;&#34;
+
+  def __init__(self, alpha=0.6):
+    self.alpha = alpha
+
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+    self.check_input(affinity, constraint_matrix)
+    adjusted_affinity = np.copy(affinity)
+    degree = np.diag(np.sum(affinity, axis=1))
+    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + EPS))
+    # Compute affinity_norm as D^(-1/2)AD^(-1/2)
+    affinity_norm = degree_norm.dot(affinity).dot(degree_norm)
+    # The closed form of the final converged constraint matrix is:
+    # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
+    # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a
+    # `temp_value` for readibility
+    temp_value = np.linalg.inv(
+        np.eye(affinity.shape[0]) - self.alpha * affinity_norm)
+    final_constraint_matrix = (
+        1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
+    # `is_positive` is a mask matrix where values of the final_constraint_matrix
+    # are positive. The affinity matrix is adjusted by the final constraint
+    # matrix using equation (4) in refernce paper [1]
+    is_positive = final_constraint_matrix &gt; 0
+    affinity1 = 1 - (1 - final_constraint_matrix * is_positive) * (
+        1 - affinity * is_positive)
+    affinity2 = (1 + final_constraint_matrix * np.invert(is_positive)) * (
+        affinity * np.invert(is_positive))
+    adjusted_affinity = affinity1 + affinity2
+    return adjusted_affinity</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="spectralcluster.constraint.AffinityIntegration"><code class="flex name class">
+<span>class <span class="ident">AffinityIntegration</span></span>
+<span>(</span><span>integration_type=IntegrationType.Max)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The Affinity Integration method.</p>
+<p>Basic operations to integrate the affinity matrix with given pairwise
+constraints in the constraint matrix. Current integration types include <code>Max</code>
+and <code>Average</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AffinityIntegration(ConstraintOperation):
+  &#34;&#34;&#34;The Affinity Integration method.
+
+  Basic operations to integrate the affinity matrix with given pairwise
+  constraints in the constraint matrix. Current integration types include `Max`
+  and `Average`.
+  &#34;&#34;&#34;
+
+  def __init__(self, integration_type=IntegrationType.Max):
+    self.integration_type = integration_type
+
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+    self.check_input(affinity, constraint_matrix)
+    if not isinstance(self.integration_type, IntegrationType):
+      raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
+    elif self.integration_type == IntegrationType.Max:
+      return np.maximum(affinity, constraint_matrix)
+    elif self.integration_type == IntegrationType.Average:
+      return 0.5 * (affinity + constraint_matrix)
+    else:
+      raise ValueError(&#34;Unsupported integration type: {}&#34;.format(
+          self.integration_type))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="spectralcluster.constraint.ConstraintOperation" href="#spectralcluster.constraint.ConstraintOperation">ConstraintOperation</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.constraint.AffinityIntegration.adjust_affinity"><code class="name flex">
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adjust the affinity matrix with constraints.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_affinity(self, affinity, constraint_matrix):
+  &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+  self.check_input(affinity, constraint_matrix)
+  if not isinstance(self.integration_type, IntegrationType):
+    raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
+  elif self.integration_type == IntegrationType.Max:
+    return np.maximum(affinity, constraint_matrix)
+  elif self.integration_type == IntegrationType.Average:
+    return 0.5 * (affinity + constraint_matrix)
+  else:
+    raise ValueError(&#34;Unsupported integration type: {}&#34;.format(
+        self.integration_type))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="spectralcluster.constraint.ConstraintOperation" href="#spectralcluster.constraint.ConstraintOperation">ConstraintOperation</a></b></code>:
+<ul class="hlist">
+<li><code><a title="spectralcluster.constraint.ConstraintOperation.check_input" href="#spectralcluster.constraint.ConstraintOperation.check_input">check_input</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintName"><code class="flex name class">
+<span>class <span class="ident">ConstraintName</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The names of constrained operations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConstraintName(enum.Enum):
+  &#34;&#34;&#34;The names of constrained operations.&#34;&#34;&#34;
+  # The Affinity Integration method
+  AffinityIntegration = 1
+
+  # The Constraint Propagation method
+  ConstraintPropagation = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.constraint.ConstraintName.AffinityIntegration"><code class="name">var <span class="ident">AffinityIntegration</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintName.ConstraintPropagation"><code class="name">var <span class="ident">ConstraintPropagation</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOperation"><code class="flex name class">
+<span>class <span class="ident">ConstraintOperation</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Constraint operation class.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConstraintOperation(metaclass=abc.ABCMeta):
+  &#34;&#34;&#34;Constraint operation class.&#34;&#34;&#34;
+
+  def check_input(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Check the input to the adjust_affinity method.
+
+    Args:
+      affinity: the input affinity matrix.
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Raises:
+      TypeError: if affinity or constraint matrix has wrong type
+      ValueError: if affinity or constraint matrix has wrong shape, etc.
+    &#34;&#34;&#34;
+    if not isinstance(affinity, np.ndarray):
+      raise TypeError(&#34;affinity must be a numpy array&#34;)
+    if not isinstance(constraint_matrix, np.ndarray):
+      raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
+    if len(affinity.shape) != 2:
+      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+    if affinity.shape[0] != affinity.shape[1]:
+      raise ValueError(&#34;affinity must be a square matrix&#34;)
+    if len(constraint_matrix.shape) != 2:
+      raise ValueError(&#34;constraint matrix must be 2-dimensional&#34;)
+    if constraint_matrix.shape[0] != constraint_matrix.shape[1]:
+      raise ValueError(&#34;constraint matrix must be a square matrix&#34;)
+    if affinity.shape != constraint_matrix.shape:
+      raise ValueError(
+          &#34;affinity and constraint matrix must have the same shape&#34;)
+
+  @abc.abstractmethod
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;An abstract method to perform the constraint operation.
+
+    Args:
+      affinity: the affinity matrix, of size (n_samples, n_samples)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Returns:
+      a matrix of the same size as affinity
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="spectralcluster.constraint.AffinityIntegration" href="#spectralcluster.constraint.AffinityIntegration">AffinityIntegration</a></li>
+<li><a title="spectralcluster.constraint.ConstraintPropagation" href="#spectralcluster.constraint.ConstraintPropagation">ConstraintPropagation</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.constraint.ConstraintOperation.adjust_affinity"><code class="name flex">
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An abstract method to perform the constraint operation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>affinity</code></strong></dt>
+<dd>the affinity matrix, of size (n_samples, n_samples)</dd>
+<dt><strong><code>constraint_matrix</code></strong></dt>
+<dd>numpy array of shape (n_samples, n_samples). The
+constraint matrix with prior information</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a matrix of the same size as affinity</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def adjust_affinity(self, affinity, constraint_matrix):
+  &#34;&#34;&#34;An abstract method to perform the constraint operation.
+
+  Args:
+    affinity: the affinity matrix, of size (n_samples, n_samples)
+    constraint_matrix: numpy array of shape (n_samples, n_samples). The
+      constraint matrix with prior information
+
+  Returns:
+    a matrix of the same size as affinity
+  &#34;&#34;&#34;
+  pass</code></pre>
+</details>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOperation.check_input"><code class="name flex">
+<span>def <span class="ident">check_input</span></span>(<span>self, affinity, constraint_matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check the input to the adjust_affinity method.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>affinity</code></strong></dt>
+<dd>the input affinity matrix.</dd>
+<dt><strong><code>constraint_matrix</code></strong></dt>
+<dd>numpy array of shape (n_samples, n_samples). The
+constraint matrix with prior information</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>if affinity or constraint matrix has wrong type</dd>
+<dt><code>ValueError</code></dt>
+<dd>if affinity or constraint matrix has wrong shape, etc.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_input(self, affinity, constraint_matrix):
+  &#34;&#34;&#34;Check the input to the adjust_affinity method.
+
+  Args:
+    affinity: the input affinity matrix.
+    constraint_matrix: numpy array of shape (n_samples, n_samples). The
+      constraint matrix with prior information
+
+  Raises:
+    TypeError: if affinity or constraint matrix has wrong type
+    ValueError: if affinity or constraint matrix has wrong shape, etc.
+  &#34;&#34;&#34;
+  if not isinstance(affinity, np.ndarray):
+    raise TypeError(&#34;affinity must be a numpy array&#34;)
+  if not isinstance(constraint_matrix, np.ndarray):
+    raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
+  if len(affinity.shape) != 2:
+    raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+  if affinity.shape[0] != affinity.shape[1]:
+    raise ValueError(&#34;affinity must be a square matrix&#34;)
+  if len(constraint_matrix.shape) != 2:
+    raise ValueError(&#34;constraint matrix must be 2-dimensional&#34;)
+  if constraint_matrix.shape[0] != constraint_matrix.shape[1]:
+    raise ValueError(&#34;constraint matrix must be a square matrix&#34;)
+  if affinity.shape != constraint_matrix.shape:
+    raise ValueError(
+        &#34;affinity and constraint matrix must have the same shape&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOptions"><code class="flex name class">
+<span>class <span class="ident">ConstraintOptions</span></span>
+<span>(</span><span>constraint_name, apply_before_refinement, integration_type=None, constraint_propagation_alpha=0.6)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Constraint options for constrained clustering methods.</p>
+<p>Initialization of the constraint arguments.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>constraint_name</code></strong></dt>
+<dd>a ConstraintName. Name of the constrained clustering
+method</dd>
+<dt><strong><code>apply_before_refinement</code></strong></dt>
+<dd>if True, this operation is applied before the
+affinity refinement. It is suggested to set as True for the
+ConstraintPropagation method and False for the AffinityIntegration
+method</dd>
+<dt><strong><code>integration_type</code></strong></dt>
+<dd>a IntegrationType. Integration type for the Affinity
+Integration method</dd>
+<dt><strong><code>constraint_propagation_alpha</code></strong></dt>
+<dd>alpha value of the constraint propagation
+method</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConstraintOptions:
+  &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
+
+  def __init__(self,
+               constraint_name,
+               apply_before_refinement,
+               integration_type=None,
+               constraint_propagation_alpha=0.6):
+    &#34;&#34;&#34;Initialization of the constraint arguments.
+
+    Args:
+      constraint_name: a ConstraintName. Name of the constrained clustering
+        method
+      apply_before_refinement: if True, this operation is applied before the
+        affinity refinement. It is suggested to set as True for the
+        ConstraintPropagation method and False for the AffinityIntegration
+        method
+      integration_type: a IntegrationType. Integration type for the Affinity
+        Integration method
+      constraint_propagation_alpha: alpha value of the constraint propagation
+        method
+    &#34;&#34;&#34;
+    if not isinstance(constraint_name, ConstraintName):
+      raise TypeError(&#34;constraint_name must be a ConstraintName&#34;)
+    elif constraint_name == ConstraintName.AffinityIntegration:
+      self.constraint_operator = AffinityIntegration(integration_type)
+    elif constraint_name == ConstraintName.ConstraintPropagation:
+      self.constraint_operator = ConstraintPropagation(
+          constraint_propagation_alpha)
+    else:
+      raise ValueError(
+          &#34;Unsupported constrained name: {}&#34;.format(constraint_name))
+    self.apply_before_refinement = apply_before_refinement</code></pre>
+</details>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintPropagation"><code class="flex name class">
+<span>class <span class="ident">ConstraintPropagation</span></span>
+<span>(</span><span>alpha=0.6)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The Constraint Propagation method.</p>
+<p>The pairwise constraints are firstly propagated throughout the whole graph by
+two independent horizontal and vertical propagations. The final propagated
+constraint matrix is applied to adjust the affinity matrix.</p>
+<p>Reference:
+[1] Lu, Zhiwu, and IP, Horace HS. "Constrained spectral clustering via
+exhaustive and efficient constraint propagation." ECCV 2010
+[2] Lu, Zhiwu, and Peng, Yuxin. "Exhaustive and efficient constraint
+propagation: A graph-based learning approach and its applications." IJCV 2013</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConstraintPropagation(ConstraintOperation):
+  &#34;&#34;&#34;The Constraint Propagation method.
+
+  The pairwise constraints are firstly propagated throughout the whole graph by
+  two independent horizontal and vertical propagations. The final propagated
+  constraint matrix is applied to adjust the affinity matrix.
+
+  Reference:
+  [1] Lu, Zhiwu, and IP, Horace HS. &#34;Constrained spectral clustering via
+  exhaustive and efficient constraint propagation.&#34; ECCV 2010
+  [2] Lu, Zhiwu, and Peng, Yuxin. &#34;Exhaustive and efficient constraint
+  propagation: A graph-based learning approach and its applications.&#34; IJCV 2013
+  &#34;&#34;&#34;
+
+  def __init__(self, alpha=0.6):
+    self.alpha = alpha
+
+  def adjust_affinity(self, affinity, constraint_matrix):
+    &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+    self.check_input(affinity, constraint_matrix)
+    adjusted_affinity = np.copy(affinity)
+    degree = np.diag(np.sum(affinity, axis=1))
+    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + EPS))
+    # Compute affinity_norm as D^(-1/2)AD^(-1/2)
+    affinity_norm = degree_norm.dot(affinity).dot(degree_norm)
+    # The closed form of the final converged constraint matrix is:
+    # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
+    # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a
+    # `temp_value` for readibility
+    temp_value = np.linalg.inv(
+        np.eye(affinity.shape[0]) - self.alpha * affinity_norm)
+    final_constraint_matrix = (
+        1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
+    # `is_positive` is a mask matrix where values of the final_constraint_matrix
+    # are positive. The affinity matrix is adjusted by the final constraint
+    # matrix using equation (4) in refernce paper [1]
+    is_positive = final_constraint_matrix &gt; 0
+    affinity1 = 1 - (1 - final_constraint_matrix * is_positive) * (
+        1 - affinity * is_positive)
+    affinity2 = (1 + final_constraint_matrix * np.invert(is_positive)) * (
+        affinity * np.invert(is_positive))
+    adjusted_affinity = affinity1 + affinity2
+    return adjusted_affinity</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="spectralcluster.constraint.ConstraintOperation" href="#spectralcluster.constraint.ConstraintOperation">ConstraintOperation</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.constraint.ConstraintPropagation.adjust_affinity"><code class="name flex">
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adjust the affinity matrix with constraints.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_affinity(self, affinity, constraint_matrix):
+  &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
+  self.check_input(affinity, constraint_matrix)
+  adjusted_affinity = np.copy(affinity)
+  degree = np.diag(np.sum(affinity, axis=1))
+  degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + EPS))
+  # Compute affinity_norm as D^(-1/2)AD^(-1/2)
+  affinity_norm = degree_norm.dot(affinity).dot(degree_norm)
+  # The closed form of the final converged constraint matrix is:
+  # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
+  # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a
+  # `temp_value` for readibility
+  temp_value = np.linalg.inv(
+      np.eye(affinity.shape[0]) - self.alpha * affinity_norm)
+  final_constraint_matrix = (
+      1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
+  # `is_positive` is a mask matrix where values of the final_constraint_matrix
+  # are positive. The affinity matrix is adjusted by the final constraint
+  # matrix using equation (4) in refernce paper [1]
+  is_positive = final_constraint_matrix &gt; 0
+  affinity1 = 1 - (1 - final_constraint_matrix * is_positive) * (
+      1 - affinity * is_positive)
+  affinity2 = (1 + final_constraint_matrix * np.invert(is_positive)) * (
+      affinity * np.invert(is_positive))
+  adjusted_affinity = affinity1 + affinity2
+  return adjusted_affinity</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="spectralcluster.constraint.ConstraintOperation" href="#spectralcluster.constraint.ConstraintOperation">ConstraintOperation</a></b></code>:
+<ul class="hlist">
+<li><code><a title="spectralcluster.constraint.ConstraintOperation.check_input" href="#spectralcluster.constraint.ConstraintOperation.check_input">check_input</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="spectralcluster.constraint.IntegrationType"><code class="flex name class">
+<span>class <span class="ident">IntegrationType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The integration types for the Affinity Integration method.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IntegrationType(enum.Enum):
+  &#34;&#34;&#34;The integration types for the Affinity Integration method.&#34;&#34;&#34;
+  Max = 1
+  Average = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.constraint.IntegrationType.Average"><code class="name">var <span class="ident">Average</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.constraint.IntegrationType.Max"><code class="name">var <span class="ident">Max</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="spectralcluster" href="index.html">spectralcluster</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="spectralcluster.constraint.AffinityIntegration" href="#spectralcluster.constraint.AffinityIntegration">AffinityIntegration</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.AffinityIntegration.adjust_affinity" href="#spectralcluster.constraint.AffinityIntegration.adjust_affinity">adjust_affinity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.ConstraintName" href="#spectralcluster.constraint.ConstraintName">ConstraintName</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.ConstraintName.AffinityIntegration" href="#spectralcluster.constraint.ConstraintName.AffinityIntegration">AffinityIntegration</a></code></li>
+<li><code><a title="spectralcluster.constraint.ConstraintName.ConstraintPropagation" href="#spectralcluster.constraint.ConstraintName.ConstraintPropagation">ConstraintPropagation</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.ConstraintOperation" href="#spectralcluster.constraint.ConstraintOperation">ConstraintOperation</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.ConstraintOperation.adjust_affinity" href="#spectralcluster.constraint.ConstraintOperation.adjust_affinity">adjust_affinity</a></code></li>
+<li><code><a title="spectralcluster.constraint.ConstraintOperation.check_input" href="#spectralcluster.constraint.ConstraintOperation.check_input">check_input</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.ConstraintOptions" href="#spectralcluster.constraint.ConstraintOptions">ConstraintOptions</a></code></h4>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.ConstraintPropagation" href="#spectralcluster.constraint.ConstraintPropagation">ConstraintPropagation</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.ConstraintPropagation.adjust_affinity" href="#spectralcluster.constraint.ConstraintPropagation.adjust_affinity">adjust_affinity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.IntegrationType" href="#spectralcluster.constraint.IntegrationType">IntegrationType</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.IntegrationType.Average" href="#spectralcluster.constraint.IntegrationType.Average">Average</a></code></li>
+<li><code><a title="spectralcluster.constraint.IntegrationType.Max" href="#spectralcluster.constraint.IntegrationType.Max">Max</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>
