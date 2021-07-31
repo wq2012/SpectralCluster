@@ -96,7 +96,7 @@ refinement_options = RefinementOptions(
     refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
 ```
 
-Then you can pass the `refinement_options` as an argument when creating your
+Then you can pass the `refinement_options` as an argument when initializing your
 `SpectralClusterer` object.
 
 For the complete list of `RefinementOptions`, see
@@ -150,7 +150,34 @@ For the complete list of parameters of `AutoTune`, see
 
 ### Constrained spectral clustering
 
-TODO: To be added.
+We also implemented 2 constrained spectral clustering methods:
+
+* Affinity integration.
+* Constraint propagation (see paper [[1](https://link.springer.com/chapter/10.1007/978-3-642-15567-3_1)] and [[2](https://arxiv.org/abs/1109.4684)]).
+
+If you pass in a `ConstraintOptions` object when initializing your `SpectralClusterer` object, you can call the `predict` function with a `constraint_matrix`.
+
+Example usage:
+
+```python
+from spectralcluster import constraint
+
+ConstraintName = constraint.ConstraintName
+
+constraint_options = constraint.ConstraintOptions(
+    constraint_name=ConstraintName.ConstraintPropagation,
+    apply_before_refinement=True,
+    constraint_propagation_alpha=0.6)
+
+clusterer = spectral_clusterer.SpectralClusterer(
+    max_clusters=2,
+    refinement_options=refinement_options,
+    constraint_options=constraint_options,
+    laplacian_type=LaplacianType.GraphCut,
+    row_wise_renorm=True)
+
+labels = clusterer.predict(matrix, constraint_matrix)
+```
 
 ## Citations
 
