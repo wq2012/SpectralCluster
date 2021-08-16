@@ -198,7 +198,42 @@ class ConstraintPropagation(ConstraintOperation):
     affinity2 = (1 + final_constraint_matrix * np.invert(is_positive)) * (
         affinity * np.invert(is_positive))
     adjusted_affinity = affinity1 + affinity2
-    return adjusted_affinity</code></pre>
+    return adjusted_affinity
+
+
+class ConstraintMatrix:
+  &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
+
+  def __init__(self, speaker_turn_scores, threshold=1):
+    &#34;&#34;&#34;Initialization of the constraint matrix arguments.
+
+    Args:
+      speaker_turn_scores: A list of speaker turn confidence scores. All score
+        values are larger or equal to 0. If score is 0, there is no speaker
+        turn. speaker_turn_scores[i+1] means the speaker turn confidence score
+        between turn i+1 and turn i. The first score speaker_turn_scores[0] is
+        not used.
+      threshold: A threshold value for the speaker turn confidence score.
+    &#34;&#34;&#34;
+    if any(score &lt; 0 for score in speaker_turn_scores):
+      raise ValueError(&#34;Speaker turn score must be larger or equal to 0.&#34;)
+    self.speaker_turn_scores = speaker_turn_scores
+    self.threshold = threshold
+
+  def compute_diagonals(self):
+    &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
+    num_turns = len(self.speaker_turn_scores)
+    constraint_matrix = np.zeros((num_turns, num_turns))
+    for i in range(num_turns - 1):
+      speaker_turn_score = self.speaker_turn_scores[i + 1]
+      if speaker_turn_score != 0:
+        if speaker_turn_score &gt; self.threshold:
+          constraint_matrix[i, i + 1] = -1
+          constraint_matrix[i + 1, i] = -1
+      else:
+        constraint_matrix[i, i + 1] = 1
+        constraint_matrix[i + 1, i] = 1
+    return constraint_matrix</code></pre>
 </details>
 </section>
 <section>
@@ -285,6 +320,91 @@ and <code>Average</code>.</p></div>
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintMatrix"><code class="flex name class">
+<span>class <span class="ident">ConstraintMatrix</span></span>
+<span>(</span><span>speaker_turn_scores, threshold=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Constraint Matrix class.</p>
+<p>Initialization of the constraint matrix arguments.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>speaker_turn_scores</code></strong></dt>
+<dd>A list of speaker turn confidence scores. All score
+values are larger or equal to 0. If score is 0, there is no speaker
+turn. speaker_turn_scores[i+1] means the speaker turn confidence score
+between turn i+1 and turn i. The first score speaker_turn_scores[0] is
+not used.</dd>
+<dt><strong><code>threshold</code></strong></dt>
+<dd>A threshold value for the speaker turn confidence score.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConstraintMatrix:
+  &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
+
+  def __init__(self, speaker_turn_scores, threshold=1):
+    &#34;&#34;&#34;Initialization of the constraint matrix arguments.
+
+    Args:
+      speaker_turn_scores: A list of speaker turn confidence scores. All score
+        values are larger or equal to 0. If score is 0, there is no speaker
+        turn. speaker_turn_scores[i+1] means the speaker turn confidence score
+        between turn i+1 and turn i. The first score speaker_turn_scores[0] is
+        not used.
+      threshold: A threshold value for the speaker turn confidence score.
+    &#34;&#34;&#34;
+    if any(score &lt; 0 for score in speaker_turn_scores):
+      raise ValueError(&#34;Speaker turn score must be larger or equal to 0.&#34;)
+    self.speaker_turn_scores = speaker_turn_scores
+    self.threshold = threshold
+
+  def compute_diagonals(self):
+    &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
+    num_turns = len(self.speaker_turn_scores)
+    constraint_matrix = np.zeros((num_turns, num_turns))
+    for i in range(num_turns - 1):
+      speaker_turn_score = self.speaker_turn_scores[i + 1]
+      if speaker_turn_score != 0:
+        if speaker_turn_score &gt; self.threshold:
+          constraint_matrix[i, i + 1] = -1
+          constraint_matrix[i + 1, i] = -1
+      else:
+        constraint_matrix[i, i + 1] = 1
+        constraint_matrix[i + 1, i] = 1
+    return constraint_matrix</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.constraint.ConstraintMatrix.compute_diagonals"><code class="name flex">
+<span>def <span class="ident">compute_diagonals</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute diagonal constraint matrix.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_diagonals(self):
+  &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
+  num_turns = len(self.speaker_turn_scores)
+  constraint_matrix = np.zeros((num_turns, num_turns))
+  for i in range(num_turns - 1):
+    speaker_turn_score = self.speaker_turn_scores[i + 1]
+    if speaker_turn_score != 0:
+      if speaker_turn_score &gt; self.threshold:
+        constraint_matrix[i, i + 1] = -1
+        constraint_matrix[i + 1, i] = -1
+    else:
+      constraint_matrix[i, i + 1] = 1
+      constraint_matrix[i + 1, i] = 1
+  return constraint_matrix</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintName"><code class="flex name class">
 <span>class <span class="ident">ConstraintName</span></span>
@@ -699,6 +819,12 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
 <h4><code><a title="spectralcluster.constraint.AffinityIntegration" href="#spectralcluster.constraint.AffinityIntegration">AffinityIntegration</a></code></h4>
 <ul class="">
 <li><code><a title="spectralcluster.constraint.AffinityIntegration.adjust_affinity" href="#spectralcluster.constraint.AffinityIntegration.adjust_affinity">adjust_affinity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.constraint.ConstraintMatrix" href="#spectralcluster.constraint.ConstraintMatrix">ConstraintMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.ConstraintMatrix.compute_diagonals" href="#spectralcluster.constraint.ConstraintMatrix.compute_diagonals">compute_diagonals</a></code></li>
 </ul>
 </li>
 <li>

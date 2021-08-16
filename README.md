@@ -5,7 +5,12 @@
 
 We are currently adding new functionalities to this library to include
 some algorithms to appear in an upcoming paper. We are updating the APIs as
-well. If you depend on our old API, please use an older version of this library.
+well.
+
+If you depend on our old API, please use an **older version** of this library:
+```
+pip3 install spectralcluster==0.1.0
+```
 
 ## Overview
 
