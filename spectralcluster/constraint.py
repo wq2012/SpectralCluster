@@ -170,3 +170,38 @@ class ConstraintPropagation(ConstraintOperation):
         affinity * np.invert(is_positive))
     adjusted_affinity = affinity1 + affinity2
     return adjusted_affinity
+
+
+class ConstraintMatrix:
+  """Constraint Matrix class."""
+
+  def __init__(self, speaker_turn_scores, threshold=1):
+    """Initialization of the constraint matrix arguments.
+
+    Args:
+      speaker_turn_scores: A list of speaker turn confidence scores. All score
+        values are larger or equal to 0. If score is 0, there is no speaker
+        turn. speaker_turn_scores[i+1] means the speaker turn confidence score
+        between turn i+1 and turn i. The first score speaker_turn_scores[0] is
+        not used.
+      threshold: A threshold value for the speaker turn confidence score.
+    """
+    if any(score < 0 for score in speaker_turn_scores):
+      raise ValueError("Speaker turn score must be larger or equal to 0.")
+    self.speaker_turn_scores = speaker_turn_scores
+    self.threshold = threshold
+
+  def compute_diagonals(self):
+    """Compute diagonal constraint matrix."""
+    num_turns = len(self.speaker_turn_scores)
+    constraint_matrix = np.zeros((num_turns, num_turns))
+    for i in range(num_turns - 1):
+      speaker_turn_score = self.speaker_turn_scores[i + 1]
+      if speaker_turn_score != 0:
+        if speaker_turn_score > self.threshold:
+          constraint_matrix[i, i + 1] = -1
+          constraint_matrix[i + 1, i] = -1
+      else:
+        constraint_matrix[i, i + 1] = 1
+        constraint_matrix[i + 1, i] = 1
+    return constraint_matrix

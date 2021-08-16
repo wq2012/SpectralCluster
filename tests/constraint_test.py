@@ -32,5 +32,23 @@ class TestConstraintPropagation(unittest.TestCase):
         np.allclose(np.array(adjusted_affinity), np.array(expected), atol=0.01))
 
 
+class TestConstraintMatrix(unittest.TestCase):
+  """Tests for the ConstraintMatrix class."""
+
+  def test_3by3_constraint_matrix(self):
+    spk_turn_entries = [0, 0, 14.308253288269043]
+    constraint_matrix = constraint.ConstraintMatrix(
+        spk_turn_entries, threshold=1).compute_diagonals()
+    expected = np.array([[0, 1, 0], [1, 0, -1], [0, -1, 0]])
+    self.assertTrue(np.array_equal(constraint_matrix, expected))
+
+  def test_3by3_constraint_matrix_threshold(self):
+    spk_turn_entries = [0, 0, 0.12095779925584793]
+    constraint_matrix = constraint.ConstraintMatrix(
+        spk_turn_entries, threshold=1).compute_diagonals()
+    expected = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
+    self.assertTrue(np.array_equal(constraint_matrix, expected))
+
+
 if __name__ == "__main__":
   unittest.main()

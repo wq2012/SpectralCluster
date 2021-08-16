@@ -1,10 +1,11 @@
 """Example configurations."""
 
 from spectralcluster import refinement
-from spectralcluster import RefinementOptions
-from spectralcluster import SpectralClusterer
+from spectralcluster import spectral_clusterer
 
 RefinementName = refinement.RefinementName
+RefinementOptions = refinement.RefinementOptions
+SpectralClusterer = spectral_clusterer.SpectralClusterer
 
 
 # Configurations that are closest to the ICASSP2018 paper
