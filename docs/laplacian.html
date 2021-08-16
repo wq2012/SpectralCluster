@@ -43,10 +43,10 @@ class LaplacianType(enum.Enum):
   # The unnormalied Laplacian: L = D - W
   Unnormalized = 1
 
-  # The graph cut view normalized Laplacian: D^{-1/2}LD^{-1/2}
+  # The random walk view normalized Laplacian:  D^{-1}L
   RandomWalk = 2
 
-  # The random walk view normalized Laplacian:  D^{-1}L
+  # The graph cut view normalized Laplacian: D^{-1/2}LD^{-1/2}
   GraphCut = 3
 
 
@@ -181,10 +181,10 @@ def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
   # The unnormalied Laplacian: L = D - W
   Unnormalized = 1
 
-  # The graph cut view normalized Laplacian: D^{-1/2}LD^{-1/2}
+  # The random walk view normalized Laplacian:  D^{-1}L
   RandomWalk = 2
 
-  # The random walk view normalized Laplacian:  D^{-1}L
+  # The graph cut view normalized Laplacian: D^{-1/2}LD^{-1/2}
   GraphCut = 3</code></pre>
 </details>
 <h3>Ancestors</h3>
