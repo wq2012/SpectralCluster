@@ -16,6 +16,15 @@ class RefinementName(enum.Enum):
   RowWiseNormalize = 6
 
 
+class ThresholdType(enum.Enum):
+  """Different types of thresholding."""
+  # We clear values that are smaller than row_max*p_percentile
+  RowMax = 1
+
+  # We clear (p_percentile*100)% smallest values of the entire row
+  Percentile = 2
+
+
 class SymmetrizeType(enum.Enum):
   """Different types of symmetrization operation."""
   # We use max(A, A^T)
@@ -32,7 +41,7 @@ class RefinementOptions:
                gaussian_blur_sigma=1,
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
-               thresholding_with_row_max=True,
+               thresholding_type=ThresholdType.RowMax,
                thresholding_with_binarization=False,
                thresholding_preserve_diagonal=False,
                symmetrize_type=SymmetrizeType.Max,
@@ -44,8 +53,7 @@ class RefinementOptions:
       p_percentile: the p-percentile for the row wise thresholding
       thresholding_soft_multiplier: the multiplier for soft threhsold, if this
         value is 0, then it's a hard thresholding
-      thresholding_with_row_max: if true, we use row_max * p_percentile as row
-        wise threshold, instead of doing a percentile-based thresholding
+      thresholding_type: the type of thresholding operation
       thresholding_with_binarization: if true, we set values larger than the
         threshold to 1
       thresholding_preserve_diagonal: if true, in the row wise thresholding
@@ -59,7 +67,7 @@ class RefinementOptions:
     self.gaussian_blur_sigma = gaussian_blur_sigma
     self.p_percentile = p_percentile
     self.thresholding_soft_multiplier = thresholding_soft_multiplier
-    self.thresholding_with_row_max = thresholding_with_row_max
+    self.thresholding_type = thresholding_type
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
     self.symmetrize_type = symmetrize_type
@@ -92,7 +100,7 @@ class RefinementOptions:
     elif name == RefinementName.RowWiseThreshold:
       return RowWiseThreshold(self.p_percentile,
                               self.thresholding_soft_multiplier,
-                              self.thresholding_with_row_max,
+                              self.thresholding_type,
                               self.thresholding_with_binarization,
                               self.thresholding_preserve_diagonal)
     elif name == RefinementName.Symmetrize:
@@ -174,12 +182,14 @@ class RowWiseThreshold(AffinityRefinementOperation):
   def __init__(self,
                p_percentile=0.95,
                thresholding_soft_multiplier=0.01,
-               thresholding_with_row_max=False,
+               thresholding_type=ThresholdType.RowMax,
                thresholding_with_binarization=False,
                thresholding_preserve_diagonal=False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
-    self.thresholding_with_row_max = thresholding_with_row_max
+    if not isinstance(thresholding_type, ThresholdType):
+      raise TypeError("thresholding_type must be a ThresholdType")
+    self.thresholding_type = thresholding_type
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
@@ -188,17 +198,19 @@ class RowWiseThreshold(AffinityRefinementOperation):
     refined_affinity = np.copy(affinity)
     if self.thresholding_preserve_diagonal:
       np.fill_diagonal(refined_affinity, 0.0)
-    if self.thresholding_with_row_max:
+    if self.thresholding_type == ThresholdType.RowMax:
       # Row_max based thresholding
       row_max = refined_affinity.max(axis=1)
       row_max = np.expand_dims(row_max, axis=1)
       is_smaller = refined_affinity < (row_max * self.p_percentile)
-    else:
+    elif self.thresholding_type == ThresholdType.Percentile:
       # Percentile based thresholding
       row_percentile = np.percentile(
           refined_affinity, self.p_percentile * 100, axis=1)
       row_percentile = np.expand_dims(row_percentile, axis=1)
       is_smaller = refined_affinity < row_percentile
+    else:
+      raise ValueError("Unsupported thresholding_type")
     if self.thresholding_with_binarization:
       # For values larger than the threshold, we binarize them to 1
       refined_affinity = (np.ones_like(
@@ -216,13 +228,13 @@ class Symmetrize(AffinityRefinementOperation):
   """The Symmetrization operation."""
 
   def __init__(self, symmetrize_type=SymmetrizeType.Max):
+    if not isinstance(symmetrize_type, SymmetrizeType):
+      raise TypeError("symmetrize_type must be a SymmetrizeType")
     self.symmetrize_type = symmetrize_type
 
   def refine(self, affinity):
     self.check_input(affinity)
-    if not isinstance(self.symmetrize_type, SymmetrizeType):
-      raise TypeError("symmetrize_type must be a SymmetrizeType")
-    elif self.symmetrize_type == SymmetrizeType.Max:
+    if self.symmetrize_type == SymmetrizeType.Max:
       return np.maximum(affinity, np.transpose(affinity))
     elif self.symmetrize_type == SymmetrizeType.Average:
       return 0.5 * (affinity + np.transpose(affinity))

@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from spectralcluster import refinement
 
+ThresholdType = refinement.ThresholdType
 SymmetrizeType = refinement.SymmetrizeType
 
 
@@ -34,7 +35,7 @@ class TestRowWiseThreshold(unittest.TestCase):
     adjusted_matrix = refinement.RowWiseThreshold(
         p_percentile=0.5,
         thresholding_soft_multiplier=0.01,
-        thresholding_with_row_max=False).refine(matrix)
+        thresholding_type=ThresholdType.Percentile).refine(matrix)
     expected = np.array([[0.005, 2.0, 3.0], [0.03, 4.0, 5.0], [4.0, 2.0, 0.01]])
     self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
 
@@ -43,7 +44,7 @@ class TestRowWiseThreshold(unittest.TestCase):
     adjusted_matrix = refinement.RowWiseThreshold(
         p_percentile=0.5,
         thresholding_soft_multiplier=0.01,
-        thresholding_with_row_max=True).refine(matrix)
+        thresholding_type=ThresholdType.RowMax).refine(matrix)
     expected = np.array([[0.005, 2.0, 3.0], [3.0, 4.0, 5.0], [4.0, 2.0, 0.01]])
     self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
 
@@ -52,7 +53,7 @@ class TestRowWiseThreshold(unittest.TestCase):
     adjusted_matrix = refinement.RowWiseThreshold(
         p_percentile=0.5,
         thresholding_soft_multiplier=0.01,
-        thresholding_with_row_max=True,
+        thresholding_type=ThresholdType.RowMax,
         thresholding_with_binarization=True).refine(matrix)
     expected = np.array([[0.005, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 0.01]])
     self.assertTrue(np.allclose(expected, adjusted_matrix, atol=0.001))
@@ -62,7 +63,7 @@ class TestRowWiseThreshold(unittest.TestCase):
     adjusted_matrix = refinement.RowWiseThreshold(
         p_percentile=0.5,
         thresholding_soft_multiplier=0.01,
-        thresholding_with_row_max=True,
+        thresholding_type=ThresholdType.RowMax,
         thresholding_with_binarization=True,
         thresholding_preserve_diagonal=True).refine(matrix)
     expected = np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])

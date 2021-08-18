@@ -7,6 +7,7 @@ from spectralcluster import spectral_clusterer
 from spectralcluster import utils
 
 RefinementName = refinement.RefinementName
+ThresholdType = refinement.ThresholdType
 LaplacianType = laplacian.LaplacianType
 
 
@@ -48,7 +49,7 @@ class TestAutotune(unittest.TestCase):
     ])
     refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
-        thresholding_with_row_max=False,
+        thresholding_type=ThresholdType.Percentile,
         refinement_sequence=refinement_sequence)
     auto_tune = autotune.AutoTune(
         p_percentile_min=0.60,

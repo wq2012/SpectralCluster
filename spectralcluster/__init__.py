@@ -18,6 +18,7 @@ LaplacianType = laplacian.LaplacianType
 
 RefinementName = refinement.RefinementName
 RefinementOptions = refinement.RefinementOptions
+ThresholdType = refinement.ThresholdType
 SymmetrizeType = refinement.SymmetrizeType
 
 SpectralClusterer = spectral_clusterer.SpectralClusterer

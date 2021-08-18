@@ -9,6 +9,7 @@ from spectralcluster import spectral_clusterer
 from spectralcluster import utils
 
 RefinementName = refinement.RefinementName
+ThresholdType = refinement.ThresholdType
 SymmetrizeType = refinement.SymmetrizeType
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
@@ -117,7 +118,7 @@ class TestSpectralClusterer(unittest.TestCase):
 
     refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
-        thresholding_with_row_max=False,
+        thresholding_type=ThresholdType.Percentile,
         refinement_sequence=refinement_sequence)
     auto_tune = autotune.AutoTune(
         p_percentile_min=0.60,
@@ -145,7 +146,7 @@ class TestSpectralClusterer(unittest.TestCase):
 
     refinement_sequence = [RefinementName.RowWiseThreshold]
     refinement_options = refinement.RefinementOptions(
-        thresholding_with_row_max=False,
+        thresholding_type=ThresholdType.Percentile,
         refinement_sequence=refinement_sequence)
     auto_tune = autotune.AutoTune(
         p_percentile_min=0.85,
@@ -187,7 +188,7 @@ class TestSpectralClusterer(unittest.TestCase):
     ]
     refinement_options = refinement.RefinementOptions(
         p_percentile=0.95,
-        thresholding_with_row_max=False,
+        thresholding_type=ThresholdType.Percentile,
         thresholding_with_binarization=True,
         thresholding_preserve_diagonal=True,
         symmetrize_type=SymmetrizeType.Average,
@@ -230,7 +231,7 @@ class TestSpectralClusterer(unittest.TestCase):
     ]
     refinement_options = refinement.RefinementOptions(
         p_percentile=0.95,
-        thresholding_with_row_max=False,
+        thresholding_type=ThresholdType.Percentile,
         thresholding_with_binarization=True,
         thresholding_preserve_diagonal=True,
         symmetrize_type=SymmetrizeType.Average,
