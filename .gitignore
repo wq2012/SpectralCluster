@@ -4,3 +4,4 @@ build/*
 dist/*
 spectralcluster.egg-info/*
 .coverage
+.DS_Store

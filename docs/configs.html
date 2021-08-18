@@ -34,6 +34,8 @@ from spectralcluster import spectral_clusterer
 
 RefinementName = refinement.RefinementName
 RefinementOptions = refinement.RefinementOptions
+ThresholdType = refinement.ThresholdType
+SymmetrizeType = refinement.SymmetrizeType
 SpectralClusterer = spectral_clusterer.SpectralClusterer
 
 
@@ -52,7 +54,7 @@ icassp2018_refinement_options = RefinementOptions(
     gaussian_blur_sigma=1,
     p_percentile=0.95,
     thresholding_soft_multiplier=0.01,
-    thresholding_with_row_max=True,
+    thresholding_type=ThresholdType.RowMax,
     refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
 
 icassp2018_clusterer = SpectralClusterer(

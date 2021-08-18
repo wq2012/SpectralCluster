@@ -91,13 +91,14 @@ You can specify your refinment operations like this:
 
 ```
 from spectralcluster import RefinementOptions
+from spectralcluster import ThresholdType
 from spectralcluster import ICASSP2018_REFINEMENT_SEQUENCE
 
 refinement_options = RefinementOptions(
     gaussian_blur_sigma=1,
     p_percentile=0.95,
     thresholding_soft_multiplier=0.01,
-    thresholding_with_row_max=True,
+    thresholding_type=ThresholdType.RowMax,
     refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
 ```
 
@@ -116,8 +117,8 @@ In the new version of this library, we support different types of Laplacian matr
 
 * None Laplacian (affinity matrix): `W`
 * Unnormalized Laplacian: `L = D - W`
-* Graph cut Laplacian: `L' = D^{-1/2} L D^{-1/2}`
-* Random walk Laplacian: `L' = D^{-1} L`
+* Graph cut Laplacian: `L' = D^{-1/2} * L * D^{-1/2}`
+* Random walk Laplacian: `L' = D^{-1} * L`
 
 You can specify the Laplacian matrix type with the `laplacian_type` argument of the `SpectralClusterer` class.
 
