@@ -10,6 +10,7 @@ from spectralcluster import utils
 RefinementName = refinement.RefinementName
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
+EigenGapType = utils.EigenGapType
 
 
 class SpectralClusterer:
@@ -25,7 +26,8 @@ class SpectralClusterer:
                row_wise_renorm=False,
                custom_dist="cosine",
                max_iter=300,
-               constraint_options=None):
+               constraint_options=None,
+               eigengap_type=EigenGapType.Ratio):
     """Constructor of the clusterer.
 
     Args:
@@ -48,6 +50,7 @@ class SpectralClusterer:
       max_iter: the maximum number of iterations for the custom k-means
       constraint_options: a ConstraintOptions object that contains constraint
         arguments
+      eigengap_type: the type of the eigengap computation
     """
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -62,6 +65,7 @@ class SpectralClusterer:
     self.custom_dist = custom_dist
     self.max_iter = max_iter
     self.constraint_options = constraint_options
+    self.eigengap_type = eigengap_type
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     """Perform eigen decomposition and estiamte the number of clusters.
@@ -104,7 +108,11 @@ class SpectralClusterer:
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+          eigenvalues,
+          self.max_clusters,
+          self.stop_eigenvalue,
+          self.eigengap_type,
+          descend=True)
     else:
       # Compute Laplacian matrix
       laplacian_norm = laplacian.compute_laplacian(
@@ -115,7 +123,7 @@ class SpectralClusterer:
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
+          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -158,7 +166,7 @@ class SpectralClusterer:
         (eigenvectors, n_clusters,
          max_delta_norm) = self._compute_eigenvectors_ncluster(
              affinity, constraint_matrix)
-        ratio = (1 - p_percentile) / max_delta_norm
+        ratio = np.sqrt(1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 
       eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)

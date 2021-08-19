@@ -1,8 +1,19 @@
 """Utility functions."""
 
+import enum
 import numpy as np
 
 EPS = 1e-10
+
+
+class EigenGapType(enum.Enum):
+  """Different types of the eigengap computation."""
+  # Eigengap is the ratio of two eigenvalues
+  Ratio = 1
+
+  # Eigengap is the subtraction of two eigenvalues, and it is normalized
+  # by the maximum eigenvalue
+  NormalizedDiff = 2
 
 
 def compute_affinity_matrix(embeddings):
@@ -60,6 +71,7 @@ def compute_sorted_eigenvectors(input_matrix, descend=True):
 def compute_number_of_clusters(eigenvalues,
                                max_clusters=None,
                                stop_eigenvalue=1e-2,
+                               eigengap_type=EigenGapType.Ratio,
                                descend=True,
                                eps=EPS):
   """Compute number of clusters using EigenGap principle.
@@ -70,6 +82,7 @@ def compute_number_of_clusters(eigenvalues,
     eigenvalues: sorted eigenvalues of the affinity matrix
     max_clusters: max number of clusters allowed
     stop_eigenvalue: we do not look at eigen values smaller than this
+    eigengap_type: the type of the eigengap computation
     descend: sort eigenvalues in a descending order. Default is True
     eps: a small value for numerial stability
 
@@ -77,6 +90,8 @@ def compute_number_of_clusters(eigenvalues,
     max_delta_index: number of clusters as an integer
     max_delta_norm: normalized maximum eigen gap
   """
+  if not isinstance(eigengap_type, EigenGapType):
+    raise TypeError("eigengap_type must be a EigenGapType")
   max_delta = 0
   max_delta_index = 0
   range_end = len(eigenvalues)
@@ -86,7 +101,12 @@ def compute_number_of_clusters(eigenvalues,
   if not descend:
     # The first eigen value is always 0 in an ascending order
     for i in range(1, range_end - 1):
-      delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i + 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError("Unsupported eigengap_type")
       if delta > max_delta:
         max_delta = delta
         max_delta_index = i + 1  # Index i means i+1 clusters
@@ -94,13 +114,17 @@ def compute_number_of_clusters(eigenvalues,
     for i in range(1, range_end):
       if eigenvalues[i - 1] < stop_eigenvalue:
         break
-      delta = eigenvalues[i - 1] / eigenvalues[i]
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i - 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i - 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError("Unsupported eigengap_type")
       if delta > max_delta:
         max_delta = delta
         max_delta_index = i
-  # normalized maximum eigen gap
-  max_delta_norm = max_delta / np.max(eigenvalues)
-  return max_delta_index, max_delta_norm
+
+  return max_delta_index, max_delta
 
 
 def enforce_ordered_labels(labels):

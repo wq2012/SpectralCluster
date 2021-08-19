@@ -14,6 +14,7 @@ SymmetrizeType = refinement.SymmetrizeType
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
 IntegrationType = constraint.IntegrationType
+EigenGapType = utils.EigenGapType
 ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE
 
 
@@ -60,6 +61,27 @@ class TestSpectralClusterer(unittest.TestCase):
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
+    self.assertTrue(np.array_equal(expected, labels))
+
+  def test_6by2_matrix_eigengap_normalizeddiff(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    refinement_options = refinement.RefinementOptions(
+        gaussian_blur_sigma=0,
+        p_percentile=0.95,
+        refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        refinement_options=refinement_options,
+        eigengap_type=EigenGapType.NormalizedDiff)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 1, 1, 0, 1])
     self.assertTrue(np.array_equal(expected, labels))
 
   def test_6by2_matrix_normalized_laplacian(self):
@@ -149,9 +171,9 @@ class TestSpectralClusterer(unittest.TestCase):
         thresholding_type=ThresholdType.Percentile,
         refinement_sequence=refinement_sequence)
     auto_tune = autotune.AutoTune(
-        p_percentile_min=0.85,
+        p_percentile_min=0.9,
         p_percentile_max=0.95,
-        init_search_step=0.05,
+        init_search_step=0.03,
         search_level=1)
     clusterer = spectral_clusterer.SpectralClusterer(
         max_clusters=4,

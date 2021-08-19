@@ -14,10 +14,10 @@ class LaplacianType(enum.Enum):
   # The unnormalied Laplacian: L = D - W
   Unnormalized = 1
 
-  # The random walk view normalized Laplacian:  D^{-1}L
+  # The random walk view normalized Laplacian:  D^{-1} * L
   RandomWalk = 2
 
-  # The graph cut view normalized Laplacian: D^{-1/2}LD^{-1/2}
+  # The graph cut view normalized Laplacian: D^{-1/2} * L * D^{-1/2}
   GraphCut = 3
 
 
