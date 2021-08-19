@@ -29,15 +29,21 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Example configurations.&#34;&#34;&#34;
 
+from spectralcluster import autotune
+from spectralcluster import constraint
+from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 
+AutoTune = autotune.AutoTune
+ConstraintName = constraint.ConstraintName
+ConstraintOptions = constraint.ConstraintOptions
 RefinementName = refinement.RefinementName
 RefinementOptions = refinement.RefinementOptions
 ThresholdType = refinement.ThresholdType
 SymmetrizeType = refinement.SymmetrizeType
+LaplacianType = laplacian.LaplacianType
 SpectralClusterer = spectral_clusterer.SpectralClusterer
-
 
 # Configurations that are closest to the ICASSP2018 paper
 # &#34;Speaker Diarization with LSTM&#34;.
@@ -63,6 +69,41 @@ icassp2018_clusterer = SpectralClusterer(
     autotune=None,
     laplacian_type=None,
     refinement_options=icassp2018_refinement_options,
+    custom_dist=&#34;cosine&#34;)
+
+# Configurations of Turn-To-Diarize system using the
+# Turn + Constraint Propagation + AutoTune method
+TURNTODIARIZE_REFINEMENT_SEQUENCE = [
+    RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+]
+
+turntodiarize_refinement_options = RefinementOptions(
+    thresholding_soft_multiplier=0.01,
+    thresholding_type=ThresholdType.Percentile,
+    thresholding_with_binarization=True,
+    thresholding_preserve_diagonal=True,
+    symmetrize_type=SymmetrizeType.Average,
+    refinement_sequence=TURNTODIARIZE_REFINEMENT_SEQUENCE)
+
+turntodiarize_constraint_options = ConstraintOptions(
+    constraint_name=ConstraintName.ConstraintPropagation,
+    apply_before_refinement=True,
+    constraint_propagation_alpha=0.4)
+
+turntodiarize_auto_tune = AutoTune(
+    p_percentile_min=0.40,
+    p_percentile_max=0.95,
+    init_search_step=0.05,
+    search_level=1)
+
+turntodiarize_clusterer = SpectralClusterer(
+    min_clusters=2,
+    max_clusters=7,
+    refinement_options=turntodiarize_refinement_options,
+    constraint_options=turntodiarize_constraint_options,
+    autotune=turntodiarize_auto_tune,
+    laplacian_type=LaplacianType.GraphCut,
+    row_wise_renorm=True,
     custom_dist=&#34;cosine&#34;)</code></pre>
 </details>
 </section>

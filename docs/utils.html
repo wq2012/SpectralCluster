@@ -29,9 +29,20 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Utility functions.&#34;&#34;&#34;
 
+import enum
 import numpy as np
 
 EPS = 1e-10
+
+
+class EigenGapType(enum.Enum):
+  &#34;&#34;&#34;Different types of the eigengap computation.&#34;&#34;&#34;
+  # Eigengap is the ratio of two eigenvalues
+  Ratio = 1
+
+  # Eigengap is the subtraction of two eigenvalues, and it is normalized
+  # by the maximum eigenvalue
+  NormalizedDiff = 2
 
 
 def compute_affinity_matrix(embeddings):
@@ -89,6 +100,7 @@ def compute_sorted_eigenvectors(input_matrix, descend=True):
 def compute_number_of_clusters(eigenvalues,
                                max_clusters=None,
                                stop_eigenvalue=1e-2,
+                               eigengap_type=EigenGapType.Ratio,
                                descend=True,
                                eps=EPS):
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
@@ -99,6 +111,7 @@ def compute_number_of_clusters(eigenvalues,
     eigenvalues: sorted eigenvalues of the affinity matrix
     max_clusters: max number of clusters allowed
     stop_eigenvalue: we do not look at eigen values smaller than this
+    eigengap_type: the type of the eigengap computation
     descend: sort eigenvalues in a descending order. Default is True
     eps: a small value for numerial stability
 
@@ -106,6 +119,8 @@ def compute_number_of_clusters(eigenvalues,
     max_delta_index: number of clusters as an integer
     max_delta_norm: normalized maximum eigen gap
   &#34;&#34;&#34;
+  if not isinstance(eigengap_type, EigenGapType):
+    raise TypeError(&#34;eigengap_type must be a EigenGapType&#34;)
   max_delta = 0
   max_delta_index = 0
   range_end = len(eigenvalues)
@@ -115,7 +130,12 @@ def compute_number_of_clusters(eigenvalues,
   if not descend:
     # The first eigen value is always 0 in an ascending order
     for i in range(1, range_end - 1):
-      delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i + 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError(&#34;Unsupported eigengap_type&#34;)
       if delta &gt; max_delta:
         max_delta = delta
         max_delta_index = i + 1  # Index i means i+1 clusters
@@ -123,13 +143,17 @@ def compute_number_of_clusters(eigenvalues,
     for i in range(1, range_end):
       if eigenvalues[i - 1] &lt; stop_eigenvalue:
         break
-      delta = eigenvalues[i - 1] / eigenvalues[i]
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i - 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i - 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError(&#34;Unsupported eigengap_type&#34;)
       if delta &gt; max_delta:
         max_delta = delta
         max_delta_index = i
-  # normalized maximum eigen gap
-  max_delta_norm = max_delta / np.max(eigenvalues)
-  return max_delta_index, max_delta_norm
+
+  return max_delta_index, max_delta
 
 
 def enforce_ordered_labels(labels):
@@ -210,7 +234,7 @@ def enforce_ordered_labels(labels):
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_number_of_clusters"><code class="name flex">
-<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues, max_clusters=None, stop_eigenvalue=0.01, descend=True, eps=1e-10)</span>
+<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues, max_clusters=None, stop_eigenvalue=0.01, eigengap_type=EigenGapType.Ratio, descend=True, eps=1e-10)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute number of clusters using EigenGap principle.</p>
@@ -223,6 +247,8 @@ def enforce_ordered_labels(labels):
 <dd>max number of clusters allowed</dd>
 <dt><strong><code>stop_eigenvalue</code></strong></dt>
 <dd>we do not look at eigen values smaller than this</dd>
+<dt><strong><code>eigengap_type</code></strong></dt>
+<dd>the type of the eigengap computation</dd>
 <dt><strong><code>descend</code></strong></dt>
 <dd>sort eigenvalues in a descending order. Default is True</dd>
 <dt><strong><code>eps</code></strong></dt>
@@ -242,6 +268,7 @@ def enforce_ordered_labels(labels):
 <pre><code class="python">def compute_number_of_clusters(eigenvalues,
                                max_clusters=None,
                                stop_eigenvalue=1e-2,
+                               eigengap_type=EigenGapType.Ratio,
                                descend=True,
                                eps=EPS):
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
@@ -252,6 +279,7 @@ def enforce_ordered_labels(labels):
     eigenvalues: sorted eigenvalues of the affinity matrix
     max_clusters: max number of clusters allowed
     stop_eigenvalue: we do not look at eigen values smaller than this
+    eigengap_type: the type of the eigengap computation
     descend: sort eigenvalues in a descending order. Default is True
     eps: a small value for numerial stability
 
@@ -259,6 +287,8 @@ def enforce_ordered_labels(labels):
     max_delta_index: number of clusters as an integer
     max_delta_norm: normalized maximum eigen gap
   &#34;&#34;&#34;
+  if not isinstance(eigengap_type, EigenGapType):
+    raise TypeError(&#34;eigengap_type must be a EigenGapType&#34;)
   max_delta = 0
   max_delta_index = 0
   range_end = len(eigenvalues)
@@ -268,7 +298,12 @@ def enforce_ordered_labels(labels):
   if not descend:
     # The first eigen value is always 0 in an ascending order
     for i in range(1, range_end - 1):
-      delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i + 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError(&#34;Unsupported eigengap_type&#34;)
       if delta &gt; max_delta:
         max_delta = delta
         max_delta_index = i + 1  # Index i means i+1 clusters
@@ -276,13 +311,17 @@ def enforce_ordered_labels(labels):
     for i in range(1, range_end):
       if eigenvalues[i - 1] &lt; stop_eigenvalue:
         break
-      delta = eigenvalues[i - 1] / eigenvalues[i]
+      if eigengap_type == EigenGapType.Ratio:
+        delta = eigenvalues[i - 1] / (eigenvalues[i] + eps)
+      elif eigengap_type == EigenGapType.NormalizedDiff:
+        delta = (eigenvalues[i - 1] - eigenvalues[i]) / np.max(eigenvalues)
+      else:
+        raise ValueError(&#34;Unsupported eigengap_type&#34;)
       if delta &gt; max_delta:
         max_delta = delta
         max_delta_index = i
-  # normalized maximum eigen gap
-  max_delta_norm = max_delta / np.max(eigenvalues)
-  return max_delta_index, max_delta_norm</code></pre>
+
+  return max_delta_index, max_delta</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_sorted_eigenvectors"><code class="name flex">
@@ -389,6 +428,44 @@ labels always appear first</dd>
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="spectralcluster.utils.EigenGapType"><code class="flex name class">
+<span>class <span class="ident">EigenGapType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Different types of the eigengap computation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EigenGapType(enum.Enum):
+  &#34;&#34;&#34;Different types of the eigengap computation.&#34;&#34;&#34;
+  # Eigengap is the ratio of two eigenvalues
+  Ratio = 1
+
+  # Eigengap is the subtraction of two eigenvalues, and it is normalized
+  # by the maximum eigenvalue
+  NormalizedDiff = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.utils.EigenGapType.NormalizedDiff"><code class="name">var <span class="ident">NormalizedDiff</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.utils.EigenGapType.Ratio"><code class="name">var <span class="ident">Ratio</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -408,6 +485,17 @@ labels always appear first</dd>
 <li><code><a title="spectralcluster.utils.compute_number_of_clusters" href="#spectralcluster.utils.compute_number_of_clusters">compute_number_of_clusters</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_sorted_eigenvectors" href="#spectralcluster.utils.compute_sorted_eigenvectors">compute_sorted_eigenvectors</a></code></li>
 <li><code><a title="spectralcluster.utils.enforce_ordered_labels" href="#spectralcluster.utils.enforce_ordered_labels">enforce_ordered_labels</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="spectralcluster.utils.EigenGapType" href="#spectralcluster.utils.EigenGapType">EigenGapType</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.utils.EigenGapType.NormalizedDiff" href="#spectralcluster.utils.EigenGapType.NormalizedDiff">NormalizedDiff</a></code></li>
+<li><code><a title="spectralcluster.utils.EigenGapType.Ratio" href="#spectralcluster.utils.EigenGapType.Ratio">Ratio</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

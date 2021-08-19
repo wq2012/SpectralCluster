@@ -39,6 +39,7 @@ from spectralcluster import utils
 RefinementName = refinement.RefinementName
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
+EigenGapType = utils.EigenGapType
 
 
 class SpectralClusterer:
@@ -54,7 +55,8 @@ class SpectralClusterer:
                row_wise_renorm=False,
                custom_dist=&#34;cosine&#34;,
                max_iter=300,
-               constraint_options=None):
+               constraint_options=None,
+               eigengap_type=EigenGapType.Ratio):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -77,6 +79,7 @@ class SpectralClusterer:
       max_iter: the maximum number of iterations for the custom k-means
       constraint_options: a ConstraintOptions object that contains constraint
         arguments
+      eigengap_type: the type of the eigengap computation
     &#34;&#34;&#34;
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -91,6 +94,7 @@ class SpectralClusterer:
     self.custom_dist = custom_dist
     self.max_iter = max_iter
     self.constraint_options = constraint_options
+    self.eigengap_type = eigengap_type
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
@@ -133,7 +137,11 @@ class SpectralClusterer:
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+          eigenvalues,
+          self.max_clusters,
+          self.stop_eigenvalue,
+          self.eigengap_type,
+          descend=True)
     else:
       # Compute Laplacian matrix
       laplacian_norm = laplacian.compute_laplacian(
@@ -144,7 +152,7 @@ class SpectralClusterer:
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
+          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -187,7 +195,7 @@ class SpectralClusterer:
         (eigenvectors, n_clusters,
          max_delta_norm) = self._compute_eigenvectors_ncluster(
              affinity, constraint_matrix)
-        ratio = (1 - p_percentile) / max_delta_norm
+        ratio = np.sqrt(1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 
       eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
@@ -228,7 +236,7 @@ class SpectralClusterer:
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -264,6 +272,8 @@ functions defined in scipy.spatial.distance can be used</dd>
 <dt><strong><code>constraint_options</code></strong></dt>
 <dd>a ConstraintOptions object that contains constraint
 arguments</dd>
+<dt><strong><code>eigengap_type</code></strong></dt>
+<dd>the type of the eigengap computation</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -282,7 +292,8 @@ arguments</dd>
                row_wise_renorm=False,
                custom_dist=&#34;cosine&#34;,
                max_iter=300,
-               constraint_options=None):
+               constraint_options=None,
+               eigengap_type=EigenGapType.Ratio):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -305,6 +316,7 @@ arguments</dd>
       max_iter: the maximum number of iterations for the custom k-means
       constraint_options: a ConstraintOptions object that contains constraint
         arguments
+      eigengap_type: the type of the eigengap computation
     &#34;&#34;&#34;
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -319,6 +331,7 @@ arguments</dd>
     self.custom_dist = custom_dist
     self.max_iter = max_iter
     self.constraint_options = constraint_options
+    self.eigengap_type = eigengap_type
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
@@ -361,7 +374,11 @@ arguments</dd>
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.stop_eigenvalue, descend=True)
+          eigenvalues,
+          self.max_clusters,
+          self.stop_eigenvalue,
+          self.eigengap_type,
+          descend=True)
     else:
       # Compute Laplacian matrix
       laplacian_norm = laplacian.compute_laplacian(
@@ -372,7 +389,7 @@ arguments</dd>
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, descend=False)
+          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -415,7 +432,7 @@ arguments</dd>
         (eigenvectors, n_clusters,
          max_delta_norm) = self._compute_eigenvectors_ncluster(
              affinity, constraint_matrix)
-        ratio = (1 - p_percentile) / max_delta_norm
+        ratio = np.sqrt(1 - p_percentile) / max_delta_norm
         return ratio, eigenvectors, n_clusters
 
       eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
@@ -516,7 +533,7 @@ constraint matrix with prior information</dd>
       (eigenvectors, n_clusters,
        max_delta_norm) = self._compute_eigenvectors_ncluster(
            affinity, constraint_matrix)
-      ratio = (1 - p_percentile) / max_delta_norm
+      ratio = np.sqrt(1 - p_percentile) / max_delta_norm
       return ratio, eigenvectors, n_clusters
 
     eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)

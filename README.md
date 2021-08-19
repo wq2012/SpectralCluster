@@ -185,6 +185,15 @@ clusterer = spectral_clusterer.SpectralClusterer(
 labels = clusterer.predict(matrix, constraint_matrix)
 ```
 
+The constraint matrix can be constructed from a `speaker_turn_scores` list:
+
+```python
+from spectralcluster import constraint
+
+constraint_matrix = constraint.ConstraintMatrix(
+    spk_turn_entries, threshold=1).compute_diagonals()
+```
+
 ## Citations
 
 Our paper is cited as:
