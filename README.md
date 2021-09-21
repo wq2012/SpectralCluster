@@ -133,6 +133,13 @@ You can set `custom_dist="cosine"` when initializing your `SpectralClusterer` ob
 
 You can also use other distances supported by [scipy.spatial.distance](https://docs.scipy.org/doc/scipy/reference/spatial.distance.html), such as `"euclidean"` or `"mahalanobis"`.
 
+### Affinity matrix
+
+In our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/),
+the affinity between two embeddings is defined as `(cos(x,y)+1)/2`.
+
+You can also use other affinity functions by setting `affinity_function` when initializing your `SpectralClusterer` object.
+
 ### Auto-tune
 
 We also support auto-tuning the `p_percentile` parameter of the `RowWiseThreshold` refinement operation, which was original proposed in [this paper](https://arxiv.org/abs/2003.02405).
