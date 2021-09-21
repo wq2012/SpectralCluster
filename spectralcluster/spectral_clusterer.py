@@ -27,7 +27,8 @@ class SpectralClusterer:
                custom_dist="cosine",
                max_iter=300,
                constraint_options=None,
-               eigengap_type=EigenGapType.Ratio):
+               eigengap_type=EigenGapType.Ratio,
+               affinity_function=utils.compute_affinity_matrix):
     """Constructor of the clusterer.
 
     Args:
@@ -51,6 +52,8 @@ class SpectralClusterer:
       constraint_options: a ConstraintOptions object that contains constraint
         arguments
       eigengap_type: the type of the eigengap computation
+      affinity_function: a function to compute the affinity matrix from the
+        embeddings. This defaults to (cos(x,y)+1)/2
     """
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -66,6 +69,7 @@ class SpectralClusterer:
     self.max_iter = max_iter
     self.constraint_options = constraint_options
     self.eigengap_type = eigengap_type
+    self.affinity_function = affinity_function
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     """Perform eigen decomposition and estiamte the number of clusters.
@@ -150,7 +154,7 @@ class SpectralClusterer:
       raise ValueError("embeddings must be 2-dimensional")
 
     # Compute affinity matrix.
-    affinity = utils.compute_affinity_matrix(embeddings)
+    affinity = self.affinity_function(embeddings)
 
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
