@@ -89,12 +89,6 @@ class SpectralClusterer:
       n_clusters: number of clusters as an integer
       max_delta_norm: normalized maximum eigen gap
     """
-    if (self.constraint_options and
-        self.constraint_options.apply_before_refinement):
-      # Perform the constraint operation before refinement
-      affinity = self.constraint_options.constraint_operator.adjust_affinity(
-          affinity, constraint_matrix)
-
     # Perform refinement operations on the affinity matrix.
     for refinement_name in self.refinement_options.refinement_sequence:
       refinement_operator = self.refinement_options.get_refinement_operator(
@@ -155,6 +149,12 @@ class SpectralClusterer:
 
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
+
+    if (self.constraint_options and
+        self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation before refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
 
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
