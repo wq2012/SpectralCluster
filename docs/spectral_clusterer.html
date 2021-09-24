@@ -57,7 +57,8 @@ class SpectralClusterer:
                max_iter=300,
                constraint_options=None,
                eigengap_type=EigenGapType.Ratio,
-               affinity_function=utils.compute_affinity_matrix):
+               affinity_function=utils.compute_affinity_matrix,
+               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -83,6 +84,9 @@ class SpectralClusterer:
       eigengap_type: the type of the eigengap computation
       affinity_function: a function to compute the affinity matrix from the
         embeddings. This defaults to (cos(x,y)+1)/2
+      post_eigen_cluster_function: a function to cluster the spectral embeddings
+        after the eigenvalue computations. This function must have the same
+        signature as custom_distance_kmeans.run_kmeans
     &#34;&#34;&#34;
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -99,6 +103,7 @@ class SpectralClusterer:
     self.constraint_options = constraint_options
     self.eigengap_type = eigengap_type
     self.affinity_function = affinity_function
+    self.post_eigen_cluster_function = post_eigen_cluster_function
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
@@ -118,12 +123,6 @@ class SpectralClusterer:
       n_clusters: number of clusters as an integer
       max_delta_norm: normalized maximum eigen gap
     &#34;&#34;&#34;
-    if (self.constraint_options and
-        self.constraint_options.apply_before_refinement):
-      # Perform the constraint operation before refinement
-      affinity = self.constraint_options.constraint_operator.adjust_affinity(
-          affinity, constraint_matrix)
-
     # Perform refinement operations on the affinity matrix.
     for refinement_name in self.refinement_options.refinement_sequence:
       refinement_operator = self.refinement_options.get_refinement_operator(
@@ -185,6 +184,12 @@ class SpectralClusterer:
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
 
+    if (self.constraint_options and
+        self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation before refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
       if (RefinementName.RowWiseThreshold
@@ -220,9 +225,10 @@ class SpectralClusterer:
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
 
-    # Run K-means on spectral embeddings.
-    labels = custom_distance_kmeans.run_kmeans(
-        spectral_embeddings,
+    # Run clustering algorithm on spectral embeddings. This defaults
+    # to customized K-means.
+    labels = self.post_eigen_cluster_function(
+        spectral_embeddings=spectral_embeddings,
         n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
@@ -240,7 +246,7 @@ class SpectralClusterer:
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio, affinity_function=&lt;function compute_affinity_matrix&gt;)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio, affinity_function=&lt;function compute_affinity_matrix&gt;, post_eigen_cluster_function=&lt;function run_kmeans&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -281,6 +287,10 @@ arguments</dd>
 <dt><strong><code>affinity_function</code></strong></dt>
 <dd>a function to compute the affinity matrix from the
 embeddings. This defaults to (cos(x,y)+1)/2</dd>
+<dt><strong><code>post_eigen_cluster_function</code></strong></dt>
+<dd>a function to cluster the spectral embeddings
+after the eigenvalue computations. This function must have the same
+signature as custom_distance_kmeans.run_kmeans</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -301,7 +311,8 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
                max_iter=300,
                constraint_options=None,
                eigengap_type=EigenGapType.Ratio,
-               affinity_function=utils.compute_affinity_matrix):
+               affinity_function=utils.compute_affinity_matrix,
+               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -327,6 +338,9 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
       eigengap_type: the type of the eigengap computation
       affinity_function: a function to compute the affinity matrix from the
         embeddings. This defaults to (cos(x,y)+1)/2
+      post_eigen_cluster_function: a function to cluster the spectral embeddings
+        after the eigenvalue computations. This function must have the same
+        signature as custom_distance_kmeans.run_kmeans
     &#34;&#34;&#34;
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -343,6 +357,7 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
     self.constraint_options = constraint_options
     self.eigengap_type = eigengap_type
     self.affinity_function = affinity_function
+    self.post_eigen_cluster_function = post_eigen_cluster_function
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
@@ -362,12 +377,6 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
       n_clusters: number of clusters as an integer
       max_delta_norm: normalized maximum eigen gap
     &#34;&#34;&#34;
-    if (self.constraint_options and
-        self.constraint_options.apply_before_refinement):
-      # Perform the constraint operation before refinement
-      affinity = self.constraint_options.constraint_operator.adjust_affinity(
-          affinity, constraint_matrix)
-
     # Perform refinement operations on the affinity matrix.
     for refinement_name in self.refinement_options.refinement_sequence:
       refinement_operator = self.refinement_options.get_refinement_operator(
@@ -429,6 +438,12 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
 
+    if (self.constraint_options and
+        self.constraint_options.apply_before_refinement):
+      # Perform the constraint operation before refinement
+      affinity = self.constraint_options.constraint_operator.adjust_affinity(
+          affinity, constraint_matrix)
+
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
       if (RefinementName.RowWiseThreshold
@@ -464,9 +479,10 @@ embeddings. This defaults to (cos(x,y)+1)/2</dd>
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
 
-    # Run K-means on spectral embeddings.
-    labels = custom_distance_kmeans.run_kmeans(
-        spectral_embeddings,
+    # Run clustering algorithm on spectral embeddings. This defaults
+    # to customized K-means.
+    labels = self.post_eigen_cluster_function(
+        spectral_embeddings=spectral_embeddings,
         n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
@@ -530,6 +546,12 @@ constraint matrix with prior information</dd>
   # Compute affinity matrix.
   affinity = self.affinity_function(embeddings)
 
+  if (self.constraint_options and
+      self.constraint_options.apply_before_refinement):
+    # Perform the constraint operation before refinement
+    affinity = self.constraint_options.constraint_operator.adjust_affinity(
+        affinity, constraint_matrix)
+
   if self.autotune:
     # Use Auto-tuning method to find a good p_percentile.
     if (RefinementName.RowWiseThreshold
@@ -565,9 +587,10 @@ constraint matrix with prior information</dd>
     spectral_embeddings = spectral_embeddings / np.reshape(
         rows_norm, (spectral_embeddings.shape[0], 1))
 
-  # Run K-means on spectral embeddings.
-  labels = custom_distance_kmeans.run_kmeans(
-      spectral_embeddings,
+  # Run clustering algorithm on spectral embeddings. This defaults
+  # to customized K-means.
+  labels = self.post_eigen_cluster_function(
+      spectral_embeddings=spectral_embeddings,
       n_clusters=n_clusters,
       custom_dist=self.custom_dist,
       max_iter=self.max_iter)

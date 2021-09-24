@@ -28,7 +28,8 @@ class SpectralClusterer:
                max_iter=300,
                constraint_options=None,
                eigengap_type=EigenGapType.Ratio,
-               affinity_function=utils.compute_affinity_matrix):
+               affinity_function=utils.compute_affinity_matrix,
+               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
     """Constructor of the clusterer.
 
     Args:
@@ -54,6 +55,9 @@ class SpectralClusterer:
       eigengap_type: the type of the eigengap computation
       affinity_function: a function to compute the affinity matrix from the
         embeddings. This defaults to (cos(x,y)+1)/2
+      post_eigen_cluster_function: a function to cluster the spectral embeddings
+        after the eigenvalue computations. This function must have the same
+        signature as custom_distance_kmeans.run_kmeans
     """
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -70,6 +74,7 @@ class SpectralClusterer:
     self.constraint_options = constraint_options
     self.eigengap_type = eigengap_type
     self.affinity_function = affinity_function
+    self.post_eigen_cluster_function = post_eigen_cluster_function
 
   def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
     """Perform eigen decomposition and estiamte the number of clusters.
@@ -191,9 +196,10 @@ class SpectralClusterer:
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
 
-    # Run K-means on spectral embeddings.
-    labels = custom_distance_kmeans.run_kmeans(
-        spectral_embeddings,
+    # Run clustering algorithm on spectral embeddings. This defaults
+    # to customized K-means.
+    labels = self.post_eigen_cluster_function(
+        spectral_embeddings=spectral_embeddings,
         n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
