@@ -36,16 +36,16 @@ class TestConstraintMatrix(unittest.TestCase):
   """Tests for the ConstraintMatrix class."""
 
   def test_3by3_constraint_matrix(self):
-    spk_turn_entries = [0, 0, 14.308253288269043]
+    speaker_turn_scores = [0, 0, 14.308253288269043]
     constraint_matrix = constraint.ConstraintMatrix(
-        spk_turn_entries, threshold=1).compute_diagonals()
+        speaker_turn_scores, threshold=1).compute_diagonals()
     expected = np.array([[0, 1, 0], [1, 0, -1], [0, -1, 0]])
     self.assertTrue(np.array_equal(constraint_matrix, expected))
 
   def test_3by3_constraint_matrix_threshold(self):
-    spk_turn_entries = [0, 0, 0.12095779925584793]
+    speaker_turn_scores = [0, 0, 0.12095779925584793]
     constraint_matrix = constraint.ConstraintMatrix(
-        spk_turn_entries, threshold=1).compute_diagonals()
+        speaker_turn_scores, threshold=1).compute_diagonals()
     expected = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
     self.assertTrue(np.array_equal(constraint_matrix, expected))
 

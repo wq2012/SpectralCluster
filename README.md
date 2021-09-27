@@ -203,7 +203,7 @@ The constraint matrix can be constructed from a `speaker_turn_scores` list:
 from spectralcluster import constraint
 
 constraint_matrix = constraint.ConstraintMatrix(
-    spk_turn_entries, threshold=1).compute_diagonals()
+    speaker_turn_scores, threshold=1).compute_diagonals()
 ```
 
 ## Citations
