@@ -166,6 +166,8 @@ For the complete list of parameters of `AutoTune`, see
 
 ### Constrained spectral clustering
 
+![turn-to-diarize-diagram](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/turn-to-diarize.png)
+
 In the [Turn-to-Diarize paper](https://arxiv.org/abs/2109.11641),
 the spectral clustering is constrained by speaker turns.
 We implemented two constrained spectral clustering methods:
