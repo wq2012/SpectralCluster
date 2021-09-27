@@ -71,8 +71,10 @@ icassp2018_clusterer = SpectralClusterer(
     refinement_options=icassp2018_refinement_options,
     custom_dist=&#34;cosine&#34;)
 
-# Configurations of Turn-To-Diarize system using the
-# Turn + Constraint Propagation + AutoTune method
+# Configurations of Turn-to-Diarize system using the
+# Turn + Constraint Propagation + AutoTune method described in the paper
+# &#34;Turn-to-Diarize: Online Speaker Diarization Constrained by
+# Transformer Transducer Speaker Turn Detection&#34;.
 TURNTODIARIZE_REFINEMENT_SEQUENCE = [
     RefinementName.RowWiseThreshold, RefinementName.Symmetrize
 ]

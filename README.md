@@ -1,23 +1,25 @@
 # Spectral Clustering
 [![Python application](https://github.com/wq2012/SpectralCluster/workflows/Python%20application/badge.svg)](https://github.com/wq2012/SpectralCluster/actions) [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster) [![Downloads](https://pepy.tech/badge/spectralcluster)](https://pepy.tech/project/spectralcluster) [![codecov](https://codecov.io/gh/wq2012/SpectralCluster/branch/master/graph/badge.svg)](https://codecov.io/gh/wq2012/SpectralCluster) [![Documentation](https://img.shields.io/badge/api-documentation-blue.svg)](https://wq2012.github.io/SpectralCluster)
 
-## Note
+## Overview
 
-We are currently adding new functionalities to this library to include
-some algorithms to appear in an upcoming paper. We are updating the APIs as
-well.
+This is a Python re-implementation of the spectral clustering and
+constrained spectral clustering algorithms in these two papers:
+
+* [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/)
+* [Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection](https://arxiv.org/abs/2109.11641)
+
+![refinement](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/refinement.png)
+
+## Notice
+
+We recently added new functionalities to this library to include
+ algorithms in a [new paper](https://arxiv.org/abs/2109.11641). We updated the APIs as well.
 
 If you depend on our old API, please use an **older version** of this library:
 ```
 pip3 install spectralcluster==0.1.0
 ```
-
-## Overview
-
-This is a Python re-implementation of the spectral clustering algorithm in the
-paper [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/).
-
-![refinement](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/refinement.png)
 
 ## Disclaimer
 
@@ -49,7 +51,8 @@ python3 -m pip install spectralcluster
 
 Simply use the `predict()` method of class `SpectralClusterer` to perform
 spectral clustering. The example below should be closest to the original C++
-implemention used my our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/).
+implemention used our
+[ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/).
 
 ```python
 from spectralcluster import configs
@@ -163,7 +166,9 @@ For the complete list of parameters of `AutoTune`, see
 
 ### Constrained spectral clustering
 
-We also implemented 2 constrained spectral clustering methods:
+In the [Turn-to-Diarize paper](https://arxiv.org/abs/2109.11641),
+the spectral clustering is constrained by speaker turns.
+We implemented two constrained spectral clustering methods:
 
 * Affinity integration.
 * Constraint propagation (see paper [[1](https://link.springer.com/chapter/10.1007/978-3-642-15567-3_1)] and [[2](https://arxiv.org/abs/1109.4684)]).
@@ -203,22 +208,29 @@ constraint_matrix = constraint.ConstraintMatrix(
 
 ## Citations
 
-Our paper is cited as:
+Our papers are cited as:
 
 ```
 @inproceedings{wang2018speaker,
-  title={Speaker diarization with lstm},
+  title={{Speaker Diarization with LSTM}},
   author={Wang, Quan and Downey, Carlton and Wan, Li and Mansfield, Philip Andrew and Moreno, Ignacio Lopz},
   booktitle={2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   pages={5239--5243},
   year={2018},
   organization={IEEE}
 }
+
+@article{xia2021turn,
+  title={{Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection}},
+  author={Wei Xia and Han Lu and Quan Wang and Anshuman Tripathi and Ignacio Lopez Moreno and Hasim Sak},
+  journal={arXiv preprint arXiv:2109.11641},
+  year={2021}
+}
 ```
 
 ## Misc
 
-Our new speaker diarization systems are now fully supervised, powered by
+We also have fully supervised speaker diarization systems, powered by
 [uis-rnn](https://github.com/google/uis-rnn).
 Check this [Google AI Blog](https://ai.googleblog.com/2018/11/accurate-online-speaker-diarization.html).
 
