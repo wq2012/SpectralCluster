@@ -9,11 +9,11 @@ EPS = 1e-10
 class EigenGapType(enum.Enum):
   """Different types of the eigengap computation."""
   # Eigengap is the ratio of two eigenvalues
-  Ratio = 1
+  Ratio = enum.auto()
 
   # Eigengap is the subtraction of two eigenvalues, and it is normalized
   # by the maximum eigenvalue
-  NormalizedDiff = 2
+  NormalizedDiff = enum.auto()
 
 
 def compute_affinity_matrix(embeddings):

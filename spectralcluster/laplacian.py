@@ -9,16 +9,16 @@ EPS = 1e-10
 class LaplacianType(enum.Enum):
   """Different types of Laplacian matrix."""
   # The affinity matrix, not a Laplacian: W
-  Affinity = 0
+  Affinity = enum.auto()
 
   # The unnormalied Laplacian: L = D - W
-  Unnormalized = 1
+  Unnormalized = enum.auto()
 
   # The random walk view normalized Laplacian:  D^{-1} * L
-  RandomWalk = 2
+  RandomWalk = enum.auto()
 
   # The graph cut view normalized Laplacian: D^{-1/2} * L * D^{-1/2}
-  GraphCut = 3
+  GraphCut = enum.auto()
 
 
 def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):

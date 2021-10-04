@@ -9,16 +9,16 @@ EPS = 1e-10
 class ConstraintName(enum.Enum):
   """The names of constrained operations."""
   # The Affinity Integration method
-  AffinityIntegration = 1
+  AffinityIntegration = enum.auto()
 
   # The Constraint Propagation method
-  ConstraintPropagation = 2
+  ConstraintPropagation = enum.auto()
 
 
 class IntegrationType(enum.Enum):
   """The integration types for the Affinity Integration method."""
-  Max = 1
-  Average = 2
+  Max = enum.auto()
+  Average = enum.auto()
 
 
 class ConstraintOptions:

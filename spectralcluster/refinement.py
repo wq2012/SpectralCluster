@@ -8,30 +8,30 @@ from scipy.ndimage import gaussian_filter
 
 class RefinementName(enum.Enum):
   """The names of the refinement operations."""
-  CropDiagonal = 1
-  GaussianBlur = 2
-  RowWiseThreshold = 3
-  Symmetrize = 4
-  Diffuse = 5
-  RowWiseNormalize = 6
+  CropDiagonal = enum.auto()
+  GaussianBlur = enum.auto()
+  RowWiseThreshold = enum.auto()
+  Symmetrize = enum.auto()
+  Diffuse = enum.auto()
+  RowWiseNormalize = enum.auto()
 
 
 class ThresholdType(enum.Enum):
   """Different types of thresholding."""
   # We clear values that are smaller than row_max*p_percentile
-  RowMax = 1
+  RowMax = enum.auto()
 
   # We clear (p_percentile*100)% smallest values of the entire row
-  Percentile = 2
+  Percentile = enum.auto()
 
 
 class SymmetrizeType(enum.Enum):
   """Different types of symmetrization operation."""
   # We use max(A, A^T)
-  Max = 1
+  Max = enum.auto()
 
   # We use 1/2(A + A^T)
-  Average = 2
+  Average = enum.auto()
 
 
 class RefinementOptions:
