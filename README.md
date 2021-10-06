@@ -224,7 +224,7 @@ Our papers are cited as:
 
 @article{xia2021turn,
   title={{Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection}},
-  author={Wei Xia and Han Lu and Quan Wang and Anshuman Tripathi and Ignacio Lopez Moreno and Hasim Sak},
+  author={Wei Xia and Han Lu and Quan Wang and Anshuman Tripathi and Yiling Huang and Ignacio Lopez Moreno and Hasim Sak},
   journal={arXiv preprint arXiv:2109.11641},
   year={2021}
 }
