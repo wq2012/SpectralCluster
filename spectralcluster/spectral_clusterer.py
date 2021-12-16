@@ -112,9 +112,9 @@ class SpectralClusterer:
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
           eigenvalues,
-          self.max_clusters,
-          self.stop_eigenvalue,
-          self.eigengap_type,
+          max_clusters=self.max_clusters,
+          stop_eigenvalue=self.stop_eigenvalue,
+          eigengap_type=self.eigengap_type,
           descend=True)
     else:
       # Compute Laplacian matrix
@@ -126,7 +126,10 @@ class SpectralClusterer:
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
+          eigenvalues,
+          max_clusters=self.max_clusters,
+          eigengap_type=self.eigengap_type,
+          descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -191,7 +194,7 @@ class SpectralClusterer:
     spectral_embeddings = eigenvectors[:, :n_clusters]
 
     if self.row_wise_renorm:
-      # Perfrom row wise re-normalization.
+      # Perform row wise re-normalization.
       rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
