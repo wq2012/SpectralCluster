@@ -222,11 +222,12 @@ Our papers are cited as:
   organization={IEEE}
 }
 
-@article{xia2021turn,
+@inproceedings{xia2022turn,
   title={{Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection}},
   author={Wei Xia and Han Lu and Quan Wang and Anshuman Tripathi and Yiling Huang and Ignacio Lopez Moreno and Hasim Sak},
-  journal={arXiv preprint arXiv:2109.11641},
-  year={2021}
+  booktitle={2012 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year={2022},
+  organization={IEEE}
 }
 ```
 
