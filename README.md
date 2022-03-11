@@ -83,7 +83,7 @@ For the complete list of parameters of `SpectralClusterer`, see
 `spectralcluster/spectral_clusterer.py`.
 
 [![youtube_screenshot_icassp2018](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/youtube_screenshot_icassp2018.jpg)](https://youtu.be/pjxGPZQeeO4)
-[![youtube_screenshot_icassp2022](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/youtube_screenshot_icassp2022.jpg)](https://youtu.be/U79Aw1ky7ag)
+[![youtube_screenshot_icassp2022](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/youtube_screenshot_icassp2022.png)](https://youtu.be/U79Aw1ky7ag)
 
 ## Advanced features
 
