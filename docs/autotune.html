@@ -63,7 +63,7 @@ class AutoTune:
 
   def get_percentile_range(self):
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
-    num_steps = np.int(
+    num_steps = int(
         np.ceil(
             (self.p_percentile_max - self.p_percentile_min) / self.search_step))
     return list(
@@ -199,7 +199,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 
   def get_percentile_range(self):
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
-    num_steps = np.int(
+    num_steps = int(
         np.ceil(
             (self.p_percentile_max - self.p_percentile_min) / self.search_step))
     return list(
@@ -283,7 +283,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 </summary>
 <pre><code class="python">def get_percentile_range(self):
   &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
-  num_steps = np.int(
+  num_steps = int(
       np.ceil(
           (self.p_percentile_max - self.p_percentile_min) / self.search_step))
   return list(

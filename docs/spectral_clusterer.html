@@ -32,6 +32,7 @@
 import numpy as np
 from spectralcluster import constraint
 from spectralcluster import custom_distance_kmeans
+from spectralcluster import fallback_clusterer
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
@@ -50,6 +51,7 @@ class SpectralClusterer:
                max_clusters=None,
                refinement_options=None,
                autotune=None,
+               fallback_options=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -70,6 +72,8 @@ class SpectralClusterer:
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix. If None, we will not refine
       autotune: an AutoTune object to automatically search p_percentile
+      fallback_options: a FallbackOptions object to indicate when to run
+        fallback clusterer instead of spectral clusterer
       laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
@@ -95,6 +99,10 @@ class SpectralClusterer:
     else:
       self.refinement_options = refinement_options
     self.autotune = autotune
+    if not fallback_options:
+      self.fallback_options = fallback_clusterer.FallbackOptions()
+    else:
+      self.fallback_options = fallback_options
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
@@ -141,9 +149,9 @@ class SpectralClusterer:
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
           eigenvalues,
-          self.max_clusters,
-          self.stop_eigenvalue,
-          self.eigengap_type,
+          max_clusters=self.max_clusters,
+          stop_eigenvalue=self.stop_eigenvalue,
+          eigengap_type=self.eigengap_type,
           descend=True)
     else:
       # Compute Laplacian matrix
@@ -155,7 +163,10 @@ class SpectralClusterer:
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
+          eigenvalues,
+          max_clusters=self.max_clusters,
+          eigengap_type=self.eigengap_type,
+          descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -180,6 +191,13 @@ class SpectralClusterer:
       raise TypeError(&#34;embeddings must be a numpy array&#34;)
     if len(embeddings.shape) != 2:
       raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
+
+    # Check whether we need to run fallback clusterer instead.
+    if (embeddings.shape[0] &lt;
+        self.fallback_options.spectral_min_embeddings):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      return temp_clusterer.predict(embeddings)
 
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
@@ -220,7 +238,7 @@ class SpectralClusterer:
     spectral_embeddings = eigenvectors[:, :n_clusters]
 
     if self.row_wise_renorm:
-      # Perfrom row wise re-normalization.
+      # Perform row wise re-normalization.
       rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
@@ -246,7 +264,7 @@ class SpectralClusterer:
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio, affinity_function=&lt;function compute_affinity_matrix&gt;, post_eigen_cluster_function=&lt;function run_kmeans&gt;)</span>
+<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, fallback_options=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio, affinity_function=&lt;function compute_affinity_matrix&gt;, post_eigen_cluster_function=&lt;function run_kmeans&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -265,6 +283,9 @@ clusters</dd>
 arguments for the affinity matrix. If None, we will not refine</dd>
 <dt><strong><code>autotune</code></strong></dt>
 <dd>an AutoTune object to automatically search p_percentile</dd>
+<dt><strong><code>fallback_options</code></strong></dt>
+<dd>a FallbackOptions object to indicate when to run
+fallback clusterer instead of spectral clusterer</dd>
 <dt><strong><code>laplacian_type</code></strong></dt>
 <dd>a LaplacianType. If None, we do not use a laplacian matrix</dd>
 <dt><strong><code>stop_eigenvalue</code></strong></dt>
@@ -304,6 +325,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
                max_clusters=None,
                refinement_options=None,
                autotune=None,
+               fallback_options=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -324,6 +346,8 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix. If None, we will not refine
       autotune: an AutoTune object to automatically search p_percentile
+      fallback_options: a FallbackOptions object to indicate when to run
+        fallback clusterer instead of spectral clusterer
       laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
@@ -349,6 +373,10 @@ signature as custom_distance_kmeans.run_kmeans</dd>
     else:
       self.refinement_options = refinement_options
     self.autotune = autotune
+    if not fallback_options:
+      self.fallback_options = fallback_clusterer.FallbackOptions()
+    else:
+      self.fallback_options = fallback_options
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
@@ -395,9 +423,9 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
           eigenvalues,
-          self.max_clusters,
-          self.stop_eigenvalue,
-          self.eigengap_type,
+          max_clusters=self.max_clusters,
+          stop_eigenvalue=self.stop_eigenvalue,
+          eigengap_type=self.eigengap_type,
           descend=True)
     else:
       # Compute Laplacian matrix
@@ -409,7 +437,10 @@ signature as custom_distance_kmeans.run_kmeans</dd>
           laplacian_norm, descend=False)
       # Get number of clusters. Eigen values are sorted in an ascending order
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
-          eigenvalues, self.max_clusters, self.eigengap_type, descend=False)
+          eigenvalues,
+          max_clusters=self.max_clusters,
+          eigengap_type=self.eigengap_type,
+          descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
   def predict(self, embeddings, constraint_matrix=None):
@@ -434,6 +465,13 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       raise TypeError(&#34;embeddings must be a numpy array&#34;)
     if len(embeddings.shape) != 2:
       raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
+
+    # Check whether we need to run fallback clusterer instead.
+    if (embeddings.shape[0] &lt;
+        self.fallback_options.spectral_min_embeddings):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      return temp_clusterer.predict(embeddings)
 
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
@@ -474,7 +512,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
     spectral_embeddings = eigenvectors[:, :n_clusters]
 
     if self.row_wise_renorm:
-      # Perfrom row wise re-normalization.
+      # Perform row wise re-normalization.
       rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
       spectral_embeddings = spectral_embeddings / np.reshape(
           rows_norm, (spectral_embeddings.shape[0], 1))
@@ -543,6 +581,13 @@ constraint matrix with prior information</dd>
   if len(embeddings.shape) != 2:
     raise ValueError(&#34;embeddings must be 2-dimensional&#34;)
 
+  # Check whether we need to run fallback clusterer instead.
+  if (embeddings.shape[0] &lt;
+      self.fallback_options.spectral_min_embeddings):
+    temp_clusterer = fallback_clusterer.FallbackClusterer(
+        self.fallback_options)
+    return temp_clusterer.predict(embeddings)
+
   # Compute affinity matrix.
   affinity = self.affinity_function(embeddings)
 
@@ -582,7 +627,7 @@ constraint matrix with prior information</dd>
   spectral_embeddings = eigenvectors[:, :n_clusters]
 
   if self.row_wise_renorm:
-    # Perfrom row wise re-normalization.
+    # Perform row wise re-normalization.
     rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
     spectral_embeddings = spectral_embeddings / np.reshape(
         rows_norm, (spectral_embeddings.shape[0], 1))

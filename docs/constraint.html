@@ -38,16 +38,16 @@ EPS = 1e-10
 class ConstraintName(enum.Enum):
   &#34;&#34;&#34;The names of constrained operations.&#34;&#34;&#34;
   # The Affinity Integration method
-  AffinityIntegration = 1
+  AffinityIntegration = enum.auto()
 
   # The Constraint Propagation method
-  ConstraintPropagation = 2
+  ConstraintPropagation = enum.auto()
 
 
 class IntegrationType(enum.Enum):
   &#34;&#34;&#34;The integration types for the Affinity Integration method.&#34;&#34;&#34;
-  Max = 1
-  Average = 2
+  Max = enum.auto()
+  Average = enum.auto()
 
 
 class ConstraintOptions:
@@ -419,10 +419,10 @@ not used.</dd>
 <pre><code class="python">class ConstraintName(enum.Enum):
   &#34;&#34;&#34;The names of constrained operations.&#34;&#34;&#34;
   # The Affinity Integration method
-  AffinityIntegration = 1
+  AffinityIntegration = enum.auto()
 
   # The Constraint Propagation method
-  ConstraintPropagation = 2</code></pre>
+  ConstraintPropagation = enum.auto()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -780,8 +780,8 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
 </summary>
 <pre><code class="python">class IntegrationType(enum.Enum):
   &#34;&#34;&#34;The integration types for the Affinity Integration method.&#34;&#34;&#34;
-  Max = 1
-  Average = 2</code></pre>
+  Max = enum.auto()
+  Average = enum.auto()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

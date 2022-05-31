@@ -17,6 +17,6 @@ rm -rf spectralcluster.egg-info
 
 # build and upload
 python3 setup.py sdist bdist_wheel
-python3 -m twine upload dist/*
+python3 -m twine upload dist/* --verbose
 
 popd

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>spectralcluster API documentation</title>
-<meta name="description" content="__init__ file." />
+<title>spectralcluster.fallback_clusterer API documentation</title>
+<meta name="description" content="In some cases, we use a fallback clusterer instead of spectral …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,94 +19,144 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>spectralcluster</code></h1>
+<h1 class="title">Module <code>spectralcluster.fallback_clusterer</code></h1>
 </header>
 <section id="section-intro">
-<p><strong>init</strong> file.</p>
+<p>In some cases, we use a fallback clusterer instead of spectral.</p>
+<p>Spectral clustering exploits the global structure of the data. But there are
+cases where spectral clustering does not work as well as some other simpler
+clustering methods, such as when the number of embeddings is too small.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;__init__ file.&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;In some cases, we use a fallback clusterer instead of spectral.
 
-from . import autotune
-from . import configs
-from . import constraint
-from . import fallback_clusterer
-from . import laplacian
-from . import refinement
-from . import spectral_clusterer
-from . import utils
+Spectral clustering exploits the global structure of the data. But there are
+cases where spectral clustering does not work as well as some other simpler
+clustering methods, such as when the number of embeddings is too small.
+&#34;&#34;&#34;
 
-AutoTune = autotune.AutoTune
+from sklearn.cluster import AgglomerativeClustering
 
-ConstraintOptions = constraint.ConstraintOptions
-ConstraintName = constraint.ConstraintName
-IntegrationType = constraint.IntegrationType
 
-FallbackOptions = fallback_clusterer.FallbackOptions
+class FallbackOptions:
+  &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-LaplacianType = laplacian.LaplacianType
+  def __init__(self, spectral_min_embeddings=1):
+    &#34;&#34;&#34;Initialization of the fallback clusterer.
 
-RefinementName = refinement.RefinementName
-RefinementOptions = refinement.RefinementOptions
-ThresholdType = refinement.ThresholdType
-SymmetrizeType = refinement.SymmetrizeType
+    Args:
+      spectral_min_embeddings: we only run spectral clusterer if we have at
+        least these many embeddings; otherwise we run fallback clusterer
+    &#34;&#34;&#34;
+    self.spectral_min_embeddings = spectral_min_embeddings
 
-SpectralClusterer = spectral_clusterer.SpectralClusterer
 
-EigenGapType = utils.EigenGapType
+class FallbackClusterer:
+  &#34;&#34;&#34;Fallback clusterer. So far we simply use AgglomerativeClustering.&#34;&#34;&#34;
 
-ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE
-TURNTODIARIZE_REFINEMENT_SEQUENCE = configs.TURNTODIARIZE_REFINEMENT_SEQUENCE</code></pre>
+  def __init__(self, options):
+    &#34;&#34;&#34;Initilization of the fallback clusterer.
+
+    Args:
+      options: an object of FallbackOptions
+    &#34;&#34;&#34;
+    self.options = options
+    self.clusterer = AgglomerativeClustering()
+
+  def predict(self, embeddings):
+    return self.clusterer.fit_predict(embeddings)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></dt>
+<dt id="spectralcluster.fallback_clusterer.FallbackClusterer"><code class="flex name class">
+<span>class <span class="ident">FallbackClusterer</span></span>
+<span>(</span><span>options)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Auto-tuning hyper-parameters.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.configs" href="configs.html">spectralcluster.configs</a></code></dt>
+<div class="desc"><p>Fallback clusterer. So far we simply use AgglomerativeClustering.</p>
+<p>Initilization of the fallback clusterer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>options</code></strong></dt>
+<dd>an object of FallbackOptions</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FallbackClusterer:
+  &#34;&#34;&#34;Fallback clusterer. So far we simply use AgglomerativeClustering.&#34;&#34;&#34;
+
+  def __init__(self, options):
+    &#34;&#34;&#34;Initilization of the fallback clusterer.
+
+    Args:
+      options: an object of FallbackOptions
+    &#34;&#34;&#34;
+    self.options = options
+    self.clusterer = AgglomerativeClustering()
+
+  def predict(self, embeddings):
+    return self.clusterer.fit_predict(embeddings)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="spectralcluster.fallback_clusterer.FallbackClusterer.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, embeddings)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Example configurations.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.constraint" href="constraint.html">spectralcluster.constraint</a></code></dt>
-<dd>
-<div class="desc"><p>Constraint information.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></dt>
-<dd>
-<div class="desc"><p>Implement custom kmeans …</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.fallback_clusterer" href="fallback_clusterer.html">spectralcluster.fallback_clusterer</a></code></dt>
-<dd>
-<div class="desc"><p>In some cases, we use a fallback clusterer instead of spectral …</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></dt>
-<dd>
-<div class="desc"><p>Laplacian matrix.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></dt>
-<dd>
-<div class="desc"><p>Affinity matrix refinemnet operations.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></dt>
-<dd>
-<div class="desc"><p>A spectral clusterer class to perform clustering.</p></div>
-</dd>
-<dt><code class="name"><a title="spectralcluster.utils" href="utils.html">spectralcluster.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Utility functions.</p></div>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, embeddings):
+  return self.clusterer.fit_predict(embeddings)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
+<span>class <span class="ident">FallbackOptions</span></span>
+<span>(</span><span>spectral_min_embeddings=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Options for fallback options.</p>
+<p>Initialization of the fallback clusterer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>spectral_min_embeddings</code></strong></dt>
+<dd>we only run spectral clusterer if we have at
+least these many embeddings; otherwise we run fallback clusterer</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FallbackOptions:
+  &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
+
+  def __init__(self, spectral_min_embeddings=1):
+    &#34;&#34;&#34;Initialization of the fallback clusterer.
+
+    Args:
+      spectral_min_embeddings: we only run spectral clusterer if we have at
+        least these many embeddings; otherwise we run fallback clusterer
+    &#34;&#34;&#34;
+    self.spectral_min_embeddings = spectral_min_embeddings</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -115,17 +165,22 @@ TURNTODIARIZE_REFINEMENT_SEQUENCE = configs.TURNTODIARIZE_REFINEMENT_SEQUENCE</c
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="spectralcluster.autotune" href="autotune.html">spectralcluster.autotune</a></code></li>
-<li><code><a title="spectralcluster.configs" href="configs.html">spectralcluster.configs</a></code></li>
-<li><code><a title="spectralcluster.constraint" href="constraint.html">spectralcluster.constraint</a></code></li>
-<li><code><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></li>
-<li><code><a title="spectralcluster.fallback_clusterer" href="fallback_clusterer.html">spectralcluster.fallback_clusterer</a></code></li>
-<li><code><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></li>
-<li><code><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></li>
-<li><code><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></li>
-<li><code><a title="spectralcluster.utils" href="utils.html">spectralcluster.utils</a></code></li>
+<li><code><a title="spectralcluster" href="index.html">spectralcluster</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="spectralcluster.fallback_clusterer.FallbackClusterer" href="#spectralcluster.fallback_clusterer.FallbackClusterer">FallbackClusterer</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackClusterer.predict" href="#spectralcluster.fallback_clusterer.FallbackClusterer.predict">predict</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.fallback_clusterer.FallbackOptions" href="#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>

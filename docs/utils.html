@@ -38,11 +38,11 @@ EPS = 1e-10
 class EigenGapType(enum.Enum):
   &#34;&#34;&#34;Different types of the eigengap computation.&#34;&#34;&#34;
   # Eigengap is the ratio of two eigenvalues
-  Ratio = 1
+  Ratio = enum.auto()
 
   # Eigengap is the subtraction of two eigenvalues, and it is normalized
   # by the maximum eigenvalue
-  NormalizedDiff = 2
+  NormalizedDiff = enum.auto()
 
 
 def compute_affinity_matrix(embeddings):
@@ -443,11 +443,11 @@ labels always appear first</dd>
 <pre><code class="python">class EigenGapType(enum.Enum):
   &#34;&#34;&#34;Different types of the eigengap computation.&#34;&#34;&#34;
   # Eigengap is the ratio of two eigenvalues
-  Ratio = 1
+  Ratio = enum.auto()
 
   # Eigengap is the subtraction of two eigenvalues, and it is normalized
   # by the maximum eigenvalue
-  NormalizedDiff = 2</code></pre>
+  NormalizedDiff = enum.auto()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
