@@ -3,6 +3,7 @@
 import numpy as np
 from spectralcluster import constraint
 from spectralcluster import custom_distance_kmeans
+from spectralcluster import fallback_clusterer
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
@@ -21,6 +22,7 @@ class SpectralClusterer:
                max_clusters=None,
                refinement_options=None,
                autotune=None,
+               fallback_options=None,
                laplacian_type=None,
                stop_eigenvalue=1e-2,
                row_wise_renorm=False,
@@ -41,6 +43,8 @@ class SpectralClusterer:
       refinement_options: a RefinementOptions object that contains refinement
         arguments for the affinity matrix. If None, we will not refine
       autotune: an AutoTune object to automatically search p_percentile
+      fallback_options: a FallbackOptions object to indicate when to run
+        fallback clusterer instead of spectral clusterer
       laplacian_type: a LaplacianType. If None, we do not use a laplacian matrix
       stop_eigenvalue: when computing the number of clusters using Eigen Gap, we
         do not look at eigen values smaller than this value
@@ -66,6 +70,10 @@ class SpectralClusterer:
     else:
       self.refinement_options = refinement_options
     self.autotune = autotune
+    if not fallback_options:
+      self.fallback_options = fallback_clusterer.FallbackOptions()
+    else:
+      self.fallback_options = fallback_options
     self.laplacian_type = laplacian_type
     self.row_wise_renorm = row_wise_renorm
     self.stop_eigenvalue = stop_eigenvalue
@@ -154,6 +162,13 @@ class SpectralClusterer:
       raise TypeError("embeddings must be a numpy array")
     if len(embeddings.shape) != 2:
       raise ValueError("embeddings must be 2-dimensional")
+
+    # Check whether we need to run fallback clusterer instead.
+    if (embeddings.shape[0] <
+        self.fallback_options.spectral_min_embeddings):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      return temp_clusterer.predict(embeddings)
 
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)

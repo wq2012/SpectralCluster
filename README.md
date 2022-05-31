@@ -165,6 +165,16 @@ autotune = AutoTune(
 For the complete list of parameters of `AutoTune`, see
 `spectralcluster/autotune.py`.
 
+### Fallback clusterer
+
+Spectral clustering exploits the global structure of the data. But there are
+cases where spectral clustering does not work as well as some other simpler
+clustering methods, such as when the number of embeddings is too small.
+
+When initializing the `SpectralClusterer` object, you can pass in a `FallbackOptions` object to the `fallback_options` argument, to use a fallback clusterer under certain conditions.
+
+For the complete list of parameters of `FallbackOptions`, see `spectralcluster/fallback_clusterer.py`.
+
 ### Constrained spectral clustering
 
 ![turn-to-diarize-diagram](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/turn-to-diarize.png)

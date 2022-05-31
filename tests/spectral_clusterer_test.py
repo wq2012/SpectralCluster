@@ -3,6 +3,7 @@ import numpy as np
 from spectralcluster import autotune
 from spectralcluster import configs
 from spectralcluster import constraint
+from spectralcluster import fallback_clusterer
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
@@ -156,6 +157,35 @@ class TestSpectralClusterer(unittest.TestCase):
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 0, 1, 1, 0, 1])
+    self.assertTrue(np.array_equal(expected, labels))
+
+  def test_2by2_matrix_auto_tune(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [0.0, 1.0],
+    ])
+    refinement_sequence = [RefinementName.RowWiseThreshold]
+    refinement_options = refinement.RefinementOptions(
+        thresholding_type=ThresholdType.Percentile,
+        refinement_sequence=refinement_sequence)
+    auto_tune = autotune.AutoTune(
+        p_percentile_min=0.60,
+        p_percentile_max=0.95,
+        init_search_step=0.05,
+        search_level=1)
+    fallback_options = fallback_clusterer.FallbackOptions(
+        spectral_min_embeddings=3)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=2,
+        refinement_options=refinement_options,
+        autotune=auto_tune,
+        fallback_options=fallback_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 1])
+    print(labels)
     self.assertTrue(np.array_equal(expected, labels))
 
   def test_1000by6_matrix_auto_tune(self):

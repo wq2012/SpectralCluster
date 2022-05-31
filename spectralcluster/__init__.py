@@ -3,6 +3,7 @@
 from . import autotune
 from . import configs
 from . import constraint
+from . import fallback_clusterer
 from . import laplacian
 from . import refinement
 from . import spectral_clusterer
@@ -13,6 +14,8 @@ AutoTune = autotune.AutoTune
 ConstraintOptions = constraint.ConstraintOptions
 ConstraintName = constraint.ConstraintName
 IntegrationType = constraint.IntegrationType
+
+FallbackOptions = fallback_clusterer.FallbackOptions
 
 LaplacianType = laplacian.LaplacianType
 
@@ -26,3 +29,4 @@ SpectralClusterer = spectral_clusterer.SpectralClusterer
 EigenGapType = utils.EigenGapType
 
 ICASSP2018_REFINEMENT_SEQUENCE = configs.ICASSP2018_REFINEMENT_SEQUENCE
+TURNTODIARIZE_REFINEMENT_SEQUENCE = configs.TURNTODIARIZE_REFINEMENT_SEQUENCE

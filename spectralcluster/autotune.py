@@ -34,7 +34,7 @@ class AutoTune:
 
   def get_percentile_range(self):
     """Get the current percentile search range."""
-    num_steps = np.int(
+    num_steps = int(
         np.ceil(
             (self.p_percentile_max - self.p_percentile_min) / self.search_step))
     return list(
