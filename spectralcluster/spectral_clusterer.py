@@ -12,6 +12,7 @@ RefinementName = refinement.RefinementName
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
 EigenGapType = utils.EigenGapType
+SingleClusterCondition = fallback_clusterer.SingleClusterCondition
 
 
 class SpectralClusterer:
@@ -157,6 +158,7 @@ class SpectralClusterer:
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
     """
+    num_embeddings = embeddings.shape[0]
 
     if not isinstance(embeddings, np.ndarray):
       raise TypeError("embeddings must be a numpy array")
@@ -164,7 +166,7 @@ class SpectralClusterer:
       raise ValueError("embeddings must be 2-dimensional")
 
     # Check whether we need to run fallback clusterer instead.
-    if (embeddings.shape[0] <
+    if (num_embeddings <
         self.fallback_options.spectral_min_embeddings):
       temp_clusterer = fallback_clusterer.FallbackClusterer(
           self.fallback_options)
@@ -173,6 +175,30 @@ class SpectralClusterer:
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)
 
+    # Make single-vs-multi cluster(s) decision.
+    if (self.fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AllAffinity):
+      if (affinity.min() >
+          self.fallback_options.single_cluster_affinity_threshold):
+        return np.array([0] * num_embeddings)
+    elif (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.NeighborAffinity):
+      neighbor_affinity = np.diag(affinity, k=1)
+      if (neighbor_affinity.min() >
+          self.fallback_options.single_cluster_affinity_threshold):
+        return np.array([0] * num_embeddings)
+    elif (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.FallbackClusterer):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      temp_labels = temp_clusterer.predict(embeddings)
+      print("temp_labels:", temp_labels)
+      if np.unique(temp_labels).size == 1:
+        return temp_labels
+    else:
+      raise TypeError("Unsupported single_cluster_condition")
+
+    # Apply constraint.
     if (self.constraint_options and
         self.constraint_options.apply_before_refinement):
       # Perform the constraint operation before refinement
@@ -212,7 +238,7 @@ class SpectralClusterer:
       # Perform row wise re-normalization.
       rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
       spectral_embeddings = spectral_embeddings / np.reshape(
-          rows_norm, (spectral_embeddings.shape[0], 1))
+          rows_norm, (num_embeddings, 1))
 
     # Run clustering algorithm on spectral embeddings. This defaults
     # to customized K-means.

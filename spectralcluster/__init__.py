@@ -16,6 +16,7 @@ ConstraintName = constraint.ConstraintName
 IntegrationType = constraint.IntegrationType
 
 FallbackOptions = fallback_clusterer.FallbackOptions
+SingleClusterCondition = fallback_clusterer.SingleClusterCondition
 
 LaplacianType = laplacian.LaplacianType
 

@@ -37,20 +37,44 @@ cases where spectral clustering does not work as well as some other simpler
 clustering methods, such as when the number of embeddings is too small.
 &#34;&#34;&#34;
 
+import enum
 from sklearn.cluster import AgglomerativeClustering
 
+
+class SingleClusterCondition(enum.Enum):
+  &#34;&#34;&#34;Which condition do we use for deciding single-vs-multi cluster(s).&#34;&#34;&#34;
+  # If all affinities are larger than threshold, there is only a single cluster.
+  AllAffinity = enum.auto()
+
+  # If all neighboring affinities are larger than threshold, there is only
+  # a single cluster.
+  NeighborAffinity = enum.auto()
+
+  # Use fallback clusterer to make the decision. If fallback clusterer
+  # finds multiple clusters, continue with spectral clusterer.
+  # TODO: currently AgglomerativeClustering is hardcoded to 2 clusters, so this
+  # is not useful. We will add other fallback clusterers in the future.
+  FallbackClusterer = enum.auto()
 
 class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(self, spectral_min_embeddings=1):
-    &#34;&#34;&#34;Initialization of the fallback clusterer.
+  def __init__(self,
+               spectral_min_embeddings=1,
+               single_cluster_condition=SingleClusterCondition.AllAffinity,
+               single_cluster_affinity_threshold=1.0):
+    &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:
       spectral_min_embeddings: we only run spectral clusterer if we have at
         least these many embeddings; otherwise we run fallback clusterer
+      single_cluster_condition: how do we decide single-vs-multi cluster(s)
+      single_cluster_affinity_threshold: affinity threshold to decide
+        whether there is only a single cluster
     &#34;&#34;&#34;
     self.spectral_min_embeddings = spectral_min_embeddings
+    self.single_cluster_condition = single_cluster_condition
+    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
 
 
 class FallbackClusterer:
@@ -128,16 +152,21 @@ class FallbackClusterer:
 </dd>
 <dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
 <span>class <span class="ident">FallbackOptions</span></span>
-<span>(</span><span>spectral_min_embeddings=1)</span>
+<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AllAffinity, single_cluster_affinity_threshold=1.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Options for fallback options.</p>
-<p>Initialization of the fallback clusterer.</p>
+<p>Initialization of the fallback options.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>spectral_min_embeddings</code></strong></dt>
 <dd>we only run spectral clusterer if we have at
 least these many embeddings; otherwise we run fallback clusterer</dd>
+<dt><strong><code>single_cluster_condition</code></strong></dt>
+<dd>how do we decide single-vs-multi cluster(s)</dd>
+<dt><strong><code>single_cluster_affinity_threshold</code></strong></dt>
+<dd>affinity threshold to decide
+whether there is only a single cluster</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -146,15 +175,68 @@ least these many embeddings; otherwise we run fallback clusterer</dd>
 <pre><code class="python">class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(self, spectral_min_embeddings=1):
-    &#34;&#34;&#34;Initialization of the fallback clusterer.
+  def __init__(self,
+               spectral_min_embeddings=1,
+               single_cluster_condition=SingleClusterCondition.AllAffinity,
+               single_cluster_affinity_threshold=1.0):
+    &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:
       spectral_min_embeddings: we only run spectral clusterer if we have at
         least these many embeddings; otherwise we run fallback clusterer
+      single_cluster_condition: how do we decide single-vs-multi cluster(s)
+      single_cluster_affinity_threshold: affinity threshold to decide
+        whether there is only a single cluster
     &#34;&#34;&#34;
-    self.spectral_min_embeddings = spectral_min_embeddings</code></pre>
+    self.spectral_min_embeddings = spectral_min_embeddings
+    self.single_cluster_condition = single_cluster_condition
+    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold</code></pre>
 </details>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.SingleClusterCondition"><code class="flex name class">
+<span>class <span class="ident">SingleClusterCondition</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Which condition do we use for deciding single-vs-multi cluster(s).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SingleClusterCondition(enum.Enum):
+  &#34;&#34;&#34;Which condition do we use for deciding single-vs-multi cluster(s).&#34;&#34;&#34;
+  # If all affinities are larger than threshold, there is only a single cluster.
+  AllAffinity = enum.auto()
+
+  # If all neighboring affinities are larger than threshold, there is only
+  # a single cluster.
+  NeighborAffinity = enum.auto()
+
+  # Use fallback clusterer to make the decision. If fallback clusterer
+  # finds multiple clusters, continue with spectral clusterer.
+  # TODO: currently AgglomerativeClustering is hardcoded to 2 clusters, so this
+  # is not useful. We will add other fallback clusterers in the future.
+  FallbackClusterer = enum.auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.fallback_clusterer.SingleClusterCondition.AllAffinity"><code class="name">var <span class="ident">AllAffinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.SingleClusterCondition.FallbackClusterer"><code class="name">var <span class="ident">FallbackClusterer</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.SingleClusterCondition.NeighborAffinity"><code class="name">var <span class="ident">NeighborAffinity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -180,6 +262,14 @@ least these many embeddings; otherwise we run fallback clusterer</dd>
 </li>
 <li>
 <h4><code><a title="spectralcluster.fallback_clusterer.FallbackOptions" href="#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a></code></h4>
+</li>
+<li>
+<h4><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.AllAffinity" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.AllAffinity">AllAffinity</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.FallbackClusterer" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.FallbackClusterer">FallbackClusterer</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.NeighborAffinity" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.NeighborAffinity">NeighborAffinity</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
