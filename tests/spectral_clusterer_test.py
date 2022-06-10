@@ -400,6 +400,43 @@ class TestSpectralClusterer(unittest.TestCase):
     expected = np.array([0, 0, 0, 0, 0, 0])
     np.testing.assert_equal(expected, labels)
 
+  def test_6by2_matrix_single_cluster_affinity_std(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [1.0, 0.0],
+        [1.0, 0.5],
+        [1.1, 0.0],
+        [0.9, -0.1],
+    ])
+    # Low threshold.
+    fallback_options = FallbackOptions(
+        single_cluster_condition=SingleClusterCondition.AffinityStd,
+        single_cluster_affinity_threshold=0.02)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
+        laplacian_type=LaplacianType.GraphCut,
+        refinement_options=None,
+        fallback_options=fallback_options)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 0, 1, 0, 0])
+    np.testing.assert_equal(expected, labels)
+
+    # High threshold.
+    fallback_options = FallbackOptions(
+        single_cluster_condition=SingleClusterCondition.AffinityStd,
+        single_cluster_affinity_threshold=0.03)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
+        laplacian_type=LaplacianType.GraphCut,
+        refinement_options=None,
+        fallback_options=fallback_options)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 0, 0, 0, 0])
+    np.testing.assert_equal(expected, labels)
+
 
 if __name__ == "__main__":
   unittest.main()

@@ -18,6 +18,10 @@ class SingleClusterCondition(enum.Enum):
   # a single cluster.
   NeighborAffinity = enum.auto()
 
+  # If the standard deviation of all affinities is smaller than threshold,
+  # there is only a single cluster.
+  AffinityStd = enum.auto()
+
   # Use fallback clusterer to make the decision. If fallback clusterer
   # finds multiple clusters, continue with spectral clusterer.
   # TODO: currently AgglomerativeClustering is hardcoded to 2 clusters, so this
