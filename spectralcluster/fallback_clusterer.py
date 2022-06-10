@@ -24,6 +24,7 @@ class SingleClusterCondition(enum.Enum):
   # is not useful. We will add other fallback clusterers in the future.
   FallbackClusterer = enum.auto()
 
+
 class FallbackOptions:
   """Options for fallback options."""
 
