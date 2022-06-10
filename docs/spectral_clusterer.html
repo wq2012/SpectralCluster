@@ -205,27 +205,28 @@ class SpectralClusterer:
     affinity = self.affinity_function(embeddings)
 
     # Make single-vs-multi cluster(s) decision.
-    if (self.fallback_options.single_cluster_condition ==
-        SingleClusterCondition.AllAffinity):
-      if (affinity.min() &gt;
-          self.fallback_options.single_cluster_affinity_threshold):
-        return np.array([0] * num_embeddings)
-    elif (self.fallback_options.single_cluster_condition ==
-          SingleClusterCondition.NeighborAffinity):
-      neighbor_affinity = np.diag(affinity, k=1)
-      if (neighbor_affinity.min() &gt;
-          self.fallback_options.single_cluster_affinity_threshold):
-        return np.array([0] * num_embeddings)
-    elif (self.fallback_options.single_cluster_condition ==
-          SingleClusterCondition.FallbackClusterer):
-      temp_clusterer = fallback_clusterer.FallbackClusterer(
-          self.fallback_options)
-      temp_labels = temp_clusterer.predict(embeddings)
-      print(&#34;temp_labels:&#34;, temp_labels)
-      if np.unique(temp_labels).size == 1:
-        return temp_labels
-    else:
-      raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
+    if self.min_clusters == 1:
+      if (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.AllAffinity):
+        if (affinity.min() &gt;
+            self.fallback_options.single_cluster_affinity_threshold):
+          return np.array([0] * num_embeddings)
+      elif (self.fallback_options.single_cluster_condition ==
+            SingleClusterCondition.NeighborAffinity):
+        neighbor_affinity = np.diag(affinity, k=1)
+        if (neighbor_affinity.min() &gt;
+            self.fallback_options.single_cluster_affinity_threshold):
+          return np.array([0] * num_embeddings)
+      elif (self.fallback_options.single_cluster_condition ==
+            SingleClusterCondition.FallbackClusterer):
+        temp_clusterer = fallback_clusterer.FallbackClusterer(
+            self.fallback_options)
+        temp_labels = temp_clusterer.predict(embeddings)
+        print(&#34;temp_labels:&#34;, temp_labels)
+        if np.unique(temp_labels).size == 1:
+          return temp_labels
+      else:
+        raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
 
     # Apply constraint.
     if (self.constraint_options and
@@ -504,27 +505,28 @@ signature as custom_distance_kmeans.run_kmeans</dd>
     affinity = self.affinity_function(embeddings)
 
     # Make single-vs-multi cluster(s) decision.
-    if (self.fallback_options.single_cluster_condition ==
-        SingleClusterCondition.AllAffinity):
-      if (affinity.min() &gt;
-          self.fallback_options.single_cluster_affinity_threshold):
-        return np.array([0] * num_embeddings)
-    elif (self.fallback_options.single_cluster_condition ==
-          SingleClusterCondition.NeighborAffinity):
-      neighbor_affinity = np.diag(affinity, k=1)
-      if (neighbor_affinity.min() &gt;
-          self.fallback_options.single_cluster_affinity_threshold):
-        return np.array([0] * num_embeddings)
-    elif (self.fallback_options.single_cluster_condition ==
-          SingleClusterCondition.FallbackClusterer):
-      temp_clusterer = fallback_clusterer.FallbackClusterer(
-          self.fallback_options)
-      temp_labels = temp_clusterer.predict(embeddings)
-      print(&#34;temp_labels:&#34;, temp_labels)
-      if np.unique(temp_labels).size == 1:
-        return temp_labels
-    else:
-      raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
+    if self.min_clusters == 1:
+      if (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.AllAffinity):
+        if (affinity.min() &gt;
+            self.fallback_options.single_cluster_affinity_threshold):
+          return np.array([0] * num_embeddings)
+      elif (self.fallback_options.single_cluster_condition ==
+            SingleClusterCondition.NeighborAffinity):
+        neighbor_affinity = np.diag(affinity, k=1)
+        if (neighbor_affinity.min() &gt;
+            self.fallback_options.single_cluster_affinity_threshold):
+          return np.array([0] * num_embeddings)
+      elif (self.fallback_options.single_cluster_condition ==
+            SingleClusterCondition.FallbackClusterer):
+        temp_clusterer = fallback_clusterer.FallbackClusterer(
+            self.fallback_options)
+        temp_labels = temp_clusterer.predict(embeddings)
+        print(&#34;temp_labels:&#34;, temp_labels)
+        if np.unique(temp_labels).size == 1:
+          return temp_labels
+      else:
+        raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
 
     # Apply constraint.
     if (self.constraint_options and
@@ -644,27 +646,28 @@ constraint matrix with prior information</dd>
   affinity = self.affinity_function(embeddings)
 
   # Make single-vs-multi cluster(s) decision.
-  if (self.fallback_options.single_cluster_condition ==
-      SingleClusterCondition.AllAffinity):
-    if (affinity.min() &gt;
-        self.fallback_options.single_cluster_affinity_threshold):
-      return np.array([0] * num_embeddings)
-  elif (self.fallback_options.single_cluster_condition ==
-        SingleClusterCondition.NeighborAffinity):
-    neighbor_affinity = np.diag(affinity, k=1)
-    if (neighbor_affinity.min() &gt;
-        self.fallback_options.single_cluster_affinity_threshold):
-      return np.array([0] * num_embeddings)
-  elif (self.fallback_options.single_cluster_condition ==
-        SingleClusterCondition.FallbackClusterer):
-    temp_clusterer = fallback_clusterer.FallbackClusterer(
-        self.fallback_options)
-    temp_labels = temp_clusterer.predict(embeddings)
-    print(&#34;temp_labels:&#34;, temp_labels)
-    if np.unique(temp_labels).size == 1:
-      return temp_labels
-  else:
-    raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
+  if self.min_clusters == 1:
+    if (self.fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AllAffinity):
+      if (affinity.min() &gt;
+          self.fallback_options.single_cluster_affinity_threshold):
+        return np.array([0] * num_embeddings)
+    elif (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.NeighborAffinity):
+      neighbor_affinity = np.diag(affinity, k=1)
+      if (neighbor_affinity.min() &gt;
+          self.fallback_options.single_cluster_affinity_threshold):
+        return np.array([0] * num_embeddings)
+    elif (self.fallback_options.single_cluster_condition ==
+          SingleClusterCondition.FallbackClusterer):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      temp_labels = temp_clusterer.predict(embeddings)
+      print(&#34;temp_labels:&#34;, temp_labels)
+      if np.unique(temp_labels).size == 1:
+        return temp_labels
+    else:
+      raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
 
   # Apply constraint.
   if (self.constraint_options and

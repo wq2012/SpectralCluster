@@ -319,6 +319,7 @@ class TestSpectralClusterer(unittest.TestCase):
         p_percentile=0.95,
         refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
     clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
         refinement_options=refinement_options)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
@@ -339,6 +340,7 @@ class TestSpectralClusterer(unittest.TestCase):
         single_cluster_condition=SingleClusterCondition.AllAffinity,
         single_cluster_affinity_threshold=0.93)
     clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
         laplacian_type=LaplacianType.GraphCut,
         refinement_options=None,
         fallback_options=fallback_options)
@@ -352,6 +354,7 @@ class TestSpectralClusterer(unittest.TestCase):
         single_cluster_condition=SingleClusterCondition.AllAffinity,
         single_cluster_affinity_threshold=0.91)
     clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
         laplacian_type=LaplacianType.GraphCut,
         refinement_options=None,
         fallback_options=fallback_options)
@@ -374,6 +377,7 @@ class TestSpectralClusterer(unittest.TestCase):
         single_cluster_condition=SingleClusterCondition.NeighborAffinity,
         single_cluster_affinity_threshold=0.96)
     clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
         laplacian_type=LaplacianType.GraphCut,
         refinement_options=None,
         fallback_options=fallback_options)
@@ -387,6 +391,7 @@ class TestSpectralClusterer(unittest.TestCase):
         single_cluster_condition=SingleClusterCondition.NeighborAffinity,
         single_cluster_affinity_threshold=0.94)
     clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1,
         laplacian_type=LaplacianType.GraphCut,
         refinement_options=None,
         fallback_options=fallback_options)
