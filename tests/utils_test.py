@@ -12,7 +12,7 @@ class TestComputeAffinityMatrix(unittest.TestCase):
     affinity = utils.compute_affinity_matrix(matrix)
     expected = np.array([[1, 0.5, 1, 0], [0.5, 1, 0.5, 0.5], [1, 0.5, 1, 0],
                          [0, 0.5, 0, 1]])
-    self.assertTrue(np.array_equal(expected, affinity))
+    np.testing.assert_equal(expected, affinity)
 
 
 class TestComputeSortedEigenvectors(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestComputeNumberOfClusters(unittest.TestCase):
     eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
     result, max_delta_norm = utils.compute_number_of_clusters(eigenvalues)
     self.assertEqual(3, result)
-    self.assertTrue(np.allclose(4.0, max_delta_norm, atol=0.01))
+    np.testing.assert_allclose(4.0, max_delta_norm, atol=0.01)
 
   def test_max_clusters(self):
     max_clusters = 2
@@ -52,19 +52,19 @@ class TestComputeNumberOfClusters(unittest.TestCase):
 
     result_1, max_delta_norm_1 = utils.compute_number_of_clusters(eigenvalues)
     self.assertEqual(5, result_1)
-    self.assertTrue(np.allclose(1.2, max_delta_norm_1, atol=0.01))
+    np.testing.assert_allclose(1.2, max_delta_norm_1, atol=0.01)
 
     result_2, max_delta_norm_2 = utils.compute_number_of_clusters(
         eigenvalues, max_clusters=max_clusters)
     self.assertEqual(max_clusters, result_2)
-    self.assertTrue(np.allclose(1.125, max_delta_norm_2, atol=0.01))
+    np.testing.assert_allclose(1.125, max_delta_norm_2, atol=0.01)
 
   def test_ascend(self):
     eigenvalues = np.array([1.0, 0.9, 0.8, 0.2, 0.1])
     result, max_delta_norm = utils.compute_number_of_clusters(
         eigenvalues, max_clusters=3, descend=False)
     self.assertEqual(2, result)
-    self.assertTrue(np.allclose(0.88, max_delta_norm, atol=0.01))
+    np.testing.assert_allclose(0.88, max_delta_norm, atol=0.01)
 
 
 class TestEnforceOrderedLabels(unittest.TestCase):
@@ -74,7 +74,7 @@ class TestEnforceOrderedLabels(unittest.TestCase):
     labels = np.array([2, 2, 1, 0, 3, 3, 1])
     expected = np.array([0, 0, 1, 2, 3, 3, 1])
     result = utils.enforce_ordered_labels(labels)
-    self.assertTrue(np.array_equal(expected, result))
+    np.testing.assert_equal(expected, result)
 
 
 if __name__ == "__main__":

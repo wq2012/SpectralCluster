@@ -25,7 +25,7 @@ class TestCustomDistanceKmeans(unittest.TestCase):
         matrix, n_clusters=2, max_iter=300, custom_dist="cosine")
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 0, 1, 1, 0, 1])
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
   def test_6by2_matrix_euclidean_dist(self):
     matrix = np.array([
@@ -41,7 +41,7 @@ class TestCustomDistanceKmeans(unittest.TestCase):
         matrix, n_clusters=2, max_iter=300, custom_dist="euclidean")
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 0, 1, 1, 0, 1])
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
   def test_1000by6_matrix_cosine_dist(self):
     matrix = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]] * 400 +
@@ -55,7 +55,7 @@ class TestCustomDistanceKmeans(unittest.TestCase):
         matrix, n_clusters=4, max_iter=300, custom_dist="cosine")
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
   def test_1000by6_matrix_euclidean_dist(self):
     matrix = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]] * 400 +
@@ -69,7 +69,7 @@ class TestCustomDistanceKmeans(unittest.TestCase):
         matrix, n_clusters=4, max_iter=300, custom_dist="euclidean")
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
 
 if __name__ == "__main__":

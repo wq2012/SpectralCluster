@@ -15,8 +15,8 @@ class TestAffinityIntegration(unittest.TestCase):
         integration_type=IntegrationType.Max).adjust_affinity(
             affinity, constraint_matrix)
     expected = np.array([[1, 1, 0], [1, 1, 0], [0, 0, 1]])
-    self.assertTrue(
-        np.allclose(np.array(adjusted_affinity), np.array(expected), atol=0.01))
+    np.testing.assert_allclose(
+        np.array(adjusted_affinity), np.array(expected), atol=0.01)
 
 
 class TestConstraintPropagation(unittest.TestCase):
@@ -28,8 +28,8 @@ class TestConstraintPropagation(unittest.TestCase):
     adjusted_affinity = constraint.ConstraintPropagation(
         alpha=0.6).adjust_affinity(affinity, constraint_matrix)
     expected = np.array([[1, 0.97, 0], [1.03, 1, 0], [0, 0, 1]])
-    self.assertTrue(
-        np.allclose(np.array(adjusted_affinity), np.array(expected), atol=0.01))
+    np.testing.assert_allclose(
+        np.array(adjusted_affinity), np.array(expected), atol=0.01)
 
 
 class TestConstraintMatrix(unittest.TestCase):
@@ -40,14 +40,14 @@ class TestConstraintMatrix(unittest.TestCase):
     constraint_matrix = constraint.ConstraintMatrix(
         speaker_turn_scores, threshold=1).compute_diagonals()
     expected = np.array([[0, 1, 0], [1, 0, -1], [0, -1, 0]])
-    self.assertTrue(np.array_equal(constraint_matrix, expected))
+    np.testing.assert_equal(constraint_matrix, expected)
 
   def test_3by3_constraint_matrix_threshold(self):
     speaker_turn_scores = [0, 0, 0.12095779925584793]
     constraint_matrix = constraint.ConstraintMatrix(
         speaker_turn_scores, threshold=1).compute_diagonals()
     expected = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
-    self.assertTrue(np.array_equal(constraint_matrix, expected))
+    np.testing.assert_equal(constraint_matrix, expected)
 
 
 if __name__ == "__main__":

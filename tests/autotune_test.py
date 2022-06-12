@@ -22,9 +22,8 @@ class TestAutotune(unittest.TestCase):
         search_level=1)
     p_percentile_range = auto_tune.get_percentile_range()
     expected = [0.60, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66]
-    self.assertTrue(
-        np.allclose(
-            np.array(p_percentile_range), np.array(expected), atol=0.01))
+    np.testing.assert_allclose(
+            np.array(p_percentile_range), np.array(expected), atol=0.01)
 
   def test_update_percentile_range(self):
     auto_tune = autotune.AutoTune(
@@ -34,9 +33,8 @@ class TestAutotune(unittest.TestCase):
         search_level=1)
     p_percentile_range = auto_tune.update_percentile_range(0.5, 0.8, 0.05)
     expected = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
-    self.assertTrue(
-        np.allclose(
-            np.array(p_percentile_range), np.array(expected), atol=0.01))
+    np.testing.assert_allclose(
+            np.array(p_percentile_range), np.array(expected), atol=0.01)
 
   def test_6by2matrix_tune(self):
     matrix = np.array([

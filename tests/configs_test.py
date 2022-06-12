@@ -19,7 +19,7 @@ class Icassp2018Test(unittest.TestCase):
     labels = configs.icassp2018_clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
 
 class TurnToDiarizeTest(unittest.TestCase):
@@ -40,7 +40,7 @@ class TurnToDiarizeTest(unittest.TestCase):
     labels = configs.turntodiarize_clusterer.predict(matrix, constraint_matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 0, 1, 1, 0, 1])
-    self.assertTrue(np.array_equal(expected, labels))
+    np.testing.assert_equal(expected, labels)
 
 
 if __name__ == "__main__":
