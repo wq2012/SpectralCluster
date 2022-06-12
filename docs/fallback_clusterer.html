@@ -38,11 +38,20 @@ clustering methods, such as when the number of embeddings is too small.
 &#34;&#34;&#34;
 
 import enum
+import numpy as np
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.mixture import GaussianMixture
 
 
 class SingleClusterCondition(enum.Enum):
   &#34;&#34;&#34;Which condition do we use for deciding single-vs-multi cluster(s).&#34;&#34;&#34;
+
+  # Fit affinity values with GMM with 1-vs-2 component(s), and use
+  # Bayesian Information Criterion (BIC) to decide whether there are
+  # at least two clusters.
+  # Note that this approach does not require additional parameters.
+  AffinityGmmBic = enum.auto()
+
   # If all affinities are larger than threshold, there is only a single cluster.
   AllAffinity = enum.auto()
 
@@ -66,7 +75,7 @@ class FallbackOptions:
 
   def __init__(self,
                spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AllAffinity,
+               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
                single_cluster_affinity_threshold=1.0):
     &#34;&#34;&#34;Initialization of the fallback options.
 
@@ -95,7 +104,57 @@ class FallbackClusterer:
     self.clusterer = AgglomerativeClustering()
 
   def predict(self, embeddings):
-    return self.clusterer.fit_predict(embeddings)</code></pre>
+    return self.clusterer.fit_predict(embeddings)
+
+
+def check_single_cluster(fallback_options, embeddings, affinity):
+  &#34;&#34;&#34;Check whether this is only a single cluster.
+
+  This function is only called when min_clusters==1.
+
+  Args:
+    fallback_options: an object of FallbackOptions
+    embeddings: numpy array of shape (n_samples, n_features)
+    affinity: the affinity matrix of shape (n_samples, (n_samples)
+
+  Returns:
+    a boolean, where True means there is only a single cluster
+  &#34;&#34;&#34;
+  if (fallback_options.single_cluster_condition ==
+      SingleClusterCondition.AllAffinity):
+    if (affinity.min() &gt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.NeighborAffinity):
+    neighbor_affinity = np.diag(affinity, k=1)
+    if (neighbor_affinity.min() &gt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityStd):
+    if (np.std(affinity) &lt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityGmmBic):
+    gmm1 = GaussianMixture(n_components=1)
+    gmm2 = GaussianMixture(n_components=2)
+    affinity_values = np.expand_dims(affinity.flatten(), 1)
+    gmm1.fit(affinity_values)
+    gmm2.fit(affinity_values)
+    bic1 = gmm1.bic(affinity_values)
+    bic2 = gmm2.bic(affinity_values)
+    return bic1 &lt; bic2
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.FallbackClusterer):
+    temp_clusterer = FallbackClusterer(fallback_options)
+    temp_labels = temp_clusterer.predict(embeddings)
+    if np.unique(temp_labels).size == 1:
+      return True
+  else:
+    raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
+  return False</code></pre>
 </details>
 </section>
 <section>
@@ -103,6 +162,80 @@ class FallbackClusterer:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="spectralcluster.fallback_clusterer.check_single_cluster"><code class="name flex">
+<span>def <span class="ident">check_single_cluster</span></span>(<span>fallback_options, embeddings, affinity)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether this is only a single cluster.</p>
+<p>This function is only called when min_clusters==1.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>fallback_options</code></strong></dt>
+<dd>an object of FallbackOptions</dd>
+<dt><strong><code>embeddings</code></strong></dt>
+<dd>numpy array of shape (n_samples, n_features)</dd>
+<dt><strong><code>affinity</code></strong></dt>
+<dd>the affinity matrix of shape (n_samples, (n_samples)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>a boolean, where True means there is only a single cluster</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_single_cluster(fallback_options, embeddings, affinity):
+  &#34;&#34;&#34;Check whether this is only a single cluster.
+
+  This function is only called when min_clusters==1.
+
+  Args:
+    fallback_options: an object of FallbackOptions
+    embeddings: numpy array of shape (n_samples, n_features)
+    affinity: the affinity matrix of shape (n_samples, (n_samples)
+
+  Returns:
+    a boolean, where True means there is only a single cluster
+  &#34;&#34;&#34;
+  if (fallback_options.single_cluster_condition ==
+      SingleClusterCondition.AllAffinity):
+    if (affinity.min() &gt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.NeighborAffinity):
+    neighbor_affinity = np.diag(affinity, k=1)
+    if (neighbor_affinity.min() &gt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityStd):
+    if (np.std(affinity) &lt;
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityGmmBic):
+    gmm1 = GaussianMixture(n_components=1)
+    gmm2 = GaussianMixture(n_components=2)
+    affinity_values = np.expand_dims(affinity.flatten(), 1)
+    gmm1.fit(affinity_values)
+    gmm2.fit(affinity_values)
+    bic1 = gmm1.bic(affinity_values)
+    bic2 = gmm2.bic(affinity_values)
+    return bic1 &lt; bic2
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.FallbackClusterer):
+    temp_clusterer = FallbackClusterer(fallback_options)
+    temp_labels = temp_clusterer.predict(embeddings)
+    if np.unique(temp_labels).size == 1:
+      return True
+  else:
+    raise TypeError(&#34;Unsupported single_cluster_condition&#34;)
+  return False</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -157,7 +290,7 @@ class FallbackClusterer:
 </dd>
 <dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
 <span>class <span class="ident">FallbackOptions</span></span>
-<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AllAffinity, single_cluster_affinity_threshold=1.0)</span>
+<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=1.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Options for fallback options.</p>
@@ -182,7 +315,7 @@ whether there is only a single cluster</dd>
 
   def __init__(self,
                spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AllAffinity,
+               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
                single_cluster_affinity_threshold=1.0):
     &#34;&#34;&#34;Initialization of the fallback options.
 
@@ -210,6 +343,13 @@ whether there is only a single cluster</dd>
 </summary>
 <pre><code class="python">class SingleClusterCondition(enum.Enum):
   &#34;&#34;&#34;Which condition do we use for deciding single-vs-multi cluster(s).&#34;&#34;&#34;
+
+  # Fit affinity values with GMM with 1-vs-2 component(s), and use
+  # Bayesian Information Criterion (BIC) to decide whether there are
+  # at least two clusters.
+  # Note that this approach does not require additional parameters.
+  AffinityGmmBic = enum.auto()
+
   # If all affinities are larger than threshold, there is only a single cluster.
   AllAffinity = enum.auto()
 
@@ -233,6 +373,10 @@ whether there is only a single cluster</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityGmmBic"><code class="name">var <span class="ident">AffinityGmmBic</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityStd"><code class="name">var <span class="ident">AffinityStd</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -265,6 +409,11 @@ whether there is only a single cluster</dd>
 <li><code><a title="spectralcluster" href="index.html">spectralcluster</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.check_single_cluster" href="#spectralcluster.fallback_clusterer.check_single_cluster">check_single_cluster</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -279,6 +428,7 @@ whether there is only a single cluster</dd>
 <li>
 <h4><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a></code></h4>
 <ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityGmmBic" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityGmmBic">AffinityGmmBic</a></code></li>
 <li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityStd" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.AffinityStd">AffinityStd</a></code></li>
 <li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.AllAffinity" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.AllAffinity">AllAffinity</a></code></li>
 <li><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition.FallbackClusterer" href="#spectralcluster.fallback_clusterer.SingleClusterCondition.FallbackClusterer">FallbackClusterer</a></code></li>

@@ -173,7 +173,7 @@ clustering methods, such as when the number of embeddings is too small.
 
 When initializing the `SpectralClusterer` object, you can pass in a `FallbackOptions` object to the `fallback_options` argument, to use a fallback clusterer under certain conditions.
 
-Also, since spectral clustering and eigen-gap may not work well at making single-vs-multi cluster decisions, when `min_clusters=1`, we can also specify `FallbackOptions.single_cluster_affinity_threshold` to help determine single cluster cases by thresdholding the affinity matrix.
+Also, spectral clustering and eigen-gap may not work well at making single-vs-multi cluster decisions. When `min_clusters=1`, we can also specify `FallbackOptions.single_cluster_condition` and `FallbackOptions.single_cluster_affinity_threshold` to help determine single cluster cases by thresdholding the affinity matrix.
 
 For the complete list of parameters of `FallbackOptions`, see `spectralcluster/fallback_clusterer.py`.
 

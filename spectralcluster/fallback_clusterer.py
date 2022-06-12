@@ -8,10 +8,18 @@ clustering methods, such as when the number of embeddings is too small.
 import enum
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.mixture import GaussianMixture
 
 
 class SingleClusterCondition(enum.Enum):
   """Which condition do we use for deciding single-vs-multi cluster(s)."""
+
+  # Fit affinity values with GMM with 1-vs-2 component(s), and use
+  # Bayesian Information Criterion (BIC) to decide whether there are
+  # at least two clusters.
+  # Note that this approach does not require additional parameters.
+  AffinityGmmBic = enum.auto()
+
   # If all affinities are larger than threshold, there is only a single cluster.
   AllAffinity = enum.auto()
 
@@ -35,7 +43,7 @@ class FallbackOptions:
 
   def __init__(self,
                spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AllAffinity,
+               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
                single_cluster_affinity_threshold=1.0):
     """Initialization of the fallback options.
 
@@ -70,6 +78,8 @@ class FallbackClusterer:
 def check_single_cluster(fallback_options, embeddings, affinity):
   """Check whether this is only a single cluster.
 
+  This function is only called when min_clusters==1.
+
   Args:
     fallback_options: an object of FallbackOptions
     embeddings: numpy array of shape (n_samples, n_features)
@@ -94,6 +104,16 @@ def check_single_cluster(fallback_options, embeddings, affinity):
     if (np.std(affinity) <
         fallback_options.single_cluster_affinity_threshold):
       return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityGmmBic):
+    gmm1 = GaussianMixture(n_components=1)
+    gmm2 = GaussianMixture(n_components=2)
+    affinity_values = np.expand_dims(affinity.flatten(), 1)
+    gmm1.fit(affinity_values)
+    gmm2.fit(affinity_values)
+    bic1 = gmm1.bic(affinity_values)
+    bic2 = gmm2.bic(affinity_values)
+    return bic1 < bic2
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.FallbackClusterer):
     temp_clusterer = FallbackClusterer(fallback_options)

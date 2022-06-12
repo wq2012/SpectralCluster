@@ -187,7 +187,6 @@ class TestSpectralClusterer(unittest.TestCase):
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 1])
-    print(labels)
     np.testing.assert_equal(expected, labels)
 
   def test_1000by6_matrix_auto_tune(self):
