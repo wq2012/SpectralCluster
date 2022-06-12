@@ -6,6 +6,7 @@ clustering methods, such as when the number of embeddings is too small.
 """
 
 import enum
+import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
 
@@ -64,3 +65,41 @@ class FallbackClusterer:
 
   def predict(self, embeddings):
     return self.clusterer.fit_predict(embeddings)
+
+
+def check_single_cluster(fallback_options, embeddings, affinity):
+  """Check whether this is only a single cluster.
+
+  Args:
+    fallback_options: an object of FallbackOptions
+    embeddings: numpy array of shape (n_samples, n_features)
+    affinity: the affinity matrix of shape (n_samples, (n_samples)
+
+  Returns:
+    a boolean, where True means there is only a single cluster
+  """
+  if (fallback_options.single_cluster_condition ==
+      SingleClusterCondition.AllAffinity):
+    if (affinity.min() >
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.NeighborAffinity):
+    neighbor_affinity = np.diag(affinity, k=1)
+    if (neighbor_affinity.min() >
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.AffinityStd):
+    if (np.std(affinity) <
+        fallback_options.single_cluster_affinity_threshold):
+      return True
+  elif (fallback_options.single_cluster_condition ==
+        SingleClusterCondition.FallbackClusterer):
+    temp_clusterer = FallbackClusterer(fallback_options)
+    temp_labels = temp_clusterer.predict(embeddings)
+    if np.unique(temp_labels).size == 1:
+      return True
+  else:
+    raise TypeError("Unsupported single_cluster_condition")
+  return False
