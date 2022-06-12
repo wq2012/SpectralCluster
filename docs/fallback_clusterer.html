@@ -41,6 +41,7 @@ import enum
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
+from spectralcluster import naive_clusterer
 
 
 class SingleClusterCondition(enum.Enum):
@@ -65,9 +66,17 @@ class SingleClusterCondition(enum.Enum):
 
   # Use fallback clusterer to make the decision. If fallback clusterer
   # finds multiple clusters, continue with spectral clusterer.
-  # TODO: currently AgglomerativeClustering is hardcoded to 2 clusters, so this
-  # is not useful. We will add other fallback clusterers in the future.
   FallbackClusterer = enum.auto()
+
+
+class FallbackClustererType(enum.Enum):
+  &#34;&#34;&#34;Which fallback clusterer to use.&#34;&#34;&#34;
+
+  # AgglomerativeClustering from scikit-learn.
+  Agglomerative = enum.auto()
+
+  # Naive clustering, as described in the paper &#34;Speaker diarization with LSTM&#34;.
+  Naive = enum.auto()
 
 
 class FallbackOptions:
@@ -76,7 +85,10 @@ class FallbackOptions:
   def __init__(self,
                spectral_min_embeddings=1,
                single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
-               single_cluster_affinity_threshold=1.0):
+               single_cluster_affinity_threshold=0.75,
+               fallback_clusterer_type=FallbackClustererType.Naive,
+               naive_threshold=0.5,
+               naive_adaptation_threshold=None):
     &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:
@@ -85,10 +97,16 @@ class FallbackOptions:
       single_cluster_condition: how do we decide single-vs-multi cluster(s)
       single_cluster_affinity_threshold: affinity threshold to decide
         whether there is only a single cluster
+      fallback_clusterer_type: which fallback clusterer to use
+      naive_threshold: threshold for naive clusterer
+      naive_adaptation_threshold: adaptation_threshold for naive clusterer
     &#34;&#34;&#34;
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
+    self.fallback_clusterer_type = fallback_clusterer_type
+    self.naive_threshold = naive_threshold
+    self.naive_adaptation_threshold = naive_adaptation_threshold
 
 
 class FallbackClusterer:
@@ -101,7 +119,19 @@ class FallbackClusterer:
       options: an object of FallbackOptions
     &#34;&#34;&#34;
     self.options = options
-    self.clusterer = AgglomerativeClustering()
+    if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
+      self.clusterer = AgglomerativeClustering()
+      if (options.single_cluster_condition ==
+          SingleClusterCondition.FallbackClusterer):
+        raise ValueError(
+            &#34;AgglomerativeClustering is hardcoded to 2 clusters, &#34;
+            &#34;thus cannot be used for single-vs-multi cluster decision.&#34;)
+    elif options.fallback_clusterer_type == FallbackClustererType.Naive:
+      self.clusterer = naive_clusterer.NaiveClusterer(
+          threshold=options.naive_threshold,
+          adaptation_threshold=options.naive_adaptation_threshold)
+    else:
+      ValueError(&#34;Unsupported fallback_clusterer_type&#34;)
 
   def predict(self, embeddings):
     return self.clusterer.fit_predict(embeddings)
@@ -266,7 +296,19 @@ def check_single_cluster(fallback_options, embeddings, affinity):
       options: an object of FallbackOptions
     &#34;&#34;&#34;
     self.options = options
-    self.clusterer = AgglomerativeClustering()
+    if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
+      self.clusterer = AgglomerativeClustering()
+      if (options.single_cluster_condition ==
+          SingleClusterCondition.FallbackClusterer):
+        raise ValueError(
+            &#34;AgglomerativeClustering is hardcoded to 2 clusters, &#34;
+            &#34;thus cannot be used for single-vs-multi cluster decision.&#34;)
+    elif options.fallback_clusterer_type == FallbackClustererType.Naive:
+      self.clusterer = naive_clusterer.NaiveClusterer(
+          threshold=options.naive_threshold,
+          adaptation_threshold=options.naive_adaptation_threshold)
+    else:
+      ValueError(&#34;Unsupported fallback_clusterer_type&#34;)
 
   def predict(self, embeddings):
     return self.clusterer.fit_predict(embeddings)</code></pre>
@@ -288,9 +330,44 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 </dd>
 </dl>
 </dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackClustererType"><code class="flex name class">
+<span>class <span class="ident">FallbackClustererType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Which fallback clusterer to use.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FallbackClustererType(enum.Enum):
+  &#34;&#34;&#34;Which fallback clusterer to use.&#34;&#34;&#34;
+
+  # AgglomerativeClustering from scikit-learn.
+  Agglomerative = enum.auto()
+
+  # Naive clustering, as described in the paper &#34;Speaker diarization with LSTM&#34;.
+  Naive = enum.auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.fallback_clusterer.FallbackClustererType.Agglomerative"><code class="name">var <span class="ident">Agglomerative</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackClustererType.Naive"><code class="name">var <span class="ident">Naive</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
 <span>class <span class="ident">FallbackOptions</span></span>
-<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=1.0)</span>
+<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=0.75, fallback_clusterer_type=FallbackClustererType.Naive, naive_threshold=0.5, naive_adaptation_threshold=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Options for fallback options.</p>
@@ -305,6 +382,12 @@ least these many embeddings; otherwise we run fallback clusterer</dd>
 <dt><strong><code>single_cluster_affinity_threshold</code></strong></dt>
 <dd>affinity threshold to decide
 whether there is only a single cluster</dd>
+<dt><strong><code>fallback_clusterer_type</code></strong></dt>
+<dd>which fallback clusterer to use</dd>
+<dt><strong><code>naive_threshold</code></strong></dt>
+<dd>threshold for naive clusterer</dd>
+<dt><strong><code>naive_adaptation_threshold</code></strong></dt>
+<dd>adaptation_threshold for naive clusterer</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -316,7 +399,10 @@ whether there is only a single cluster</dd>
   def __init__(self,
                spectral_min_embeddings=1,
                single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
-               single_cluster_affinity_threshold=1.0):
+               single_cluster_affinity_threshold=0.75,
+               fallback_clusterer_type=FallbackClustererType.Naive,
+               naive_threshold=0.5,
+               naive_adaptation_threshold=None):
     &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:
@@ -325,10 +411,16 @@ whether there is only a single cluster</dd>
       single_cluster_condition: how do we decide single-vs-multi cluster(s)
       single_cluster_affinity_threshold: affinity threshold to decide
         whether there is only a single cluster
+      fallback_clusterer_type: which fallback clusterer to use
+      naive_threshold: threshold for naive clusterer
+      naive_adaptation_threshold: adaptation_threshold for naive clusterer
     &#34;&#34;&#34;
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
-    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold</code></pre>
+    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
+    self.fallback_clusterer_type = fallback_clusterer_type
+    self.naive_threshold = naive_threshold
+    self.naive_adaptation_threshold = naive_adaptation_threshold</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.fallback_clusterer.SingleClusterCondition"><code class="flex name class">
@@ -363,8 +455,6 @@ whether there is only a single cluster</dd>
 
   # Use fallback clusterer to make the decision. If fallback clusterer
   # finds multiple clusters, continue with spectral clusterer.
-  # TODO: currently AgglomerativeClustering is hardcoded to 2 clusters, so this
-  # is not useful. We will add other fallback clusterers in the future.
   FallbackClusterer = enum.auto()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -420,6 +510,13 @@ whether there is only a single cluster</dd>
 <h4><code><a title="spectralcluster.fallback_clusterer.FallbackClusterer" href="#spectralcluster.fallback_clusterer.FallbackClusterer">FallbackClusterer</a></code></h4>
 <ul class="">
 <li><code><a title="spectralcluster.fallback_clusterer.FallbackClusterer.predict" href="#spectralcluster.fallback_clusterer.FallbackClusterer.predict">predict</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.fallback_clusterer.FallbackClustererType" href="#spectralcluster.fallback_clusterer.FallbackClustererType">FallbackClustererType</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackClustererType.Agglomerative" href="#spectralcluster.fallback_clusterer.FallbackClustererType.Agglomerative">Agglomerative</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackClustererType.Naive" href="#spectralcluster.fallback_clusterer.FallbackClustererType.Naive">Naive</a></code></li>
 </ul>
 </li>
 <li>
