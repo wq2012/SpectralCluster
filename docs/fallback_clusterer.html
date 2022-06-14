@@ -117,6 +117,7 @@ class FallbackOptions:
       raise ValueError(
           &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
 
+
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
@@ -186,6 +187,11 @@ def check_single_cluster(fallback_options, embeddings, affinity):
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.AffinityGmmBic):
     # Compute upper triangular matrix values to exclude diagonal values.
+    if (fallback_options.single_cluster_affinity_diagonal_offset &gt;=
+        affinity.shape[0] - 1):
+      raise ValueError(
+          &#34;single_cluster_affinity_diagonal_offset must be significantly &#34;
+          &#34;smaller than affinity matrix dimension&#34;)
     upper_indices = np.triu_indices(
         affinity.shape[0],
         fallback_options.single_cluster_affinity_diagonal_offset)
@@ -270,6 +276,11 @@ def check_single_cluster(fallback_options, embeddings, affinity):
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.AffinityGmmBic):
     # Compute upper triangular matrix values to exclude diagonal values.
+    if (fallback_options.single_cluster_affinity_diagonal_offset &gt;=
+        affinity.shape[0] - 1):
+      raise ValueError(
+          &#34;single_cluster_affinity_diagonal_offset must be significantly &#34;
+          &#34;smaller than affinity matrix dimension&#34;)
     upper_indices = np.triu_indices(
         affinity.shape[0],
         fallback_options.single_cluster_affinity_diagonal_offset)
@@ -466,6 +477,7 @@ overlapping sliding windows, this value could be larger than 1</dd>
     if single_cluster_affinity_diagonal_offset &lt; 0:
       raise ValueError(
           &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
+
 
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
