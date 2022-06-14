@@ -54,6 +54,7 @@ class FallbackOptions:
                spectral_min_embeddings=1,
                single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
                single_cluster_affinity_threshold=0.75,
+               single_cluster_affinity_diagonal_offset=1,
                fallback_clusterer_type=FallbackClustererType.Naive,
                naive_threshold=0.5,
                naive_adaptation_threshold=None):
@@ -65,13 +66,30 @@ class FallbackOptions:
       single_cluster_condition: how do we decide single-vs-multi cluster(s)
       single_cluster_affinity_threshold: affinity threshold to decide
         whether there is only a single cluster
+      single_cluster_affinity_diagonal_offset: when using AffinityGmmBic
+        to make single-vs-multi cluster(s) decisions, we only fit the GMM to
+        the upper triangular matrix because the diagonal and near-diagonal
+        values might be very big. By default, we use a value of 1 to only
+        exclude diagonal values. But if embeddings are extracted from
+        overlapping sliding windows, this value could be larger than 1
       fallback_clusterer_type: which fallback clusterer to use
       naive_threshold: threshold for naive clusterer
       naive_adaptation_threshold: adaptation_threshold for naive clusterer
     """
+    if not isinstance(spectral_min_embeddings, int):
+      raise TypeError("spectral_min_embeddings must be an integer")
+    if not isinstance(single_cluster_affinity_diagonal_offset, int):
+      raise TypeError(
+          "single_cluster_affinity_diagonal_offset must be an integer")
+    if single_cluster_affinity_diagonal_offset < 0:
+      raise ValueError(
+          "single_cluster_affinity_diagonal_offset ust be a positive integer")
+
+
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
+    self.single_cluster_affinity_diagonal_offset = single_cluster_affinity_diagonal_offset
     self.fallback_clusterer_type = fallback_clusterer_type
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold
@@ -137,7 +155,14 @@ def check_single_cluster(fallback_options, embeddings, affinity):
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.AffinityGmmBic):
     # Compute upper triangular matrix values to exclude diagonal values.
-    upper_indices = np.triu_indices(affinity.shape[0], 1)
+    if (fallback_options.single_cluster_affinity_diagonal_offset >=
+        affinity.shape[0] - 1):
+      raise ValueError(
+          "single_cluster_affinity_diagonal_offset must be significantly "
+          "smaller than affinity matrix dimension")
+    upper_indices = np.triu_indices(
+        affinity.shape[0],
+        fallback_options.single_cluster_affinity_diagonal_offset)
     affinity_values = np.expand_dims(affinity[upper_indices], 1)
 
     # Fit GMM and compare BIC.
