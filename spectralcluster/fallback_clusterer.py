@@ -136,9 +136,13 @@ def check_single_cluster(fallback_options, embeddings, affinity):
       return True
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.AffinityGmmBic):
+    # Compute upper triangular matrix values to exclude diagonal values.
+    upper_indices = np.triu_indices(affinity.shape[0], 1)
+    affinity_values = np.expand_dims(affinity[upper_indices], 1)
+
+    # Fit GMM and compare BIC.
     gmm1 = GaussianMixture(n_components=1)
     gmm2 = GaussianMixture(n_components=2)
-    affinity_values = np.expand_dims(affinity.flatten(), 1)
     gmm1.fit(affinity_values)
     gmm2.fit(affinity_values)
     bic1 = gmm1.bic(affinity_values)
