@@ -117,11 +117,11 @@ class FallbackOptions:
       raise ValueError(
           &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
 
-
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = single_cluster_affinity_diagonal_offset
+    self.single_cluster_affinity_diagonal_offset = (
+        single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold
@@ -478,11 +478,11 @@ overlapping sliding windows, this value could be larger than 1</dd>
       raise ValueError(
           &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
 
-
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = single_cluster_affinity_diagonal_offset
+    self.single_cluster_affinity_diagonal_offset = (
+        single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold</code></pre>
