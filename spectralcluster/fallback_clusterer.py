@@ -85,11 +85,11 @@ class FallbackOptions:
       raise ValueError(
           "single_cluster_affinity_diagonal_offset ust be a positive integer")
 
-
     self.spectral_min_embeddings = spectral_min_embeddings
     self.single_cluster_condition = single_cluster_condition
     self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = single_cluster_affinity_diagonal_offset
+    self.single_cluster_affinity_diagonal_offset = (
+        single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold
