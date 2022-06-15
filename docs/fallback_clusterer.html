@@ -88,6 +88,7 @@ class FallbackOptions:
                single_cluster_affinity_threshold=0.75,
                single_cluster_affinity_diagonal_offset=1,
                fallback_clusterer_type=FallbackClustererType.Naive,
+               agglomerative_threshold=0.5,
                naive_threshold=0.5,
                naive_adaptation_threshold=None):
     &#34;&#34;&#34;Initialization of the fallback options.
@@ -105,6 +106,7 @@ class FallbackOptions:
         exclude diagonal values. But if embeddings are extracted from
         overlapping sliding windows, this value could be larger than 1
       fallback_clusterer_type: which fallback clusterer to use
+      agglomerative_threshold: threshold of agglomerative clustering
       naive_threshold: threshold for naive clusterer
       naive_adaptation_threshold: adaptation_threshold for naive clusterer
     &#34;&#34;&#34;
@@ -123,6 +125,7 @@ class FallbackOptions:
     self.single_cluster_affinity_diagonal_offset = (
         single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
+    self.agglomerative_threshold = agglomerative_threshold
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold
 
@@ -138,12 +141,11 @@ class FallbackClusterer:
     &#34;&#34;&#34;
     self.options = options
     if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
-      self.clusterer = AgglomerativeClustering()
-      if (options.single_cluster_condition ==
-          SingleClusterCondition.FallbackClusterer):
-        raise ValueError(
-            &#34;AgglomerativeClustering is hardcoded to 2 clusters, &#34;
-            &#34;thus cannot be used for single-vs-multi cluster decision.&#34;)
+      self.clusterer = AgglomerativeClustering(
+          n_clusters=None,
+          affinity=&#34;cosine&#34;,
+          linkage=&#34;average&#34;,
+          distance_threshold=options.agglomerative_threshold)
     elif options.fallback_clusterer_type == FallbackClustererType.Naive:
       self.clusterer = naive_clusterer.NaiveClusterer(
           threshold=options.naive_threshold,
@@ -337,12 +339,11 @@ def check_single_cluster(fallback_options, embeddings, affinity):
     &#34;&#34;&#34;
     self.options = options
     if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
-      self.clusterer = AgglomerativeClustering()
-      if (options.single_cluster_condition ==
-          SingleClusterCondition.FallbackClusterer):
-        raise ValueError(
-            &#34;AgglomerativeClustering is hardcoded to 2 clusters, &#34;
-            &#34;thus cannot be used for single-vs-multi cluster decision.&#34;)
+      self.clusterer = AgglomerativeClustering(
+          n_clusters=None,
+          affinity=&#34;cosine&#34;,
+          linkage=&#34;average&#34;,
+          distance_threshold=options.agglomerative_threshold)
     elif options.fallback_clusterer_type == FallbackClustererType.Naive:
       self.clusterer = naive_clusterer.NaiveClusterer(
           threshold=options.naive_threshold,
@@ -407,7 +408,7 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 </dd>
 <dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
 <span>class <span class="ident">FallbackOptions</span></span>
-<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=0.75, single_cluster_affinity_diagonal_offset=1, fallback_clusterer_type=FallbackClustererType.Naive, naive_threshold=0.5, naive_adaptation_threshold=None)</span>
+<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=0.75, single_cluster_affinity_diagonal_offset=1, fallback_clusterer_type=FallbackClustererType.Naive, agglomerative_threshold=0.5, naive_threshold=0.5, naive_adaptation_threshold=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Options for fallback options.</p>
@@ -431,6 +432,8 @@ exclude diagonal values. But if embeddings are extracted from
 overlapping sliding windows, this value could be larger than 1</dd>
 <dt><strong><code>fallback_clusterer_type</code></strong></dt>
 <dd>which fallback clusterer to use</dd>
+<dt><strong><code>agglomerative_threshold</code></strong></dt>
+<dd>threshold of agglomerative clustering</dd>
 <dt><strong><code>naive_threshold</code></strong></dt>
 <dd>threshold for naive clusterer</dd>
 <dt><strong><code>naive_adaptation_threshold</code></strong></dt>
@@ -449,6 +452,7 @@ overlapping sliding windows, this value could be larger than 1</dd>
                single_cluster_affinity_threshold=0.75,
                single_cluster_affinity_diagonal_offset=1,
                fallback_clusterer_type=FallbackClustererType.Naive,
+               agglomerative_threshold=0.5,
                naive_threshold=0.5,
                naive_adaptation_threshold=None):
     &#34;&#34;&#34;Initialization of the fallback options.
@@ -466,6 +470,7 @@ overlapping sliding windows, this value could be larger than 1</dd>
         exclude diagonal values. But if embeddings are extracted from
         overlapping sliding windows, this value could be larger than 1
       fallback_clusterer_type: which fallback clusterer to use
+      agglomerative_threshold: threshold of agglomerative clustering
       naive_threshold: threshold for naive clusterer
       naive_adaptation_threshold: adaptation_threshold for naive clusterer
     &#34;&#34;&#34;
@@ -484,6 +489,7 @@ overlapping sliding windows, this value could be larger than 1</dd>
     self.single_cluster_affinity_diagonal_offset = (
         single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
+    self.agglomerative_threshold = agglomerative_threshold
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold</code></pre>
 </details>

@@ -56,6 +56,7 @@ class FallbackOptions:
                single_cluster_affinity_threshold=0.75,
                single_cluster_affinity_diagonal_offset=1,
                fallback_clusterer_type=FallbackClustererType.Naive,
+               agglomerative_threshold=0.5,
                naive_threshold=0.5,
                naive_adaptation_threshold=None):
     """Initialization of the fallback options.
@@ -73,6 +74,7 @@ class FallbackOptions:
         exclude diagonal values. But if embeddings are extracted from
         overlapping sliding windows, this value could be larger than 1
       fallback_clusterer_type: which fallback clusterer to use
+      agglomerative_threshold: threshold of agglomerative clustering
       naive_threshold: threshold for naive clusterer
       naive_adaptation_threshold: adaptation_threshold for naive clusterer
     """
@@ -91,6 +93,7 @@ class FallbackOptions:
     self.single_cluster_affinity_diagonal_offset = (
         single_cluster_affinity_diagonal_offset)
     self.fallback_clusterer_type = fallback_clusterer_type
+    self.agglomerative_threshold = agglomerative_threshold
     self.naive_threshold = naive_threshold
     self.naive_adaptation_threshold = naive_adaptation_threshold
 
@@ -106,12 +109,11 @@ class FallbackClusterer:
     """
     self.options = options
     if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
-      self.clusterer = AgglomerativeClustering()
-      if (options.single_cluster_condition ==
-          SingleClusterCondition.FallbackClusterer):
-        raise ValueError(
-            "AgglomerativeClustering is hardcoded to 2 clusters, "
-            "thus cannot be used for single-vs-multi cluster decision.")
+      self.clusterer = AgglomerativeClustering(
+          n_clusters=None,
+          affinity="cosine",
+          linkage="average",
+          distance_threshold=options.agglomerative_threshold)
     elif options.fallback_clusterer_type == FallbackClustererType.Naive:
       self.clusterer = naive_clusterer.NaiveClusterer(
           threshold=options.naive_threshold,

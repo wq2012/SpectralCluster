@@ -6,6 +6,7 @@ from spectralcluster import utils
 FallbackOptions = fallback_clusterer.FallbackOptions
 FallbackClusterer = fallback_clusterer.FallbackClusterer
 SingleClusterCondition = fallback_clusterer.SingleClusterCondition
+FallbackClustererType = fallback_clusterer.FallbackClustererType
 
 
 class TestFallbackClusterer(unittest.TestCase):
@@ -14,7 +15,7 @@ class TestFallbackClusterer(unittest.TestCase):
     super().setUp()
     pass
 
-  def test_6by2_matrix(self):
+  def test_6by2_matrix_naive(self):
     matrix = np.array([
         [1.0, 0.0],
         [1.1, 0.1],
@@ -23,7 +24,29 @@ class TestFallbackClusterer(unittest.TestCase):
         [0.9, -0.1],
         [0.0, 1.2],
     ])
-    options = FallbackOptions()
+    options = FallbackOptions(
+        fallback_clusterer_type=FallbackClustererType.Naive,
+        naive_threshold=0.5,
+    )
+    clusterer = FallbackClusterer(options)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 1, 1, 0, 1])
+    np.testing.assert_equal(expected, labels)
+
+  def test_6by2_matrix_agglomerative(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    options = FallbackOptions(
+        fallback_clusterer_type=FallbackClustererType.Agglomerative,
+        agglomerative_threshold=0.5,
+    )
     clusterer = FallbackClusterer(options)
     labels = clusterer.predict(matrix)
     labels = utils.enforce_ordered_labels(labels)
