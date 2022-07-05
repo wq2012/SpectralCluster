@@ -14,6 +14,7 @@ AutoTune = autotune.AutoTune
 
 ConstraintOptions = constraint.ConstraintOptions
 ConstraintName = constraint.ConstraintName
+ConstraintMatrix = constraint.ConstraintMatrix
 IntegrationType = constraint.IntegrationType
 
 FallbackOptions = fallback_clusterer.FallbackOptions
