@@ -67,6 +67,26 @@ class TestSpectralClusterer(unittest.TestCase):
     expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
     np.testing.assert_equal(expected, labels)
 
+  def test_1000by6_matrix_reduce_dimension(self):
+    matrix = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]] * 400 +
+                      [[0.0, 1.0, 0.0, 0.0, 0.0, 0.0]] * 300 +
+                      [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0]] * 200 +
+                      [[0.0, 0.0, 0.0, 1.0, 0.0, 0.0]] * 100)
+    noisy = np.random.rand(1000, 6) * 2 - 1
+    matrix = matrix + noisy * 0.1
+    refinement_options = refinement.RefinementOptions(
+        gaussian_blur_sigma=0,
+        p_percentile=0.2,
+        refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        refinement_options=refinement_options,
+        stop_eigenvalue=0.01,
+        max_spectral_size=100)
+    labels = clusterer.predict(matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0] * 400 + [1] * 300 + [2] * 200 + [3] * 100)
+    np.testing.assert_equal(expected, labels)
+
   def test_6by2_matrix_eigengap_normalizeddiff(self):
     matrix = np.array([
         [1.0, 0.0],

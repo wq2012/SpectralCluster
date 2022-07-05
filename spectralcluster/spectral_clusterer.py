@@ -1,6 +1,7 @@
 """A spectral clusterer class to perform clustering."""
 
 import numpy as np
+from sklearn.cluster import AgglomerativeClustering
 from spectralcluster import constraint
 from spectralcluster import custom_distance_kmeans
 from spectralcluster import fallback_clusterer
@@ -30,6 +31,7 @@ class SpectralClusterer:
                max_iter=300,
                constraint_options=None,
                eigengap_type=EigenGapType.Ratio,
+               max_spectral_size=None,
                affinity_function=utils.compute_affinity_matrix,
                post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
     """Constructor of the clusterer.
@@ -57,6 +59,13 @@ class SpectralClusterer:
       constraint_options: a ConstraintOptions object that contains constraint
         arguments
       eigengap_type: the type of the eigengap computation
+      max_spectral_size: the maximal size of input to the spectral clustering
+        algorithm. If this is set, and the actual input size is larger than
+        this value, then we are going to first use hierarchical clustering
+        to reduce the input size to this number. This can significantly reduce
+        the computational cost for steps like Laplacian matrix and eigen
+        decomposition. However, please note that this may degrade the quality
+        of the final clustering results
       affinity_function: a function to compute the affinity matrix from the
         embeddings. This defaults to (cos(x,y)+1)/2
       post_eigen_cluster_function: a function to cluster the spectral embeddings
@@ -81,6 +90,7 @@ class SpectralClusterer:
     self.max_iter = max_iter
     self.constraint_options = constraint_options
     self.eigengap_type = eigengap_type
+    self.max_spectral_size = max_spectral_size
     self.affinity_function = affinity_function
     self.post_eigen_cluster_function = post_eigen_cluster_function
 
@@ -140,6 +150,43 @@ class SpectralClusterer:
           descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
+  def _reduce_size_and_predict(self, embeddings):
+    """Reduce the input size, then run spectral clustering.
+
+    Args:
+      embeddings: numpy array of shape (n_samples, n_features)
+
+    Returns:
+      labels: numpy array of shape (n_samples,)
+    """
+    # Run AHC on the input to reduce the size.
+    # Note that linkage needs to be "complete", ecause "average" and "single"
+    # do not work very well here.
+    # Alternatively, we can use "euclidean" and "ward", but that requires
+    # that the inputs are L2 normalized first.
+    ahc = AgglomerativeClustering(
+        n_clusters=self.max_spectral_size,
+        affinity="cosine",
+        linkage="complete")
+    ahc_labels = ahc.fit_predict(embeddings)
+
+    # Compute the centroids of the AHC clusters.
+    ahc_centroids = []
+    for i in range(self.max_spectral_size):
+      ahc_cluster_embeddings = embeddings[ahc_labels == i, :]
+      ahc_centroids.append(np.mean(ahc_cluster_embeddings, axis=0))
+    ahc_centroids = np.stack(ahc_centroids)
+
+    # Run spectral clustering on AHC centroids.
+    spectral_labels = self.predict(ahc_centroids)
+
+    # Convert spectral labels to final labels.
+    final_labels = np.zeros(ahc_labels.shape)
+    for i in range(self.max_spectral_size):
+      final_labels[ahc_labels == i] = spectral_labels[i]
+
+    return final_labels
+
   def predict(self, embeddings, constraint_matrix=None):
     """Perform spectral clustering on data embeddings.
 
@@ -156,6 +203,7 @@ class SpectralClusterer:
     Raises:
       TypeError: if embeddings has wrong type
       ValueError: if embeddings has wrong shape
+      RuntimeError: if max_spectral_size is set and constraint_matrix is given
     """
     num_embeddings = embeddings.shape[0]
 
@@ -170,6 +218,17 @@ class SpectralClusterer:
       temp_clusterer = fallback_clusterer.FallbackClusterer(
           self.fallback_options)
       return temp_clusterer.predict(embeddings)
+
+    # Check whether the input size is too big for running spectral clustering.
+    if (self.max_spectral_size is not None
+        and num_embeddings > self.max_spectral_size):
+      if constraint_matrix is not None:
+        raise RuntimeError(
+            "Cannot handle constraint_matrix when max_spectral_size is set")
+      if self.max_spectral_size < 2:
+        raise ValueError(
+            "max_spectral_size should be a relatively big number")
+      return self._reduce_size_and_predict(embeddings)
 
     # Compute affinity matrix.
     affinity = self.affinity_function(embeddings)

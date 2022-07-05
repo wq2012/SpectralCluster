@@ -177,6 +177,12 @@ Also, spectral clustering and eigen-gap may not work well at making single-vs-mu
 
 For the complete list of parameters of `FallbackOptions`, see `spectralcluster/fallback_clusterer.py`.
 
+### Speed up the clustering
+
+Spectral clustering can become slow when the number of input embeddings is large. This is due to the high costs of steps such as computing the Laplacian matrix, and eigen decomposition of the Laplacian matrix. One trick to speed up the spectral clustering when the input size is large is to use hierarchical clustering as a pre-clustering step.
+
+To use this feature, you can specify the `max_spectral_size` argument when constructing the `SpectralClusterer` object. For example, if you set `max_spectral_size=200`, then the Laplacian matrix can be at most `200 * 200`.
+
 ### Constrained spectral clustering
 
 ![turn-to-diarize-diagram](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/turn-to-diarize.png)
@@ -250,5 +256,7 @@ We also have fully supervised speaker diarization systems, powered by
 [uis-rnn](https://github.com/google/uis-rnn).
 Check this [Google AI Blog](https://ai.googleblog.com/2018/11/accurate-online-speaker-diarization.html).
 
-To learn more about speaker diarization, here is a curated list of resources:
-[awesome-diarization](https://github.com/wq2012/awesome-diarization).
+To learn more about speaker diarization, you can check out:
+* A curated list of resources:
+[awesome-diarization](https://github.com/wq2012/awesome-diarization)
+* An online course on Udemy: [A Tutorial on Speaker Diarization](https://www.udemy.com/course/diarization/?referralCode=21D7CC0AEABB7FE3680F)
