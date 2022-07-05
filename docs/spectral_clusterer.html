@@ -254,7 +254,9 @@ class SpectralClusterer:
       if constraint_matrix is not None:
         raise RuntimeError(
             &#34;Cannot handle constraint_matrix when max_spectral_size is set&#34;)
-      if self.max_spectral_size &lt; 2:
+      if (self.max_spectral_size &lt; 2 or
+         (self.max_clusters and self.max_spectral_size &lt;= self.max_clusters) or
+         (self.min_clusters and self.max_spectral_size &lt;= self.min_clusters)):
         raise ValueError(
             &#34;max_spectral_size should be a relatively big number&#34;)
       return self._reduce_size_and_predict(embeddings)
@@ -602,7 +604,9 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       if constraint_matrix is not None:
         raise RuntimeError(
             &#34;Cannot handle constraint_matrix when max_spectral_size is set&#34;)
-      if self.max_spectral_size &lt; 2:
+      if (self.max_spectral_size &lt; 2 or
+         (self.max_clusters and self.max_spectral_size &lt;= self.max_clusters) or
+         (self.min_clusters and self.max_spectral_size &lt;= self.min_clusters)):
         raise ValueError(
             &#34;max_spectral_size should be a relatively big number&#34;)
       return self._reduce_size_and_predict(embeddings)
@@ -739,7 +743,9 @@ constraint matrix with prior information</dd>
     if constraint_matrix is not None:
       raise RuntimeError(
           &#34;Cannot handle constraint_matrix when max_spectral_size is set&#34;)
-    if self.max_spectral_size &lt; 2:
+    if (self.max_spectral_size &lt; 2 or
+       (self.max_clusters and self.max_spectral_size &lt;= self.max_clusters) or
+       (self.min_clusters and self.max_spectral_size &lt;= self.min_clusters)):
       raise ValueError(
           &#34;max_spectral_size should be a relatively big number&#34;)
     return self._reduce_size_and_predict(embeddings)

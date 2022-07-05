@@ -225,7 +225,9 @@ class SpectralClusterer:
       if constraint_matrix is not None:
         raise RuntimeError(
             "Cannot handle constraint_matrix when max_spectral_size is set")
-      if self.max_spectral_size < 2:
+      if (self.max_spectral_size < 2 or
+         (self.max_clusters and self.max_spectral_size <= self.max_clusters) or
+         (self.min_clusters and self.max_spectral_size <= self.min_clusters)):
         raise ValueError(
             "max_spectral_size should be a relatively big number")
       return self._reduce_size_and_predict(embeddings)
