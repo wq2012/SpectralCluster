@@ -183,6 +183,8 @@ Spectral clustering can become slow when the number of input embeddings is large
 
 To use this feature, you can specify the `max_spectral_size` argument when constructing the `SpectralClusterer` object. For example, if you set `max_spectral_size=200`, then the Laplacian matrix can be at most `200 * 200`.
 
+But please note that setting `max_spectral_size` may cause degradations of the final clustering quality. So please use this feature wisely.
+
 ### Constrained spectral clustering
 
 ![turn-to-diarize-diagram](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/turn-to-diarize.png)
