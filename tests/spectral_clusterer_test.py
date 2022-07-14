@@ -9,6 +9,7 @@ from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
 
+AutoTuneProxy = autotune.AutoTuneProxy
 RefinementName = refinement.RefinementName
 ThresholdType = refinement.ThresholdType
 SymmetrizeType = refinement.SymmetrizeType
@@ -195,7 +196,8 @@ class TestSpectralClusterer(unittest.TestCase):
         p_percentile_min=0.60,
         p_percentile_max=0.95,
         init_search_step=0.05,
-        search_level=1)
+        search_level=1,
+        proxy=AutoTuneProxy.PercentileOverNME)
     fallback_options = fallback_clusterer.FallbackOptions(
         spectral_min_embeddings=3)
     clusterer = spectral_clusterer.SpectralClusterer(

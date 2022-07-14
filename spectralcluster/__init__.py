@@ -11,6 +11,7 @@ from . import spectral_clusterer
 from . import utils
 
 AutoTune = autotune.AutoTune
+AutoTuneProxy = autotune.AutoTuneProxy
 
 ConstraintOptions = constraint.ConstraintOptions
 ConstraintName = constraint.ConstraintName

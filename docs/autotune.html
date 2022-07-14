@@ -29,9 +29,26 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Auto-tuning hyper-parameters.&#34;&#34;&#34;
 
+import enum
 import numpy as np
 
 MIN_SEARCH_STEP = 1e-04
+
+
+class AutoTuneProxy(enum.Enum):
+  &#34;&#34;&#34;What proxy to use as the auto-tuning target.&#34;&#34;&#34;
+
+  # The original proxy used in:
+  # Park, Tae Jin, et al. &#34;Auto-tuning spectral clustering for speaker
+  # diarization using normalized maximum eigengap.&#34; IEEE Signal Processing
+  # Letter 2019.
+  PercentileOverNME = enum.auto()
+
+  # The modified proxy used in:
+  # Xia, Wei, et al. &#34;Turn-to-diarize: Online speaker diarization constrained
+  # by transformer transducer speaker turn detection.&#34; ICASSP 2022.
+  # https://arxiv.org/abs/2109.11641
+  PercentileSqrtOverNME = enum.auto()
 
 
 class AutoTune:
@@ -47,7 +64,8 @@ class AutoTune:
                p_percentile_min=0.60,
                p_percentile_max=0.95,
                init_search_step=0.01,
-               search_level=1):
+               search_level=1,
+               proxy=AutoTuneProxy.PercentileSqrtOverNME):
     &#34;&#34;&#34;Initialization of the autotune arguments.
 
     Args:
@@ -55,11 +73,15 @@ class AutoTune:
       p_percentile_max: maximum value of p_percentile
       init_search_step: initial search step size for auto-tuning
       search_level: hierarchical search level for auto-tuning
+      proxy: which proxy to minimize for auto-tuning
     &#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = init_search_step
     self.search_level = search_level
+    if not isinstance(proxy, AutoTuneProxy):
+      raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
+    self.proxy = proxy
 
   def get_percentile_range(self):
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
@@ -146,7 +168,7 @@ class AutoTune:
 <dl>
 <dt id="spectralcluster.autotune.AutoTune"><code class="flex name class">
 <span>class <span class="ident">AutoTune</span></span>
-<span>(</span><span>p_percentile_min=0.6, p_percentile_max=0.95, init_search_step=0.01, search_level=1)</span>
+<span>(</span><span>p_percentile_min=0.6, p_percentile_max=0.95, init_search_step=0.01, search_level=1, proxy=AutoTuneProxy.PercentileSqrtOverNME)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>AutoTune Class.</p>
@@ -165,6 +187,8 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 <dd>initial search step size for auto-tuning</dd>
 <dt><strong><code>search_level</code></strong></dt>
 <dd>hierarchical search level for auto-tuning</dd>
+<dt><strong><code>proxy</code></strong></dt>
+<dd>which proxy to minimize for auto-tuning</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -183,7 +207,8 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
                p_percentile_min=0.60,
                p_percentile_max=0.95,
                init_search_step=0.01,
-               search_level=1):
+               search_level=1,
+               proxy=AutoTuneProxy.PercentileSqrtOverNME):
     &#34;&#34;&#34;Initialization of the autotune arguments.
 
     Args:
@@ -191,11 +216,15 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
       p_percentile_max: maximum value of p_percentile
       init_search_step: initial search step size for auto-tuning
       search_level: hierarchical search level for auto-tuning
+      proxy: which proxy to minimize for auto-tuning
     &#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = init_search_step
     self.search_level = search_level
+    if not isinstance(proxy, AutoTuneProxy):
+      raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
+    self.proxy = proxy
 
   def get_percentile_range(self):
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
@@ -396,6 +425,47 @@ estimate the number of clusters.</p>
 </dd>
 </dl>
 </dd>
+<dt id="spectralcluster.autotune.AutoTuneProxy"><code class="flex name class">
+<span>class <span class="ident">AutoTuneProxy</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>What proxy to use as the auto-tuning target.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AutoTuneProxy(enum.Enum):
+  &#34;&#34;&#34;What proxy to use as the auto-tuning target.&#34;&#34;&#34;
+
+  # The original proxy used in:
+  # Park, Tae Jin, et al. &#34;Auto-tuning spectral clustering for speaker
+  # diarization using normalized maximum eigengap.&#34; IEEE Signal Processing
+  # Letter 2019.
+  PercentileOverNME = enum.auto()
+
+  # The modified proxy used in:
+  # Xia, Wei, et al. &#34;Turn-to-diarize: Online speaker diarization constrained
+  # by transformer transducer speaker turn detection.&#34; ICASSP 2022.
+  # https://arxiv.org/abs/2109.11641
+  PercentileSqrtOverNME = enum.auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.autotune.AutoTuneProxy.PercentileOverNME"><code class="name">var <span class="ident">PercentileOverNME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.autotune.AutoTuneProxy.PercentileSqrtOverNME"><code class="name">var <span class="ident">PercentileSqrtOverNME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -418,6 +488,13 @@ estimate the number of clusters.</p>
 <li><code><a title="spectralcluster.autotune.AutoTune.get_percentile_range" href="#spectralcluster.autotune.AutoTune.get_percentile_range">get_percentile_range</a></code></li>
 <li><code><a title="spectralcluster.autotune.AutoTune.tune" href="#spectralcluster.autotune.AutoTune.tune">tune</a></code></li>
 <li><code><a title="spectralcluster.autotune.AutoTune.update_percentile_range" href="#spectralcluster.autotune.AutoTune.update_percentile_range">update_percentile_range</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="spectralcluster.autotune.AutoTuneProxy" href="#spectralcluster.autotune.AutoTuneProxy">AutoTuneProxy</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.autotune.AutoTuneProxy.PercentileOverNME" href="#spectralcluster.autotune.AutoTuneProxy.PercentileOverNME">PercentileOverNME</a></code></li>
+<li><code><a title="spectralcluster.autotune.AutoTuneProxy.PercentileSqrtOverNME" href="#spectralcluster.autotune.AutoTuneProxy.PercentileSqrtOverNME">PercentileSqrtOverNME</a></code></li>
 </ul>
 </li>
 </ul>

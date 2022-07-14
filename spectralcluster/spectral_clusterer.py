@@ -2,6 +2,7 @@
 
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
+from spectralcluster import autotune
 from spectralcluster import constraint
 from spectralcluster import custom_distance_kmeans
 from spectralcluster import fallback_clusterer
@@ -9,6 +10,7 @@ from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
 
+AutoTuneProxy = autotune.AutoTuneProxy
 RefinementName = refinement.RefinementName
 LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
@@ -262,7 +264,12 @@ class SpectralClusterer:
         (eigenvectors, n_clusters,
          max_delta_norm) = self._compute_eigenvectors_ncluster(
              affinity, constraint_matrix)
-        ratio = np.sqrt(1 - p_percentile) / max_delta_norm
+        if self.autotune.proxy == AutoTuneProxy.PercentileSqrtOverNME:
+          ratio = np.sqrt(1 - p_percentile) / max_delta_norm
+        elif self.autotune.proxy == AutoTuneProxy.PercentileSqrtOverNME:
+          ratio = (1 - p_percentile) / max_delta_norm
+        else:
+            raise ValueError("Unsupported value of AutoTuneProxy")
         return ratio, eigenvectors, n_clusters
 
       eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)

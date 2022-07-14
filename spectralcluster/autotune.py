@@ -1,8 +1,25 @@
 """Auto-tuning hyper-parameters."""
 
+import enum
 import numpy as np
 
 MIN_SEARCH_STEP = 1e-04
+
+
+class AutoTuneProxy(enum.Enum):
+  """What proxy to use as the auto-tuning target."""
+
+  # The original proxy used in:
+  # Park, Tae Jin, et al. "Auto-tuning spectral clustering for speaker
+  # diarization using normalized maximum eigengap." IEEE Signal Processing
+  # Letter 2019.
+  PercentileOverNME = enum.auto()
+
+  # The modified proxy used in:
+  # Xia, Wei, et al. "Turn-to-diarize: Online speaker diarization constrained
+  # by transformer transducer speaker turn detection." ICASSP 2022.
+  # https://arxiv.org/abs/2109.11641
+  PercentileSqrtOverNME = enum.auto()
 
 
 class AutoTune:
@@ -18,7 +35,8 @@ class AutoTune:
                p_percentile_min=0.60,
                p_percentile_max=0.95,
                init_search_step=0.01,
-               search_level=1):
+               search_level=1,
+               proxy=AutoTuneProxy.PercentileSqrtOverNME):
     """Initialization of the autotune arguments.
 
     Args:
@@ -26,11 +44,15 @@ class AutoTune:
       p_percentile_max: maximum value of p_percentile
       init_search_step: initial search step size for auto-tuning
       search_level: hierarchical search level for auto-tuning
+      proxy: which proxy to minimize for auto-tuning
     """
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = init_search_step
     self.search_level = search_level
+    if not isinstance(proxy, AutoTuneProxy):
+      raise TypeError("proxy must be an instance of AutoTuneProxy")
+    self.proxy = proxy
 
   def get_percentile_range(self):
     """Get the current percentile search range."""
