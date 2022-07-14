@@ -248,6 +248,7 @@ Our papers are cited as:
   title={{Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection}},
   author={Wei Xia and Han Lu and Quan Wang and Anshuman Tripathi and Yiling Huang and Ignacio Lopez Moreno and Hasim Sak},
   booktitle={2022 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages={8077--8081},
   year={2022},
   organization={IEEE}
 }
