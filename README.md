@@ -153,13 +153,14 @@ You can enable this by passing in an `AutoTune` object to the `autotune` argumen
 Example:
 
 ```python
-from spectralcluster import AutoTune
+from spectralcluster import AutoTune, AutoTuneProxy
 
 autotune = AutoTune(
     p_percentile_min=0.60,
     p_percentile_max=0.95,
     init_search_step=0.01,
-    search_level=3)
+    search_level=3,
+    proxy=AutoTuneProxy.PercentileSqrtOverNME)
 ```
 
 For the complete list of parameters of `AutoTune`, see
