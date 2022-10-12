@@ -121,7 +121,8 @@ class SpectralClusterer:
       affinity = refinement_operator.refine(affinity)
 
     if (self.constraint_options and
-        not self.constraint_options.apply_before_refinement):
+        not self.constraint_options.apply_before_refinement and
+        constraint_matrix is not None):
       # Perform the constraint operation after refinement
       affinity = self.constraint_options.constraint_operator.adjust_affinity(
           affinity, constraint_matrix)
@@ -240,12 +241,13 @@ class SpectralClusterer:
     # Make single-vs-multi cluster(s) decision.
     if self.min_clusters == 1:
       if fallback_clusterer.check_single_cluster(
-          self.fallback_options, embeddings, affinity):
+              self.fallback_options, embeddings, affinity):
         return np.array([0] * num_embeddings)
 
     # Apply constraint.
     if (self.constraint_options and
-        self.constraint_options.apply_before_refinement):
+        self.constraint_options.apply_before_refinement and
+        constraint_matrix is not None):
       # Perform the constraint operation before refinement
       affinity = self.constraint_options.constraint_operator.adjust_affinity(
           affinity, constraint_matrix)
@@ -269,7 +271,7 @@ class SpectralClusterer:
         elif self.autotune.proxy == AutoTuneProxy.PercentileSqrtOverNME:
           ratio = (1 - p_percentile) / max_delta_norm
         else:
-            raise ValueError("Unsupported value of AutoTuneProxy")
+          raise ValueError("Unsupported value of AutoTuneProxy")
         return ratio, eigenvectors, n_clusters
 
       eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)

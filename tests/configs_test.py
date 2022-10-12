@@ -37,7 +37,23 @@ class TurnToDiarizeTest(unittest.TestCase):
     speaker_turn_scores = [0, 0, 1.5, 0, 1.5, 1.5]
     constraint_matrix = constraint.ConstraintMatrix(
         speaker_turn_scores, threshold=1).compute_diagonals()
-    labels = configs.turntodiarize_clusterer.predict(matrix, constraint_matrix)
+    labels = configs.turntodiarize_clusterer.predict(
+        matrix, constraint_matrix)
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 0, 1, 1, 0, 1])
+    np.testing.assert_equal(expected, labels)
+
+  def test_6by2_matrix_no_constraint(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    labels = configs.turntodiarize_clusterer.predict(
+        matrix, constraint_matrix=None)
     labels = utils.enforce_ordered_labels(labels)
     expected = np.array([0, 0, 1, 1, 0, 1])
     np.testing.assert_equal(expected, labels)

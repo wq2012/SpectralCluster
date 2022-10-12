@@ -6,11 +6,11 @@
   ],
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "terminal.integrated.fontSize": 13,
   "python.formatting.provider": "autopep8",
   "python.formatting.autopep8Args": [
-    "--indent-size=4",
+    "--indent-size=2",
     "--max-line-length=80"
   ],
 }
