@@ -3,6 +3,12 @@
 Spectral clustering exploits the global structure of the data. But there are
 cases where spectral clustering does not work as well as some other simpler
 clustering methods, such as when the number of embeddings is too small.
+
+See this paper for more details:
+Quan Wang, Yiling Huang, Han Lu, Guanlong Zhao, Ignacio Lopez Moreno,
+"Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization
+with Multi-Stage Clustering", arXiv:2210.13690.
+https://arxiv.org/abs/2210.13690
 """
 
 import enum
@@ -99,7 +105,12 @@ class FallbackOptions:
 
 
 class FallbackClusterer:
-  """Fallback clusterer. So far we simply use AgglomerativeClustering."""
+  """Fallback clusterer.
+
+  The fallback clusterer is introduced in the multi-stage clustering paper
+  (https://arxiv.org/abs/2210.13690). So far we simply use
+  AgglomerativeClustering.
+  """
 
   def __init__(self, options):
     """Initilization of the fallback clusterer.

@@ -4,10 +4,11 @@
 ## Overview
 
 This is a Python re-implementation of the spectral clustering and
-constrained spectral clustering algorithms in these two papers:
+constrained spectral clustering algorithms in these papers:
 
 * [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/)
 * [Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection](https://arxiv.org/abs/2109.11641)
+* [Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization with Multi-Stage Clustering](https://arxiv.org/abs/2210.13690)
 
 ![refinement](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/refinement.png)
 
@@ -251,6 +252,13 @@ Our papers are cited as:
   pages={8077--8081},
   year={2022},
   organization={IEEE}
+}
+
+@article{wang2022highly,
+  title={Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization with Multi-Stage Clustering},
+  author={Quan Wang and Yiling Huang and Han Lu and Guanlong Zhao and Ignacio Lopez Moreno},
+  journal={arXiv:2210.13690},
+  year={2022}
 }
 ```
 

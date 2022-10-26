@@ -26,6 +26,11 @@
 <p>Spectral clustering exploits the global structure of the data. But there are
 cases where spectral clustering does not work as well as some other simpler
 clustering methods, such as when the number of embeddings is too small.</p>
+<p>See this paper for more details:
+Quan Wang, Yiling Huang, Han Lu, Guanlong Zhao, Ignacio Lopez Moreno,
+"Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization
+with Multi-Stage Clustering", arXiv:2210.13690.
+<a href="https://arxiv.org/abs/2210.13690">https://arxiv.org/abs/2210.13690</a></p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -35,6 +40,12 @@ clustering methods, such as when the number of embeddings is too small.</p>
 Spectral clustering exploits the global structure of the data. But there are
 cases where spectral clustering does not work as well as some other simpler
 clustering methods, such as when the number of embeddings is too small.
+
+See this paper for more details:
+Quan Wang, Yiling Huang, Han Lu, Guanlong Zhao, Ignacio Lopez Moreno,
+&#34;Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization
+with Multi-Stage Clustering&#34;, arXiv:2210.13690.
+https://arxiv.org/abs/2210.13690
 &#34;&#34;&#34;
 
 import enum
@@ -131,7 +142,12 @@ class FallbackOptions:
 
 
 class FallbackClusterer:
-  &#34;&#34;&#34;Fallback clusterer. So far we simply use AgglomerativeClustering.&#34;&#34;&#34;
+  &#34;&#34;&#34;Fallback clusterer.
+
+  The fallback clusterer is introduced in the multi-stage clustering paper
+  (https://arxiv.org/abs/2210.13690). So far we simply use
+  AgglomerativeClustering.
+  &#34;&#34;&#34;
 
   def __init__(self, options):
     &#34;&#34;&#34;Initilization of the fallback clusterer.
@@ -317,7 +333,10 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 <span>(</span><span>options)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fallback clusterer. So far we simply use AgglomerativeClustering.</p>
+<div class="desc"><p>Fallback clusterer.</p>
+<p>The fallback clusterer is introduced in the multi-stage clustering paper
+(<a href="https://arxiv.org/abs/2210.13690">https://arxiv.org/abs/2210.13690</a>). So far we simply use
+AgglomerativeClustering.</p>
 <p>Initilization of the fallback clusterer.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -329,7 +348,12 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FallbackClusterer:
-  &#34;&#34;&#34;Fallback clusterer. So far we simply use AgglomerativeClustering.&#34;&#34;&#34;
+  &#34;&#34;&#34;Fallback clusterer.
+
+  The fallback clusterer is introduced in the multi-stage clustering paper
+  (https://arxiv.org/abs/2210.13690). So far we simply use
+  AgglomerativeClustering.
+  &#34;&#34;&#34;
 
   def __init__(self, options):
     &#34;&#34;&#34;Initilization of the fallback clusterer.

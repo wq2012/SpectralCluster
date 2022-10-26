@@ -67,7 +67,8 @@ class SpectralClusterer:
         to reduce the input size to this number. This can significantly reduce
         the computational cost for steps like Laplacian matrix and eigen
         decomposition. However, please note that this may degrade the quality
-        of the final clustering results
+        of the final clustering results. This corresponds to the U1 value in
+        the multi-stage clustering paper (https://arxiv.org/abs/2210.13690)
       affinity_function: a function to compute the affinity matrix from the
         embeddings. This defaults to (cos(x,y)+1)/2
       post_eigen_cluster_function: a function to cluster the spectral embeddings
