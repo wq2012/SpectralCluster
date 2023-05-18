@@ -74,7 +74,7 @@ class AutoTune:
     return self.get_percentile_range()
 
   def tune(self, p_percentile_to_ratio: typing.Callable) -> (
-      tuple[np.ndarray, int, float]):
+      typing.Tuple[np.ndarray, int, float]):
     """Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also

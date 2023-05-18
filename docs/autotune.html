@@ -103,7 +103,7 @@ class AutoTune:
     return self.get_percentile_range()
 
   def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
-      tuple[np.ndarray, int, float]):
+      typing.Tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
@@ -249,7 +249,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
     return self.get_percentile_range()
 
   def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
-      tuple[np.ndarray, int, float]):
+      typing.Tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
@@ -327,7 +327,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 </details>
 </dd>
 <dt id="spectralcluster.autotune.AutoTune.tune"><code class="name flex">
-<span>def <span class="ident">tune</span></span>(<span>self, p_percentile_to_ratio: Callable) ‑> tuple[numpy.ndarray, int, float]</span>
+<span>def <span class="ident">tune</span></span>(<span>self, p_percentile_to_ratio: Callable) ‑> Tuple[numpy.ndarray, int, float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tune the hyper-parameter p_percentile.</p>
@@ -355,7 +355,7 @@ estimate the number of clusters.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
-    tuple[np.ndarray, int, float]):
+    typing.Tuple[np.ndarray, int, float]):
   &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
   Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
