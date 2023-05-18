@@ -9,33 +9,41 @@ from spectralcluster import fallback_clusterer
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
+import typing
 
+
+AutoTune = autotune.AutoTune
 AutoTuneProxy = autotune.AutoTuneProxy
-RefinementName = refinement.RefinementName
-LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
+ConstraintOptions = constraint.ConstraintOptions
+FallbackOptions = fallback_clusterer.FallbackOptions
+LaplacianType = laplacian.LaplacianType
+RefinementName = refinement.RefinementName
+RefinementOptions = refinement.RefinementOptions
 EigenGapType = utils.EigenGapType
 
 
 class SpectralClusterer:
   """Spectral clustering class."""
 
-  def __init__(self,
-               min_clusters=None,
-               max_clusters=None,
-               refinement_options=None,
-               autotune=None,
-               fallback_options=None,
-               laplacian_type=None,
-               stop_eigenvalue=1e-2,
-               row_wise_renorm=False,
-               custom_dist="cosine",
-               max_iter=300,
-               constraint_options=None,
-               eigengap_type=EigenGapType.Ratio,
-               max_spectral_size=None,
-               affinity_function=utils.compute_affinity_matrix,
-               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
+  def __init__(
+      self,
+      min_clusters: typing.Optional[int] = None,
+      max_clusters: typing.Optional[int] = None,
+      refinement_options: typing.Optional[RefinementOptions] = None,
+      autotune: typing.Optional[AutoTune] = None,
+      fallback_options: typing.Optional[FallbackOptions] = None,
+      laplacian_type: typing.Optional[LaplacianType] = None,
+      stop_eigenvalue: float = 1e-2,
+      row_wise_renorm: bool = False,
+      custom_dist: typing.Union[str, typing.Callable] = "cosine",
+      max_iter: int = 300,
+      constraint_options: typing.Optional[ConstraintOptions] = None,
+      eigengap_type: EigenGapType = EigenGapType.Ratio,
+      max_spectral_size: typing.Optional[int] = None,
+      affinity_function: typing.Callable = utils.compute_affinity_matrix,
+      post_eigen_cluster_function: typing.Callable = (
+          custom_distance_kmeans.run_kmeans)):
     """Constructor of the clusterer.
 
     Args:
@@ -97,7 +105,11 @@ class SpectralClusterer:
     self.affinity_function = affinity_function
     self.post_eigen_cluster_function = post_eigen_cluster_function
 
-  def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
+  def _compute_eigenvectors_ncluster(
+      self,
+      affinity: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -> (
+          tuple[np.ndarray, int, float]):
     """Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -154,7 +166,7 @@ class SpectralClusterer:
           descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
-  def _reduce_size_and_predict(self, embeddings):
+  def _reduce_size_and_predict(self, embeddings: np.ndarray) -> np.ndarray:
     """Reduce the input size, then run spectral clustering.
 
     Args:
@@ -191,7 +203,10 @@ class SpectralClusterer:
 
     return final_labels
 
-  def predict(self, embeddings, constraint_matrix=None):
+  def predict(
+      self,
+      embeddings: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -> np.ndarray:
     """Perform spectral clustering on data embeddings.
 
     The spectral clustering is performed on an affinity matrix.
@@ -261,7 +276,8 @@ class SpectralClusterer:
             "AutoTune is only effective when the refinement sequence"
             "contains RowWiseThreshold")
 
-      def p_percentile_to_ratio(p_percentile):
+      def p_percentile_to_ratio(p_percentile: float) -> (
+          tuple[float, np.ndarray, int]):
         """Compute the `ratio` given a `p_percentile` value."""
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,

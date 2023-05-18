@@ -28,6 +28,10 @@ jobs:
       run: |
         pip install flake8
         flake8 --indent-size 2 --max-line-length 80 .
+    - name: pytype
+      run: |
+        pip install pytype
+        pytype .
     - name: Run tests
       run: |
         pip install codecov

@@ -21,7 +21,9 @@ class LaplacianType(enum.Enum):
   GraphCut = enum.auto()
 
 
-def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
+def compute_laplacian(affinity: np.ndarray,
+                      laplacian_type: LaplacianType = LaplacianType.GraphCut,
+                      eps: float = EPS) -> np.ndarray:
   """Compute the Laplacian matrix.
 
   Args:

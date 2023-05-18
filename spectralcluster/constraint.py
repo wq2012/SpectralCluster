@@ -2,6 +2,7 @@
 import abc
 import enum
 import numpy as np
+import typing
 
 EPS = 1e-10
 
@@ -25,10 +26,10 @@ class ConstraintOptions:
   """Constraint options for constrained clustering methods."""
 
   def __init__(self,
-               constraint_name,
-               apply_before_refinement,
-               integration_type=None,
-               constraint_propagation_alpha=0.6):
+               constraint_name: ConstraintName,
+               apply_before_refinement: bool,
+               integration_type: typing.Optional[IntegrationType] = None,
+               constraint_propagation_alpha: float = 0.6):
     """Initialization of the constraint arguments.
 
     Args:
@@ -59,7 +60,7 @@ class ConstraintOptions:
 class ConstraintOperation(metaclass=abc.ABCMeta):
   """Constraint operation class."""
 
-  def check_input(self, affinity, constraint_matrix):
+  def check_input(self, affinity: np.ndarray, constraint_matrix: np.ndarray):
     """Check the input to the adjust_affinity method.
 
     Args:
@@ -68,13 +69,8 @@ class ConstraintOperation(metaclass=abc.ABCMeta):
         constraint matrix with prior information
 
     Raises:
-      TypeError: if affinity or constraint matrix has wrong type
       ValueError: if affinity or constraint matrix has wrong shape, etc.
     """
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError("affinity must be a numpy array")
-    if not isinstance(constraint_matrix, np.ndarray):
-      raise TypeError("constraint matrix must be a numpy array")
     if len(affinity.shape) != 2:
       raise ValueError("affinity must be 2-dimensional")
     if affinity.shape[0] != affinity.shape[1]:
@@ -88,7 +84,9 @@ class ConstraintOperation(metaclass=abc.ABCMeta):
           "affinity and constraint matrix must have the same shape")
 
   @abc.abstractmethod
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray):
     """An abstract method to perform the constraint operation.
 
     Args:
@@ -110,15 +108,15 @@ class AffinityIntegration(ConstraintOperation):
   and `Average`.
   """
 
-  def __init__(self, integration_type=IntegrationType.Max):
+  def __init__(self, integration_type: IntegrationType = IntegrationType.Max):
     self.integration_type = integration_type
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -> np.ndarray:
     """Adjust the affinity matrix with constraints."""
     self.check_input(affinity, constraint_matrix)
-    if not isinstance(self.integration_type, IntegrationType):
-      raise TypeError("integration_type must be a IntegrationType")
-    elif self.integration_type == IntegrationType.Max:
+    if self.integration_type == IntegrationType.Max:
       return np.maximum(affinity, constraint_matrix)
     elif self.integration_type == IntegrationType.Average:
       return 0.5 * (affinity + constraint_matrix)
@@ -141,10 +139,12 @@ class ConstraintPropagation(ConstraintOperation):
   propagation: A graph-based learning approach and its applications." IJCV 2013
   """
 
-  def __init__(self, alpha=0.6):
+  def __init__(self, alpha: float = 0.6):
     self.alpha = alpha
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -> np.ndarray:
     """Adjust the affinity matrix with constraints."""
     self.check_input(affinity, constraint_matrix)
     adjusted_affinity = np.copy(affinity)
@@ -175,7 +175,7 @@ class ConstraintPropagation(ConstraintOperation):
 class ConstraintMatrix:
   """Constraint Matrix class."""
 
-  def __init__(self, speaker_turn_scores, threshold=1):
+  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
     """Initialization of the constraint matrix arguments.
 
     Args:
@@ -191,7 +191,7 @@ class ConstraintMatrix:
     self.speaker_turn_scores = speaker_turn_scores
     self.threshold = threshold
 
-  def compute_diagonals(self):
+  def compute_diagonals(self) -> np.ndarray:
     """Compute diagonal constraint matrix."""
     num_turns = len(self.speaker_turn_scores)
     constraint_matrix = np.zeros((num_turns, num_turns))

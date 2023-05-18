@@ -38,33 +38,41 @@ from spectralcluster import fallback_clusterer
 from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import utils
+import typing
 
+
+AutoTune = autotune.AutoTune
 AutoTuneProxy = autotune.AutoTuneProxy
-RefinementName = refinement.RefinementName
-LaplacianType = laplacian.LaplacianType
 ConstraintName = constraint.ConstraintName
+ConstraintOptions = constraint.ConstraintOptions
+FallbackOptions = fallback_clusterer.FallbackOptions
+LaplacianType = laplacian.LaplacianType
+RefinementName = refinement.RefinementName
+RefinementOptions = refinement.RefinementOptions
 EigenGapType = utils.EigenGapType
 
 
 class SpectralClusterer:
   &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
 
-  def __init__(self,
-               min_clusters=None,
-               max_clusters=None,
-               refinement_options=None,
-               autotune=None,
-               fallback_options=None,
-               laplacian_type=None,
-               stop_eigenvalue=1e-2,
-               row_wise_renorm=False,
-               custom_dist=&#34;cosine&#34;,
-               max_iter=300,
-               constraint_options=None,
-               eigengap_type=EigenGapType.Ratio,
-               max_spectral_size=None,
-               affinity_function=utils.compute_affinity_matrix,
-               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
+  def __init__(
+      self,
+      min_clusters: typing.Optional[int] = None,
+      max_clusters: typing.Optional[int] = None,
+      refinement_options: typing.Optional[RefinementOptions] = None,
+      autotune: typing.Optional[AutoTune] = None,
+      fallback_options: typing.Optional[FallbackOptions] = None,
+      laplacian_type: typing.Optional[LaplacianType] = None,
+      stop_eigenvalue: float = 1e-2,
+      row_wise_renorm: bool = False,
+      custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;,
+      max_iter: int = 300,
+      constraint_options: typing.Optional[ConstraintOptions] = None,
+      eigengap_type: EigenGapType = EigenGapType.Ratio,
+      max_spectral_size: typing.Optional[int] = None,
+      affinity_function: typing.Callable = utils.compute_affinity_matrix,
+      post_eigen_cluster_function: typing.Callable = (
+          custom_distance_kmeans.run_kmeans)):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -126,7 +134,11 @@ class SpectralClusterer:
     self.affinity_function = affinity_function
     self.post_eigen_cluster_function = post_eigen_cluster_function
 
-  def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
+  def _compute_eigenvectors_ncluster(
+      self,
+      affinity: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; (
+          tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -183,7 +195,7 @@ class SpectralClusterer:
           descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
-  def _reduce_size_and_predict(self, embeddings):
+  def _reduce_size_and_predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Reduce the input size, then run spectral clustering.
 
     Args:
@@ -220,7 +232,10 @@ class SpectralClusterer:
 
     return final_labels
 
-  def predict(self, embeddings, constraint_matrix=None):
+  def predict(
+      self,
+      embeddings: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; np.ndarray:
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
     The spectral clustering is performed on an affinity matrix.
@@ -290,7 +305,8 @@ class SpectralClusterer:
             &#34;AutoTune is only effective when the refinement sequence&#34;
             &#34;contains RowWiseThreshold&#34;)
 
-      def p_percentile_to_ratio(p_percentile):
+      def p_percentile_to_ratio(p_percentile: float) -&gt; (
+          tuple[float, np.ndarray, int]):
         &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
@@ -343,7 +359,7 @@ class SpectralClusterer:
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer"><code class="flex name class">
 <span>class <span class="ident">SpectralClusterer</span></span>
-<span>(</span><span>min_clusters=None, max_clusters=None, refinement_options=None, autotune=None, fallback_options=None, laplacian_type=None, stop_eigenvalue=0.01, row_wise_renorm=False, custom_dist='cosine', max_iter=300, constraint_options=None, eigengap_type=EigenGapType.Ratio, max_spectral_size=None, affinity_function=&lt;function compute_affinity_matrix&gt;, post_eigen_cluster_function=&lt;function run_kmeans&gt;)</span>
+<span>(</span><span>min_clusters: Optional[int] = None, max_clusters: Optional[int] = None, refinement_options: Optional[<a title="spectralcluster.refinement.RefinementOptions" href="refinement.html#spectralcluster.refinement.RefinementOptions">RefinementOptions</a>] = None, autotune: Optional[<a title="spectralcluster.autotune.AutoTune" href="autotune.html#spectralcluster.autotune.AutoTune">AutoTune</a>] = None, fallback_options: Optional[<a title="spectralcluster.fallback_clusterer.FallbackOptions" href="fallback_clusterer.html#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a>] = None, laplacian_type: Optional[<a title="spectralcluster.laplacian.LaplacianType" href="laplacian.html#spectralcluster.laplacian.LaplacianType">LaplacianType</a>] = None, stop_eigenvalue: float = 0.01, row_wise_renorm: bool = False, custom_dist: Union[str, Callable] = 'cosine', max_iter: int = 300, constraint_options: Optional[<a title="spectralcluster.constraint.ConstraintOptions" href="constraint.html#spectralcluster.constraint.ConstraintOptions">ConstraintOptions</a>] = None, eigengap_type: <a title="spectralcluster.utils.EigenGapType" href="utils.html#spectralcluster.utils.EigenGapType">EigenGapType</a> = EigenGapType.Ratio, max_spectral_size: Optional[int] = None, affinity_function: Callable = &lt;function compute_affinity_matrix&gt;, post_eigen_cluster_function: Callable = &lt;function run_kmeans&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Spectral clustering class.</p>
@@ -408,22 +424,24 @@ signature as custom_distance_kmeans.run_kmeans</dd>
 <pre><code class="python">class SpectralClusterer:
   &#34;&#34;&#34;Spectral clustering class.&#34;&#34;&#34;
 
-  def __init__(self,
-               min_clusters=None,
-               max_clusters=None,
-               refinement_options=None,
-               autotune=None,
-               fallback_options=None,
-               laplacian_type=None,
-               stop_eigenvalue=1e-2,
-               row_wise_renorm=False,
-               custom_dist=&#34;cosine&#34;,
-               max_iter=300,
-               constraint_options=None,
-               eigengap_type=EigenGapType.Ratio,
-               max_spectral_size=None,
-               affinity_function=utils.compute_affinity_matrix,
-               post_eigen_cluster_function=custom_distance_kmeans.run_kmeans):
+  def __init__(
+      self,
+      min_clusters: typing.Optional[int] = None,
+      max_clusters: typing.Optional[int] = None,
+      refinement_options: typing.Optional[RefinementOptions] = None,
+      autotune: typing.Optional[AutoTune] = None,
+      fallback_options: typing.Optional[FallbackOptions] = None,
+      laplacian_type: typing.Optional[LaplacianType] = None,
+      stop_eigenvalue: float = 1e-2,
+      row_wise_renorm: bool = False,
+      custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;,
+      max_iter: int = 300,
+      constraint_options: typing.Optional[ConstraintOptions] = None,
+      eigengap_type: EigenGapType = EigenGapType.Ratio,
+      max_spectral_size: typing.Optional[int] = None,
+      affinity_function: typing.Callable = utils.compute_affinity_matrix,
+      post_eigen_cluster_function: typing.Callable = (
+          custom_distance_kmeans.run_kmeans)):
     &#34;&#34;&#34;Constructor of the clusterer.
 
     Args:
@@ -485,7 +503,11 @@ signature as custom_distance_kmeans.run_kmeans</dd>
     self.affinity_function = affinity_function
     self.post_eigen_cluster_function = post_eigen_cluster_function
 
-  def _compute_eigenvectors_ncluster(self, affinity, constraint_matrix=None):
+  def _compute_eigenvectors_ncluster(
+      self,
+      affinity: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; (
+          tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -542,7 +564,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
           descend=False)
     return eigenvectors, n_clusters, max_delta_norm
 
-  def _reduce_size_and_predict(self, embeddings):
+  def _reduce_size_and_predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Reduce the input size, then run spectral clustering.
 
     Args:
@@ -579,7 +601,10 @@ signature as custom_distance_kmeans.run_kmeans</dd>
 
     return final_labels
 
-  def predict(self, embeddings, constraint_matrix=None):
+  def predict(
+      self,
+      embeddings: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; np.ndarray:
     &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
     The spectral clustering is performed on an affinity matrix.
@@ -649,7 +674,8 @@ signature as custom_distance_kmeans.run_kmeans</dd>
             &#34;AutoTune is only effective when the refinement sequence&#34;
             &#34;contains RowWiseThreshold&#34;)
 
-      def p_percentile_to_ratio(p_percentile):
+      def p_percentile_to_ratio(p_percentile: float) -&gt; (
+          tuple[float, np.ndarray, int]):
         &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
@@ -693,7 +719,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.spectral_clusterer.SpectralClusterer.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, embeddings, constraint_matrix=None)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, embeddings: numpy.ndarray, constraint_matrix: Optional[numpy.ndarray] = None) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perform spectral clustering on data embeddings.</p>
@@ -724,7 +750,10 @@ constraint matrix with prior information</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, embeddings, constraint_matrix=None):
+<pre><code class="python">def predict(
+    self,
+    embeddings: np.ndarray,
+    constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; np.ndarray:
   &#34;&#34;&#34;Perform spectral clustering on data embeddings.
 
   The spectral clustering is performed on an affinity matrix.
@@ -794,7 +823,8 @@ constraint matrix with prior information</dd>
           &#34;AutoTune is only effective when the refinement sequence&#34;
           &#34;contains RowWiseThreshold&#34;)
 
-    def p_percentile_to_ratio(p_percentile):
+    def p_percentile_to_ratio(p_percentile: float) -&gt; (
+        tuple[float, np.ndarray, int]):
       &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
       self.refinement_options.p_percentile = p_percentile
       (eigenvectors, n_clusters,

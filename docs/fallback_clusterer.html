@@ -53,6 +53,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
 from spectralcluster import naive_clusterer
+import typing
 
 
 class SingleClusterCondition(enum.Enum):
@@ -93,15 +94,18 @@ class FallbackClustererType(enum.Enum):
 class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(self,
-               spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
-               single_cluster_affinity_threshold=0.75,
-               single_cluster_affinity_diagonal_offset=1,
-               fallback_clusterer_type=FallbackClustererType.Naive,
-               agglomerative_threshold=0.5,
-               naive_threshold=0.5,
-               naive_adaptation_threshold=None):
+  def __init__(
+      self,
+      spectral_min_embeddings: int = 1,
+      single_cluster_condition: SingleClusterCondition = (
+          SingleClusterCondition.AffinityGmmBic),
+      single_cluster_affinity_threshold: float = 0.75,
+      single_cluster_affinity_diagonal_offset: int = 1,
+      fallback_clusterer_type: FallbackClustererType = (
+          FallbackClustererType.Naive),
+      agglomerative_threshold: float = 0.5,
+      naive_threshold: float = 0.5,
+      naive_adaptation_threshold: typing.Optional[float] = None):
     &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:
@@ -149,7 +153,7 @@ class FallbackClusterer:
   AgglomerativeClustering.
   &#34;&#34;&#34;
 
-  def __init__(self, options):
+  def __init__(self, options: FallbackOptions):
     &#34;&#34;&#34;Initilization of the fallback clusterer.
 
     Args:
@@ -169,11 +173,13 @@ class FallbackClusterer:
     else:
       ValueError(&#34;Unsupported fallback_clusterer_type&#34;)
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     return self.clusterer.fit_predict(embeddings)
 
 
-def check_single_cluster(fallback_options, embeddings, affinity):
+def check_single_cluster(fallback_options: FallbackOptions,
+                         embeddings: typing.Optional[np.ndarray],
+                         affinity: np.ndarray) -&gt; bool:
   &#34;&#34;&#34;Check whether this is only a single cluster.
 
   This function is only called when min_clusters==1.
@@ -242,7 +248,7 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="spectralcluster.fallback_clusterer.check_single_cluster"><code class="name flex">
-<span>def <span class="ident">check_single_cluster</span></span>(<span>fallback_options, embeddings, affinity)</span>
+<span>def <span class="ident">check_single_cluster</span></span>(<span>fallback_options: <a title="spectralcluster.fallback_clusterer.FallbackOptions" href="#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a>, embeddings: Optional[numpy.ndarray], affinity: numpy.ndarray) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check whether this is only a single cluster.</p>
@@ -262,7 +268,9 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_single_cluster(fallback_options, embeddings, affinity):
+<pre><code class="python">def check_single_cluster(fallback_options: FallbackOptions,
+                         embeddings: typing.Optional[np.ndarray],
+                         affinity: np.ndarray) -&gt; bool:
   &#34;&#34;&#34;Check whether this is only a single cluster.
 
   This function is only called when min_clusters==1.
@@ -330,7 +338,7 @@ def check_single_cluster(fallback_options, embeddings, affinity):
 <dl>
 <dt id="spectralcluster.fallback_clusterer.FallbackClusterer"><code class="flex name class">
 <span>class <span class="ident">FallbackClusterer</span></span>
-<span>(</span><span>options)</span>
+<span>(</span><span>options: <a title="spectralcluster.fallback_clusterer.FallbackOptions" href="#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fallback clusterer.</p>
@@ -355,7 +363,7 @@ AgglomerativeClustering.</p>
   AgglomerativeClustering.
   &#34;&#34;&#34;
 
-  def __init__(self, options):
+  def __init__(self, options: FallbackOptions):
     &#34;&#34;&#34;Initilization of the fallback clusterer.
 
     Args:
@@ -375,13 +383,13 @@ AgglomerativeClustering.</p>
     else:
       ValueError(&#34;Unsupported fallback_clusterer_type&#34;)
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     return self.clusterer.fit_predict(embeddings)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.fallback_clusterer.FallbackClusterer.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, embeddings)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, embeddings: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -389,7 +397,7 @@ AgglomerativeClustering.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, embeddings):
+<pre><code class="python">def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
   return self.clusterer.fit_predict(embeddings)</code></pre>
 </details>
 </dd>
@@ -432,7 +440,7 @@ AgglomerativeClustering.</p>
 </dd>
 <dt id="spectralcluster.fallback_clusterer.FallbackOptions"><code class="flex name class">
 <span>class <span class="ident">FallbackOptions</span></span>
-<span>(</span><span>spectral_min_embeddings=1, single_cluster_condition=SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold=0.75, single_cluster_affinity_diagonal_offset=1, fallback_clusterer_type=FallbackClustererType.Naive, agglomerative_threshold=0.5, naive_threshold=0.5, naive_adaptation_threshold=None)</span>
+<span>(</span><span>spectral_min_embeddings: int = 1, single_cluster_condition: <a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a> = SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold: float = 0.75, single_cluster_affinity_diagonal_offset: int = 1, fallback_clusterer_type: <a title="spectralcluster.fallback_clusterer.FallbackClustererType" href="#spectralcluster.fallback_clusterer.FallbackClustererType">FallbackClustererType</a> = FallbackClustererType.Naive, agglomerative_threshold: float = 0.5, naive_threshold: float = 0.5, naive_adaptation_threshold: Optional[float] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Options for fallback options.</p>
@@ -470,15 +478,18 @@ overlapping sliding windows, this value could be larger than 1</dd>
 <pre><code class="python">class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(self,
-               spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
-               single_cluster_affinity_threshold=0.75,
-               single_cluster_affinity_diagonal_offset=1,
-               fallback_clusterer_type=FallbackClustererType.Naive,
-               agglomerative_threshold=0.5,
-               naive_threshold=0.5,
-               naive_adaptation_threshold=None):
+  def __init__(
+      self,
+      spectral_min_embeddings: int = 1,
+      single_cluster_condition: SingleClusterCondition = (
+          SingleClusterCondition.AffinityGmmBic),
+      single_cluster_affinity_threshold: float = 0.75,
+      single_cluster_affinity_diagonal_offset: int = 1,
+      fallback_clusterer_type: FallbackClustererType = (
+          FallbackClustererType.Naive),
+      agglomerative_threshold: float = 0.5,
+      naive_threshold: float = 0.5,
+      naive_adaptation_threshold: typing.Optional[float] = None):
     &#34;&#34;&#34;Initialization of the fallback options.
 
     Args:

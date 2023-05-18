@@ -6,9 +6,13 @@ It supports any distance measure defined in scipy.spatial.distance.
 import numpy as np
 from scipy.spatial import distance
 from sklearn.cluster import KMeans
+import typing
 
 
-def run_kmeans(spectral_embeddings, n_clusters, custom_dist, max_iter):
+def run_kmeans(spectral_embeddings: np.ndarray,
+               n_clusters: int,
+               custom_dist: typing.Union[str, typing.Callable],
+               max_iter: int) -> np.ndarray:
   """Run CustomKMeans with a custom distance measure support.
 
   Perform a custom kmeans clustering with any distance measure defined
@@ -49,11 +53,11 @@ class CustomKMeans:
   """Class CustomKMeans performs KMeans clustering."""
 
   def __init__(self,
-               n_clusters=None,
-               centroids=None,
-               max_iter=10,
-               tol=.001,
-               custom_dist="cosine"):
+               n_clusters: typing.Optional[int] = None,
+               centroids: typing.Optional[np.ndarray] = None,
+               max_iter: int = 10,
+               tol: float = 0.001,
+               custom_dist: typing.Union[str, typing.Callable] = "cosine"):
     """Constructor of the clusterer.
 
     A custom kmeans clusterer with any distance measure from
@@ -75,7 +79,7 @@ class CustomKMeans:
     self.tol = tol
     self.custom_dist = custom_dist
 
-  def _init_centroids(self, embeddings):
+  def _init_centroids(self, embeddings: np.ndarray):
     """Compute the initial centroids."""
 
     n_samples = embeddings.shape[0]
@@ -83,7 +87,7 @@ class CustomKMeans:
         np.arange(n_samples), size=self.n_clusters, replace=False)
     self.centroids = embeddings[idx, :]
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -> np.ndarray:
     """Performs the clustering.
 
     Args:

@@ -16,6 +16,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
 from spectralcluster import naive_clusterer
+import typing
 
 
 class SingleClusterCondition(enum.Enum):
@@ -56,15 +57,18 @@ class FallbackClustererType(enum.Enum):
 class FallbackOptions:
   """Options for fallback options."""
 
-  def __init__(self,
-               spectral_min_embeddings=1,
-               single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
-               single_cluster_affinity_threshold=0.75,
-               single_cluster_affinity_diagonal_offset=1,
-               fallback_clusterer_type=FallbackClustererType.Naive,
-               agglomerative_threshold=0.5,
-               naive_threshold=0.5,
-               naive_adaptation_threshold=None):
+  def __init__(
+      self,
+      spectral_min_embeddings: int = 1,
+      single_cluster_condition: SingleClusterCondition = (
+          SingleClusterCondition.AffinityGmmBic),
+      single_cluster_affinity_threshold: float = 0.75,
+      single_cluster_affinity_diagonal_offset: int = 1,
+      fallback_clusterer_type: FallbackClustererType = (
+          FallbackClustererType.Naive),
+      agglomerative_threshold: float = 0.5,
+      naive_threshold: float = 0.5,
+      naive_adaptation_threshold: typing.Optional[float] = None):
     """Initialization of the fallback options.
 
     Args:
@@ -112,7 +116,7 @@ class FallbackClusterer:
   AgglomerativeClustering.
   """
 
-  def __init__(self, options):
+  def __init__(self, options: FallbackOptions):
     """Initilization of the fallback clusterer.
 
     Args:
@@ -132,11 +136,13 @@ class FallbackClusterer:
     else:
       ValueError("Unsupported fallback_clusterer_type")
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -> np.ndarray:
     return self.clusterer.fit_predict(embeddings)
 
 
-def check_single_cluster(fallback_options, embeddings, affinity):
+def check_single_cluster(fallback_options: FallbackOptions,
+                         embeddings: typing.Optional[np.ndarray],
+                         affinity: np.ndarray) -> bool:
   """Check whether this is only a single cluster.
 
   This function is only called when min_clusters==1.

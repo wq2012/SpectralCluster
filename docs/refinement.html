@@ -33,6 +33,7 @@ import abc
 import enum
 import numpy as np
 from scipy.ndimage import gaussian_filter
+import typing
 
 
 class RefinementName(enum.Enum):
@@ -63,18 +64,51 @@ class SymmetrizeType(enum.Enum):
   Average = enum.auto()
 
 
+class AffinityRefinementOperation(metaclass=abc.ABCMeta):
+  &#34;&#34;&#34;Refinement of the affinity matrix.&#34;&#34;&#34;
+
+  def check_input(self, affinity: np.ndarray):
+    &#34;&#34;&#34;Check the input to the refine() method.
+
+    Args:
+      affinity: the input affinity matrix.
+
+    Raises:
+      TypeError: if affinity has wrong type
+      ValueError: if affinity has wrong shape, etc.
+    &#34;&#34;&#34;
+    shape = affinity.shape
+    if len(shape) != 2:
+      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
+    if shape[0] != shape[1]:
+      raise ValueError(&#34;affinity must be a square matrix&#34;)
+
+  @abc.abstractmethod
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;An abstract method to perform the refinement operation.
+
+    Args:
+        affinity: the affinity matrix, of size (n_samples, n_samples)
+
+    Returns:
+        a matrix of the same size as affinity
+    &#34;&#34;&#34;
+    pass
+
+
 class RefinementOptions:
   &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
 
-  def __init__(self,
-               gaussian_blur_sigma=1,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False,
-               symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=None):
+  def __init__(
+      self,
+      gaussian_blur_sigma: int = 1,
+      p_percentile: float = 0.95,
+      thresholding_soft_multiplier: float = 0.01,
+      thresholding_type: ThresholdType = ThresholdType.RowMax,
+      thresholding_with_binarization: bool = False,
+      thresholding_preserve_diagonal: bool = False,
+      symmetrize_type: SymmetrizeType = SymmetrizeType.Max,
+      refinement_sequence: typing.Optional[list[RefinementName]] = None):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
     Args:
@@ -107,7 +141,8 @@ class RefinementOptions:
     else:
       self.refinement_sequence = refinement_sequence
 
-  def get_refinement_operator(self, name):
+  def get_refinement_operator(self, name: RefinementName) -&gt; (
+      AffinityRefinementOperation):
     &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
 
     Args:
@@ -142,40 +177,6 @@ class RefinementOptions:
       raise ValueError(&#34;Unknown refinement operation: {}&#34;.format(name))
 
 
-class AffinityRefinementOperation(metaclass=abc.ABCMeta):
-  &#34;&#34;&#34;Refinement of the affinity matrix.&#34;&#34;&#34;
-
-  def check_input(self, affinity):
-    &#34;&#34;&#34;Check the input to the refine() method.
-
-    Args:
-      affinity: the input affinity matrix.
-
-    Raises:
-      TypeError: if affinity has wrong type
-      ValueError: if affinity has wrong shape, etc.
-    &#34;&#34;&#34;
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError(&#34;affinity must be a numpy array&#34;)
-    shape = affinity.shape
-    if len(shape) != 2:
-      raise ValueError(&#34;affinity must be 2-dimensional&#34;)
-    if shape[0] != shape[1]:
-      raise ValueError(&#34;affinity must be a square matrix&#34;)
-
-  @abc.abstractmethod
-  def refine(self, affinity):
-    &#34;&#34;&#34;An abstract method to perform the refinement operation.
-
-    Args:
-        affinity: the affinity matrix, of size (n_samples, n_samples)
-
-    Returns:
-        a matrix of the same size as affinity
-    &#34;&#34;&#34;
-    pass
-
-
 class CropDiagonal(AffinityRefinementOperation):
   &#34;&#34;&#34;Crop the diagonal.
 
@@ -185,7 +186,7 @@ class CropDiagonal(AffinityRefinementOperation):
   normalization.
   &#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     np.fill_diagonal(refined_affinity, 0.0)
@@ -197,10 +198,10 @@ class CropDiagonal(AffinityRefinementOperation):
 class GaussianBlur(AffinityRefinementOperation):
   &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
 
-  def __init__(self, sigma=1):
+  def __init__(self, sigma: int = 1):
     self.sigma = sigma
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     return gaussian_filter(affinity, sigma=self.sigma)
 
@@ -209,11 +210,11 @@ class RowWiseThreshold(AffinityRefinementOperation):
   &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
 
   def __init__(self,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False):
+               p_percentile: float = 0.95,
+               thresholding_soft_multiplier: float = 0.01,
+               thresholding_type: ThresholdType = ThresholdType.RowMax,
+               thresholding_with_binarization: bool = False,
+               thresholding_preserve_diagonal: bool = False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     if not isinstance(thresholding_type, ThresholdType):
@@ -222,7 +223,7 @@ class RowWiseThreshold(AffinityRefinementOperation):
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     if self.thresholding_preserve_diagonal:
@@ -256,12 +257,10 @@ class RowWiseThreshold(AffinityRefinementOperation):
 class Symmetrize(AffinityRefinementOperation):
   &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
-  def __init__(self, symmetrize_type=SymmetrizeType.Max):
-    if not isinstance(symmetrize_type, SymmetrizeType):
-      raise TypeError(&#34;symmetrize_type must be a SymmetrizeType&#34;)
+  def __init__(self, symmetrize_type: SymmetrizeType = SymmetrizeType.Max):
     self.symmetrize_type = symmetrize_type
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     if self.symmetrize_type == SymmetrizeType.Max:
       return np.maximum(affinity, np.transpose(affinity))
@@ -274,7 +273,7 @@ class Symmetrize(AffinityRefinementOperation):
 class Diffuse(AffinityRefinementOperation):
   &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     return np.matmul(affinity, np.transpose(affinity))
 
@@ -282,7 +281,7 @@ class Diffuse(AffinityRefinementOperation):
 class RowWiseNormalize(AffinityRefinementOperation):
   &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     row_max = refined_affinity.max(axis=1)
@@ -311,7 +310,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <pre><code class="python">class AffinityRefinementOperation(metaclass=abc.ABCMeta):
   &#34;&#34;&#34;Refinement of the affinity matrix.&#34;&#34;&#34;
 
-  def check_input(self, affinity):
+  def check_input(self, affinity: np.ndarray):
     &#34;&#34;&#34;Check the input to the refine() method.
 
     Args:
@@ -321,8 +320,6 @@ class RowWiseNormalize(AffinityRefinementOperation):
       TypeError: if affinity has wrong type
       ValueError: if affinity has wrong shape, etc.
     &#34;&#34;&#34;
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError(&#34;affinity must be a numpy array&#34;)
     shape = affinity.shape
     if len(shape) != 2:
       raise ValueError(&#34;affinity must be 2-dimensional&#34;)
@@ -330,7 +327,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
       raise ValueError(&#34;affinity must be a square matrix&#34;)
 
   @abc.abstractmethod
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;An abstract method to perform the refinement operation.
 
     Args:
@@ -353,7 +350,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.refinement.AffinityRefinementOperation.check_input"><code class="name flex">
-<span>def <span class="ident">check_input</span></span>(<span>self, affinity)</span>
+<span>def <span class="ident">check_input</span></span>(<span>self, affinity: numpy.ndarray)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check the input to the refine() method.</p>
@@ -373,7 +370,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_input(self, affinity):
+<pre><code class="python">def check_input(self, affinity: np.ndarray):
   &#34;&#34;&#34;Check the input to the refine() method.
 
   Args:
@@ -383,8 +380,6 @@ class RowWiseNormalize(AffinityRefinementOperation):
     TypeError: if affinity has wrong type
     ValueError: if affinity has wrong shape, etc.
   &#34;&#34;&#34;
-  if not isinstance(affinity, np.ndarray):
-    raise TypeError(&#34;affinity must be a numpy array&#34;)
   shape = affinity.shape
   if len(shape) != 2:
     raise ValueError(&#34;affinity must be 2-dimensional&#34;)
@@ -393,7 +388,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 </details>
 </dd>
 <dt id="spectralcluster.refinement.AffinityRefinementOperation.refine"><code class="name flex">
-<span>def <span class="ident">refine</span></span>(<span>self, affinity)</span>
+<span>def <span class="ident">refine</span></span>(<span>self, affinity: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An abstract method to perform the refinement operation.</p>
@@ -409,7 +404,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def refine(self, affinity):
+def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;An abstract method to perform the refinement operation.
 
   Args:
@@ -445,7 +440,7 @@ normalization.</p></div>
   normalization.
   &#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     np.fill_diagonal(refined_affinity, 0.0)
@@ -479,7 +474,7 @@ normalization.</p></div>
 <pre><code class="python">class Diffuse(AffinityRefinementOperation):
   &#34;&#34;&#34;The diffusion operation.&#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     return np.matmul(affinity, np.transpose(affinity))</code></pre>
 </details>
@@ -499,7 +494,7 @@ normalization.</p></div>
 </dd>
 <dt id="spectralcluster.refinement.GaussianBlur"><code class="flex name class">
 <span>class <span class="ident">GaussianBlur</span></span>
-<span>(</span><span>sigma=1)</span>
+<span>(</span><span>sigma: int = 1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply Gaussian blur.</p></div>
@@ -510,10 +505,10 @@ normalization.</p></div>
 <pre><code class="python">class GaussianBlur(AffinityRefinementOperation):
   &#34;&#34;&#34;Apply Gaussian blur.&#34;&#34;&#34;
 
-  def __init__(self, sigma=1):
+  def __init__(self, sigma: int = 1):
     self.sigma = sigma
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     return gaussian_filter(affinity, sigma=self.sigma)</code></pre>
 </details>
@@ -584,7 +579,7 @@ normalization.</p></div>
 </dd>
 <dt id="spectralcluster.refinement.RefinementOptions"><code class="flex name class">
 <span>class <span class="ident">RefinementOptions</span></span>
-<span>(</span><span>gaussian_blur_sigma=1, p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_type=ThresholdType.RowMax, thresholding_with_binarization=False, thresholding_preserve_diagonal=False, symmetrize_type=SymmetrizeType.Max, refinement_sequence=None)</span>
+<span>(</span><span>gaussian_blur_sigma: int = 1, p_percentile: float = 0.95, thresholding_soft_multiplier: float = 0.01, thresholding_type: <a title="spectralcluster.refinement.ThresholdType" href="#spectralcluster.refinement.ThresholdType">ThresholdType</a> = ThresholdType.RowMax, thresholding_with_binarization: bool = False, thresholding_preserve_diagonal: bool = False, symmetrize_type: <a title="spectralcluster.refinement.SymmetrizeType" href="#spectralcluster.refinement.SymmetrizeType">SymmetrizeType</a> = SymmetrizeType.Max, refinement_sequence: Optional[list[<a title="spectralcluster.refinement.RefinementName" href="#spectralcluster.refinement.RefinementName">RefinementName</a>]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Refinement options for the affinity matrix.</p>
@@ -621,15 +616,16 @@ not refine</dd>
 <pre><code class="python">class RefinementOptions:
   &#34;&#34;&#34;Refinement options for the affinity matrix.&#34;&#34;&#34;
 
-  def __init__(self,
-               gaussian_blur_sigma=1,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False,
-               symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=None):
+  def __init__(
+      self,
+      gaussian_blur_sigma: int = 1,
+      p_percentile: float = 0.95,
+      thresholding_soft_multiplier: float = 0.01,
+      thresholding_type: ThresholdType = ThresholdType.RowMax,
+      thresholding_with_binarization: bool = False,
+      thresholding_preserve_diagonal: bool = False,
+      symmetrize_type: SymmetrizeType = SymmetrizeType.Max,
+      refinement_sequence: typing.Optional[list[RefinementName]] = None):
     &#34;&#34;&#34;Initialization of the refinement arguments.
 
     Args:
@@ -662,7 +658,8 @@ not refine</dd>
     else:
       self.refinement_sequence = refinement_sequence
 
-  def get_refinement_operator(self, name):
+  def get_refinement_operator(self, name: RefinementName) -&gt; (
+      AffinityRefinementOperation):
     &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
 
     Args:
@@ -699,7 +696,7 @@ not refine</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.refinement.RefinementOptions.get_refinement_operator"><code class="name flex">
-<span>def <span class="ident">get_refinement_operator</span></span>(<span>self, name)</span>
+<span>def <span class="ident">get_refinement_operator</span></span>(<span>self, name: <a title="spectralcluster.refinement.RefinementName" href="#spectralcluster.refinement.RefinementName">RefinementName</a>) ‑> <a title="spectralcluster.refinement.AffinityRefinementOperation" href="#spectralcluster.refinement.AffinityRefinementOperation">AffinityRefinementOperation</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the refinement operator for the affinity matrix.</p>
@@ -721,7 +718,8 @@ not refine</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_refinement_operator(self, name):
+<pre><code class="python">def get_refinement_operator(self, name: RefinementName) -&gt; (
+    AffinityRefinementOperation):
   &#34;&#34;&#34;Get the refinement operator for the affinity matrix.
 
   Args:
@@ -770,7 +768,7 @@ not refine</dd>
 <pre><code class="python">class RowWiseNormalize(AffinityRefinementOperation):
   &#34;&#34;&#34;The row wise max normalization operation.&#34;&#34;&#34;
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     row_max = refined_affinity.max(axis=1)
@@ -793,7 +791,7 @@ not refine</dd>
 </dd>
 <dt id="spectralcluster.refinement.RowWiseThreshold"><code class="flex name class">
 <span>class <span class="ident">RowWiseThreshold</span></span>
-<span>(</span><span>p_percentile=0.95, thresholding_soft_multiplier=0.01, thresholding_type=ThresholdType.RowMax, thresholding_with_binarization=False, thresholding_preserve_diagonal=False)</span>
+<span>(</span><span>p_percentile: float = 0.95, thresholding_soft_multiplier: float = 0.01, thresholding_type: <a title="spectralcluster.refinement.ThresholdType" href="#spectralcluster.refinement.ThresholdType">ThresholdType</a> = ThresholdType.RowMax, thresholding_with_binarization: bool = False, thresholding_preserve_diagonal: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply row wise thresholding.</p></div>
@@ -805,11 +803,11 @@ not refine</dd>
   &#34;&#34;&#34;Apply row wise thresholding.&#34;&#34;&#34;
 
   def __init__(self,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False):
+               p_percentile: float = 0.95,
+               thresholding_soft_multiplier: float = 0.01,
+               thresholding_type: ThresholdType = ThresholdType.RowMax,
+               thresholding_with_binarization: bool = False,
+               thresholding_preserve_diagonal: bool = False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     if not isinstance(thresholding_type, ThresholdType):
@@ -818,7 +816,7 @@ not refine</dd>
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     if self.thresholding_preserve_diagonal:
@@ -864,7 +862,7 @@ not refine</dd>
 </dd>
 <dt id="spectralcluster.refinement.Symmetrize"><code class="flex name class">
 <span>class <span class="ident">Symmetrize</span></span>
-<span>(</span><span>symmetrize_type=SymmetrizeType.Max)</span>
+<span>(</span><span>symmetrize_type: <a title="spectralcluster.refinement.SymmetrizeType" href="#spectralcluster.refinement.SymmetrizeType">SymmetrizeType</a> = SymmetrizeType.Max)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Symmetrization operation.</p></div>
@@ -875,12 +873,10 @@ not refine</dd>
 <pre><code class="python">class Symmetrize(AffinityRefinementOperation):
   &#34;&#34;&#34;The Symmetrization operation.&#34;&#34;&#34;
 
-  def __init__(self, symmetrize_type=SymmetrizeType.Max):
-    if not isinstance(symmetrize_type, SymmetrizeType):
-      raise TypeError(&#34;symmetrize_type must be a SymmetrizeType&#34;)
+  def __init__(self, symmetrize_type: SymmetrizeType = SymmetrizeType.Max):
     self.symmetrize_type = symmetrize_type
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -&gt; np.ndarray:
     self.check_input(affinity)
     if self.symmetrize_type == SymmetrizeType.Max:
       return np.maximum(affinity, np.transpose(affinity))

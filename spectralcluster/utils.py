@@ -2,6 +2,7 @@
 
 import enum
 import numpy as np
+import typing
 
 EPS = 1e-10
 
@@ -16,7 +17,7 @@ class EigenGapType(enum.Enum):
   NormalizedDiff = enum.auto()
 
 
-def compute_affinity_matrix(embeddings):
+def compute_affinity_matrix(embeddings: np.ndarray) -> np.ndarray:
   """Compute the affinity matrix from data.
 
   Note that the range of affinity is [0, 1].
@@ -40,7 +41,9 @@ def compute_affinity_matrix(embeddings):
   return affinity
 
 
-def compute_sorted_eigenvectors(input_matrix, descend=True):
+def compute_sorted_eigenvectors(
+    input_matrix: np.ndarray,
+    descend: bool = True) -> tuple[np.ndarray, np.ndarray]:
   """Sort eigenvectors by the real part of eigenvalues.
 
   Args:
@@ -68,12 +71,12 @@ def compute_sorted_eigenvectors(input_matrix, descend=True):
   return w, v
 
 
-def compute_number_of_clusters(eigenvalues,
-                               max_clusters=None,
-                               stop_eigenvalue=1e-2,
-                               eigengap_type=EigenGapType.Ratio,
-                               descend=True,
-                               eps=EPS):
+def compute_number_of_clusters(eigenvalues: np.ndarray,
+                               max_clusters: typing.Optional[int] = None,
+                               stop_eigenvalue: float = 1e-2,
+                               eigengap_type: EigenGapType = EigenGapType.Ratio,
+                               descend: bool = True,
+                               eps: float = EPS) -> tuple[int, float]:
   """Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.
@@ -127,7 +130,7 @@ def compute_number_of_clusters(eigenvalues,
   return max_delta_index, max_delta
 
 
-def enforce_ordered_labels(labels):
+def enforce_ordered_labels(labels: np.ndarray) -> np.ndarray:
   """Transform the label sequence to an ordered form.
 
   This is the same type of label sequence used in the paper "Discriminative

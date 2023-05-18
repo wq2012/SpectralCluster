@@ -31,6 +31,7 @@
 
 import enum
 import numpy as np
+import typing
 
 MIN_SEARCH_STEP = 1e-04
 
@@ -61,11 +62,11 @@ class AutoTune:
   &#34;&#34;&#34;
 
   def __init__(self,
-               p_percentile_min=0.60,
-               p_percentile_max=0.95,
-               init_search_step=0.01,
-               search_level=1,
-               proxy=AutoTuneProxy.PercentileSqrtOverNME):
+               p_percentile_min: float = 0.60,
+               p_percentile_max: float = 0.95,
+               init_search_step: float = 0.01,
+               search_level: int = 1,
+               proxy: AutoTuneProxy = AutoTuneProxy.PercentileSqrtOverNME):
     &#34;&#34;&#34;Initialization of the autotune arguments.
 
     Args:
@@ -83,7 +84,7 @@ class AutoTune:
       raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
     self.proxy = proxy
 
-  def get_percentile_range(self):
+  def get_percentile_range(self) -&gt; list[float]:
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
     num_steps = int(
         np.ceil(
@@ -91,15 +92,18 @@ class AutoTune:
     return list(
         np.linspace(self.p_percentile_min, self.p_percentile_max, num_steps))
 
-  def update_percentile_range(self, p_percentile_min, p_percentile_max,
-                              search_step):
+  def update_percentile_range(self,
+                              p_percentile_min: float,
+                              p_percentile_max: float,
+                              search_step: float) -&gt; list[float]:
     &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = search_step
     return self.get_percentile_range()
 
-  def tune(self, p_percentile_to_ratio):
+  def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
+      tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
@@ -168,7 +172,7 @@ class AutoTune:
 <dl>
 <dt id="spectralcluster.autotune.AutoTune"><code class="flex name class">
 <span>class <span class="ident">AutoTune</span></span>
-<span>(</span><span>p_percentile_min=0.6, p_percentile_max=0.95, init_search_step=0.01, search_level=1, proxy=AutoTuneProxy.PercentileSqrtOverNME)</span>
+<span>(</span><span>p_percentile_min: float = 0.6, p_percentile_max: float = 0.95, init_search_step: float = 0.01, search_level: int = 1, proxy: <a title="spectralcluster.autotune.AutoTuneProxy" href="#spectralcluster.autotune.AutoTuneProxy">AutoTuneProxy</a> = AutoTuneProxy.PercentileSqrtOverNME)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>AutoTune Class.</p>
@@ -204,11 +208,11 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
   &#34;&#34;&#34;
 
   def __init__(self,
-               p_percentile_min=0.60,
-               p_percentile_max=0.95,
-               init_search_step=0.01,
-               search_level=1,
-               proxy=AutoTuneProxy.PercentileSqrtOverNME):
+               p_percentile_min: float = 0.60,
+               p_percentile_max: float = 0.95,
+               init_search_step: float = 0.01,
+               search_level: int = 1,
+               proxy: AutoTuneProxy = AutoTuneProxy.PercentileSqrtOverNME):
     &#34;&#34;&#34;Initialization of the autotune arguments.
 
     Args:
@@ -226,7 +230,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
       raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
     self.proxy = proxy
 
-  def get_percentile_range(self):
+  def get_percentile_range(self) -&gt; list[float]:
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
     num_steps = int(
         np.ceil(
@@ -234,15 +238,18 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
     return list(
         np.linspace(self.p_percentile_min, self.p_percentile_max, num_steps))
 
-  def update_percentile_range(self, p_percentile_min, p_percentile_max,
-                              search_step):
+  def update_percentile_range(self,
+                              p_percentile_min: float,
+                              p_percentile_max: float,
+                              search_step: float) -&gt; list[float]:
     &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = search_step
     return self.get_percentile_range()
 
-  def tune(self, p_percentile_to_ratio):
+  def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
+      tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
@@ -302,7 +309,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.autotune.AutoTune.get_percentile_range"><code class="name flex">
-<span>def <span class="ident">get_percentile_range</span></span>(<span>self)</span>
+<span>def <span class="ident">get_percentile_range</span></span>(<span>self) ‑> list[float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the current percentile search range.</p></div>
@@ -310,7 +317,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_percentile_range(self):
+<pre><code class="python">def get_percentile_range(self) -&gt; list[float]:
   &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
   num_steps = int(
       np.ceil(
@@ -320,7 +327,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 </details>
 </dd>
 <dt id="spectralcluster.autotune.AutoTune.tune"><code class="name flex">
-<span>def <span class="ident">tune</span></span>(<span>self, p_percentile_to_ratio)</span>
+<span>def <span class="ident">tune</span></span>(<span>self, p_percentile_to_ratio: Callable) ‑> tuple[numpy.ndarray, int, float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tune the hyper-parameter p_percentile.</p>
@@ -347,7 +354,8 @@ estimate the number of clusters.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def tune(self, p_percentile_to_ratio):
+<pre><code class="python">def tune(self, p_percentile_to_ratio: typing.Callable) -&gt; (
+    tuple[np.ndarray, int, float]):
   &#34;&#34;&#34;Tune the hyper-parameter p_percentile.
 
   Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
@@ -406,7 +414,7 @@ estimate the number of clusters.</p>
 </details>
 </dd>
 <dt id="spectralcluster.autotune.AutoTune.update_percentile_range"><code class="name flex">
-<span>def <span class="ident">update_percentile_range</span></span>(<span>self, p_percentile_min, p_percentile_max, search_step)</span>
+<span>def <span class="ident">update_percentile_range</span></span>(<span>self, p_percentile_min: float, p_percentile_max: float, search_step: float) ‑> list[float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Update the percentile search range.</p></div>
@@ -414,8 +422,10 @@ estimate the number of clusters.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update_percentile_range(self, p_percentile_min, p_percentile_max,
-                            search_step):
+<pre><code class="python">def update_percentile_range(self,
+                            p_percentile_min: float,
+                            p_percentile_max: float,
+                            search_step: float) -&gt; list[float]:
   &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
   self.p_percentile_min = p_percentile_min
   self.p_percentile_max = p_percentile_max

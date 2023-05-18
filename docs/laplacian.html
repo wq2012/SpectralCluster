@@ -50,7 +50,9 @@ class LaplacianType(enum.Enum):
   GraphCut = enum.auto()
 
 
-def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
+def compute_laplacian(affinity: np.ndarray,
+                      laplacian_type: LaplacianType = LaplacianType.GraphCut,
+                      eps: float = EPS) -&gt; np.ndarray:
   &#34;&#34;&#34;Compute the Laplacian matrix.
 
   Args:
@@ -95,7 +97,7 @@ def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="spectralcluster.laplacian.compute_laplacian"><code class="name flex">
-<span>def <span class="ident">compute_laplacian</span></span>(<span>affinity, laplacian_type=LaplacianType.GraphCut, eps=1e-10)</span>
+<span>def <span class="ident">compute_laplacian</span></span>(<span>affinity: numpy.ndarray, laplacian_type: <a title="spectralcluster.laplacian.LaplacianType" href="#spectralcluster.laplacian.LaplacianType">LaplacianType</a> = LaplacianType.GraphCut, eps: float = 1e-10) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute the Laplacian matrix.</p>
@@ -121,7 +123,9 @@ def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_laplacian(affinity, laplacian_type=LaplacianType.GraphCut, eps=EPS):
+<pre><code class="python">def compute_laplacian(affinity: np.ndarray,
+                      laplacian_type: LaplacianType = LaplacianType.GraphCut,
+                      eps: float = EPS) -&gt; np.ndarray:
   &#34;&#34;&#34;Compute the Laplacian matrix.
 
   Args:

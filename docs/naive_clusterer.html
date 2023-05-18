@@ -27,23 +27,24 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import numpy as np
+import typing
 
 
 class NaiveCentroid:
   &#34;&#34;&#34;A cluster centroid of the Naive clustering algorithm.&#34;&#34;&#34;
 
-  def __init__(self, embedding):
+  def __init__(self, embedding: np.ndarray):
     &#34;&#34;&#34;Create a new centroid.&#34;&#34;&#34;
     self.embedding = embedding
     self.count = 1
 
-  def merge(self, embedding):
+  def merge(self, embedding: np.ndarray):
     &#34;&#34;&#34;Merge a new embedding into the centroid.&#34;&#34;&#34;
     self.embedding = (self.embedding * self.count + embedding) / (
         self.count + 1)
     self.count += 1
 
-  def cosine(self, embedding):
+  def cosine(self, embedding: np.ndarray) -&gt; float:
     &#34;&#34;&#34;Compute cosine similarity to a new embedding.&#34;&#34;&#34;
     return np.dot(self.embedding, embedding) / (
         np.linalg.norm(self.embedding) * np.linalg.norm(embedding))
@@ -52,7 +53,9 @@ class NaiveCentroid:
 class NaiveClusterer:
   &#34;&#34;&#34;Naive clustering class.&#34;&#34;&#34;
 
-  def __init__(self, threshold, adaptation_threshold=None):
+  def __init__(self,
+               threshold: float,
+               adaptation_threshold: typing.Optional[float] = None):
     &#34;&#34;&#34;Initialized the clusterer.
 
     Note that since this is online clustering, fit_predict and predict
@@ -81,7 +84,7 @@ class NaiveClusterer:
     &#34;&#34;&#34;Reset the clusterer.&#34;&#34;&#34;
     self.centroids = []
 
-  def predict_next(self, embedding):
+  def predict_next(self, embedding: np.ndarray) -&gt; int:
     &#34;&#34;&#34;Given a new embedding, output its label.
 
     This is used for online clustering.
@@ -112,7 +115,7 @@ class NaiveClusterer:
       self.centroids[label].merge(embedding)
     return label
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Given many embeddings, return all cluster labels.
 
     This is for simulating offline clustering behavior.
@@ -125,7 +128,7 @@ class NaiveClusterer:
     &#34;&#34;&#34;
     return np.array([self.predict_next(embedding) for embedding in embeddings])
 
-  def fit_predict(self, embeddings):
+  def fit_predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Same as predict(), since this is an online clusterer.&#34;&#34;&#34;
     return self.predict(embeddings)</code></pre>
 </details>
@@ -141,7 +144,7 @@ class NaiveClusterer:
 <dl>
 <dt id="spectralcluster.naive_clusterer.NaiveCentroid"><code class="flex name class">
 <span>class <span class="ident">NaiveCentroid</span></span>
-<span>(</span><span>embedding)</span>
+<span>(</span><span>embedding: numpy.ndarray)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A cluster centroid of the Naive clustering algorithm.</p>
@@ -153,18 +156,18 @@ class NaiveClusterer:
 <pre><code class="python">class NaiveCentroid:
   &#34;&#34;&#34;A cluster centroid of the Naive clustering algorithm.&#34;&#34;&#34;
 
-  def __init__(self, embedding):
+  def __init__(self, embedding: np.ndarray):
     &#34;&#34;&#34;Create a new centroid.&#34;&#34;&#34;
     self.embedding = embedding
     self.count = 1
 
-  def merge(self, embedding):
+  def merge(self, embedding: np.ndarray):
     &#34;&#34;&#34;Merge a new embedding into the centroid.&#34;&#34;&#34;
     self.embedding = (self.embedding * self.count + embedding) / (
         self.count + 1)
     self.count += 1
 
-  def cosine(self, embedding):
+  def cosine(self, embedding: np.ndarray) -&gt; float:
     &#34;&#34;&#34;Compute cosine similarity to a new embedding.&#34;&#34;&#34;
     return np.dot(self.embedding, embedding) / (
         np.linalg.norm(self.embedding) * np.linalg.norm(embedding))</code></pre>
@@ -172,7 +175,7 @@ class NaiveClusterer:
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.naive_clusterer.NaiveCentroid.cosine"><code class="name flex">
-<span>def <span class="ident">cosine</span></span>(<span>self, embedding)</span>
+<span>def <span class="ident">cosine</span></span>(<span>self, embedding: numpy.ndarray) ‑> float</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute cosine similarity to a new embedding.</p></div>
@@ -180,14 +183,14 @@ class NaiveClusterer:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cosine(self, embedding):
+<pre><code class="python">def cosine(self, embedding: np.ndarray) -&gt; float:
   &#34;&#34;&#34;Compute cosine similarity to a new embedding.&#34;&#34;&#34;
   return np.dot(self.embedding, embedding) / (
       np.linalg.norm(self.embedding) * np.linalg.norm(embedding))</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.naive_clusterer.NaiveCentroid.merge"><code class="name flex">
-<span>def <span class="ident">merge</span></span>(<span>self, embedding)</span>
+<span>def <span class="ident">merge</span></span>(<span>self, embedding: numpy.ndarray)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Merge a new embedding into the centroid.</p></div>
@@ -195,7 +198,7 @@ class NaiveClusterer:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge(self, embedding):
+<pre><code class="python">def merge(self, embedding: np.ndarray):
   &#34;&#34;&#34;Merge a new embedding into the centroid.&#34;&#34;&#34;
   self.embedding = (self.embedding * self.count + embedding) / (
       self.count + 1)
@@ -206,7 +209,7 @@ class NaiveClusterer:
 </dd>
 <dt id="spectralcluster.naive_clusterer.NaiveClusterer"><code class="flex name class">
 <span>class <span class="ident">NaiveClusterer</span></span>
-<span>(</span><span>threshold, adaptation_threshold=None)</span>
+<span>(</span><span>threshold: float, adaptation_threshold: Optional[float] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Naive clustering class.</p>
@@ -235,7 +238,9 @@ If None, we use threshold as adaptation_threshold</dd>
 <pre><code class="python">class NaiveClusterer:
   &#34;&#34;&#34;Naive clustering class.&#34;&#34;&#34;
 
-  def __init__(self, threshold, adaptation_threshold=None):
+  def __init__(self,
+               threshold: float,
+               adaptation_threshold: typing.Optional[float] = None):
     &#34;&#34;&#34;Initialized the clusterer.
 
     Note that since this is online clustering, fit_predict and predict
@@ -264,7 +269,7 @@ If None, we use threshold as adaptation_threshold</dd>
     &#34;&#34;&#34;Reset the clusterer.&#34;&#34;&#34;
     self.centroids = []
 
-  def predict_next(self, embedding):
+  def predict_next(self, embedding: np.ndarray) -&gt; int:
     &#34;&#34;&#34;Given a new embedding, output its label.
 
     This is used for online clustering.
@@ -295,7 +300,7 @@ If None, we use threshold as adaptation_threshold</dd>
       self.centroids[label].merge(embedding)
     return label
 
-  def predict(self, embeddings):
+  def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Given many embeddings, return all cluster labels.
 
     This is for simulating offline clustering behavior.
@@ -308,14 +313,14 @@ If None, we use threshold as adaptation_threshold</dd>
     &#34;&#34;&#34;
     return np.array([self.predict_next(embedding) for embedding in embeddings])
 
-  def fit_predict(self, embeddings):
+  def fit_predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Same as predict(), since this is an online clusterer.&#34;&#34;&#34;
     return self.predict(embeddings)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.naive_clusterer.NaiveClusterer.fit_predict"><code class="name flex">
-<span>def <span class="ident">fit_predict</span></span>(<span>self, embeddings)</span>
+<span>def <span class="ident">fit_predict</span></span>(<span>self, embeddings: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Same as predict(), since this is an online clusterer.</p></div>
@@ -323,13 +328,13 @@ If None, we use threshold as adaptation_threshold</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit_predict(self, embeddings):
+<pre><code class="python">def fit_predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Same as predict(), since this is an online clusterer.&#34;&#34;&#34;
   return self.predict(embeddings)</code></pre>
 </details>
 </dd>
 <dt id="spectralcluster.naive_clusterer.NaiveClusterer.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, embeddings)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, embeddings: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Given many embeddings, return all cluster labels.</p>
@@ -348,7 +353,7 @@ If None, we use threshold as adaptation_threshold</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, embeddings):
+<pre><code class="python">def predict(self, embeddings: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Given many embeddings, return all cluster labels.
 
   This is for simulating offline clustering behavior.
@@ -363,7 +368,7 @@ If None, we use threshold as adaptation_threshold</dd>
 </details>
 </dd>
 <dt id="spectralcluster.naive_clusterer.NaiveClusterer.predict_next"><code class="name flex">
-<span>def <span class="ident">predict_next</span></span>(<span>self, embedding)</span>
+<span>def <span class="ident">predict_next</span></span>(<span>self, embedding: numpy.ndarray) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Given a new embedding, output its label.</p>
@@ -382,7 +387,7 @@ If None, we use threshold as adaptation_threshold</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_next(self, embedding):
+<pre><code class="python">def predict_next(self, embedding: np.ndarray) -&gt; int:
   &#34;&#34;&#34;Given a new embedding, output its label.
 
   This is used for online clustering.

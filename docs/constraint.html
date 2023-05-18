@@ -31,6 +31,7 @@
 import abc
 import enum
 import numpy as np
+import typing
 
 EPS = 1e-10
 
@@ -54,10 +55,10 @@ class ConstraintOptions:
   &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
 
   def __init__(self,
-               constraint_name,
-               apply_before_refinement,
-               integration_type=None,
-               constraint_propagation_alpha=0.6):
+               constraint_name: ConstraintName,
+               apply_before_refinement: bool,
+               integration_type: typing.Optional[IntegrationType] = None,
+               constraint_propagation_alpha: float = 0.6):
     &#34;&#34;&#34;Initialization of the constraint arguments.
 
     Args:
@@ -88,7 +89,7 @@ class ConstraintOptions:
 class ConstraintOperation(metaclass=abc.ABCMeta):
   &#34;&#34;&#34;Constraint operation class.&#34;&#34;&#34;
 
-  def check_input(self, affinity, constraint_matrix):
+  def check_input(self, affinity: np.ndarray, constraint_matrix: np.ndarray):
     &#34;&#34;&#34;Check the input to the adjust_affinity method.
 
     Args:
@@ -97,13 +98,8 @@ class ConstraintOperation(metaclass=abc.ABCMeta):
         constraint matrix with prior information
 
     Raises:
-      TypeError: if affinity or constraint matrix has wrong type
       ValueError: if affinity or constraint matrix has wrong shape, etc.
     &#34;&#34;&#34;
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError(&#34;affinity must be a numpy array&#34;)
-    if not isinstance(constraint_matrix, np.ndarray):
-      raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
     if len(affinity.shape) != 2:
       raise ValueError(&#34;affinity must be 2-dimensional&#34;)
     if affinity.shape[0] != affinity.shape[1]:
@@ -117,7 +113,9 @@ class ConstraintOperation(metaclass=abc.ABCMeta):
           &#34;affinity and constraint matrix must have the same shape&#34;)
 
   @abc.abstractmethod
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray):
     &#34;&#34;&#34;An abstract method to perform the constraint operation.
 
     Args:
@@ -139,15 +137,15 @@ class AffinityIntegration(ConstraintOperation):
   and `Average`.
   &#34;&#34;&#34;
 
-  def __init__(self, integration_type=IntegrationType.Max):
+  def __init__(self, integration_type: IntegrationType = IntegrationType.Max):
     self.integration_type = integration_type
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
     self.check_input(affinity, constraint_matrix)
-    if not isinstance(self.integration_type, IntegrationType):
-      raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
-    elif self.integration_type == IntegrationType.Max:
+    if self.integration_type == IntegrationType.Max:
       return np.maximum(affinity, constraint_matrix)
     elif self.integration_type == IntegrationType.Average:
       return 0.5 * (affinity + constraint_matrix)
@@ -170,10 +168,12 @@ class ConstraintPropagation(ConstraintOperation):
   propagation: A graph-based learning approach and its applications.&#34; IJCV 2013
   &#34;&#34;&#34;
 
-  def __init__(self, alpha=0.6):
+  def __init__(self, alpha: float = 0.6):
     self.alpha = alpha
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
     self.check_input(affinity, constraint_matrix)
     adjusted_affinity = np.copy(affinity)
@@ -204,7 +204,7 @@ class ConstraintPropagation(ConstraintOperation):
 class ConstraintMatrix:
   &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
 
-  def __init__(self, speaker_turn_scores, threshold=1):
+  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
     &#34;&#34;&#34;Initialization of the constraint matrix arguments.
 
     Args:
@@ -220,7 +220,7 @@ class ConstraintMatrix:
     self.speaker_turn_scores = speaker_turn_scores
     self.threshold = threshold
 
-  def compute_diagonals(self):
+  def compute_diagonals(self) -&gt; np.ndarray:
     &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
     num_turns = len(self.speaker_turn_scores)
     constraint_matrix = np.zeros((num_turns, num_turns))
@@ -247,7 +247,7 @@ class ConstraintMatrix:
 <dl>
 <dt id="spectralcluster.constraint.AffinityIntegration"><code class="flex name class">
 <span>class <span class="ident">AffinityIntegration</span></span>
-<span>(</span><span>integration_type=IntegrationType.Max)</span>
+<span>(</span><span>integration_type: <a title="spectralcluster.constraint.IntegrationType" href="#spectralcluster.constraint.IntegrationType">IntegrationType</a> = IntegrationType.Max)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Affinity Integration method.</p>
@@ -266,15 +266,15 @@ and <code>Average</code>.</p></div>
   and `Average`.
   &#34;&#34;&#34;
 
-  def __init__(self, integration_type=IntegrationType.Max):
+  def __init__(self, integration_type: IntegrationType = IntegrationType.Max):
     self.integration_type = integration_type
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
     self.check_input(affinity, constraint_matrix)
-    if not isinstance(self.integration_type, IntegrationType):
-      raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
-    elif self.integration_type == IntegrationType.Max:
+    if self.integration_type == IntegrationType.Max:
       return np.maximum(affinity, constraint_matrix)
     elif self.integration_type == IntegrationType.Average:
       return 0.5 * (affinity + constraint_matrix)
@@ -289,7 +289,7 @@ and <code>Average</code>.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.constraint.AffinityIntegration.adjust_affinity"><code class="name flex">
-<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity: numpy.ndarray, constraint_matrix: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adjust the affinity matrix with constraints.</p></div>
@@ -297,12 +297,12 @@ and <code>Average</code>.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def adjust_affinity(self, affinity, constraint_matrix):
+<pre><code class="python">def adjust_affinity(self,
+                    affinity: np.ndarray,
+                    constraint_matrix: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
   self.check_input(affinity, constraint_matrix)
-  if not isinstance(self.integration_type, IntegrationType):
-    raise TypeError(&#34;integration_type must be a IntegrationType&#34;)
-  elif self.integration_type == IntegrationType.Max:
+  if self.integration_type == IntegrationType.Max:
     return np.maximum(affinity, constraint_matrix)
   elif self.integration_type == IntegrationType.Average:
     return 0.5 * (affinity + constraint_matrix)
@@ -323,7 +323,7 @@ and <code>Average</code>.</p></div>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintMatrix"><code class="flex name class">
 <span>class <span class="ident">ConstraintMatrix</span></span>
-<span>(</span><span>speaker_turn_scores, threshold=1)</span>
+<span>(</span><span>speaker_turn_scores: list[float], threshold: float = 1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Constraint Matrix class.</p>
@@ -346,7 +346,7 @@ not used.</dd>
 <pre><code class="python">class ConstraintMatrix:
   &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
 
-  def __init__(self, speaker_turn_scores, threshold=1):
+  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
     &#34;&#34;&#34;Initialization of the constraint matrix arguments.
 
     Args:
@@ -362,7 +362,7 @@ not used.</dd>
     self.speaker_turn_scores = speaker_turn_scores
     self.threshold = threshold
 
-  def compute_diagonals(self):
+  def compute_diagonals(self) -&gt; np.ndarray:
     &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
     num_turns = len(self.speaker_turn_scores)
     constraint_matrix = np.zeros((num_turns, num_turns))
@@ -380,7 +380,7 @@ not used.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.constraint.ConstraintMatrix.compute_diagonals"><code class="name flex">
-<span>def <span class="ident">compute_diagonals</span></span>(<span>self)</span>
+<span>def <span class="ident">compute_diagonals</span></span>(<span>self) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute diagonal constraint matrix.</p></div>
@@ -388,7 +388,7 @@ not used.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_diagonals(self):
+<pre><code class="python">def compute_diagonals(self) -&gt; np.ndarray:
   &#34;&#34;&#34;Compute diagonal constraint matrix.&#34;&#34;&#34;
   num_turns = len(self.speaker_turn_scores)
   constraint_matrix = np.zeros((num_turns, num_turns))
@@ -452,7 +452,7 @@ not used.</dd>
 <pre><code class="python">class ConstraintOperation(metaclass=abc.ABCMeta):
   &#34;&#34;&#34;Constraint operation class.&#34;&#34;&#34;
 
-  def check_input(self, affinity, constraint_matrix):
+  def check_input(self, affinity: np.ndarray, constraint_matrix: np.ndarray):
     &#34;&#34;&#34;Check the input to the adjust_affinity method.
 
     Args:
@@ -461,13 +461,8 @@ not used.</dd>
         constraint matrix with prior information
 
     Raises:
-      TypeError: if affinity or constraint matrix has wrong type
       ValueError: if affinity or constraint matrix has wrong shape, etc.
     &#34;&#34;&#34;
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError(&#34;affinity must be a numpy array&#34;)
-    if not isinstance(constraint_matrix, np.ndarray):
-      raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
     if len(affinity.shape) != 2:
       raise ValueError(&#34;affinity must be 2-dimensional&#34;)
     if affinity.shape[0] != affinity.shape[1]:
@@ -481,7 +476,9 @@ not used.</dd>
           &#34;affinity and constraint matrix must have the same shape&#34;)
 
   @abc.abstractmethod
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray):
     &#34;&#34;&#34;An abstract method to perform the constraint operation.
 
     Args:
@@ -502,7 +499,7 @@ not used.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.constraint.ConstraintOperation.adjust_affinity"><code class="name flex">
-<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity: numpy.ndarray, constraint_matrix: numpy.ndarray)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An abstract method to perform the constraint operation.</p>
@@ -521,7 +518,9 @@ constraint matrix with prior information</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abc.abstractmethod
-def adjust_affinity(self, affinity, constraint_matrix):
+def adjust_affinity(self,
+                    affinity: np.ndarray,
+                    constraint_matrix: np.ndarray):
   &#34;&#34;&#34;An abstract method to perform the constraint operation.
 
   Args:
@@ -536,7 +535,7 @@ def adjust_affinity(self, affinity, constraint_matrix):
 </details>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintOperation.check_input"><code class="name flex">
-<span>def <span class="ident">check_input</span></span>(<span>self, affinity, constraint_matrix)</span>
+<span>def <span class="ident">check_input</span></span>(<span>self, affinity: numpy.ndarray, constraint_matrix: numpy.ndarray)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check the input to the adjust_affinity method.</p>
@@ -550,8 +549,6 @@ constraint matrix with prior information</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
-<dt><code>TypeError</code></dt>
-<dd>if affinity or constraint matrix has wrong type</dd>
 <dt><code>ValueError</code></dt>
 <dd>if affinity or constraint matrix has wrong shape, etc.</dd>
 </dl></div>
@@ -559,7 +556,7 @@ constraint matrix with prior information</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_input(self, affinity, constraint_matrix):
+<pre><code class="python">def check_input(self, affinity: np.ndarray, constraint_matrix: np.ndarray):
   &#34;&#34;&#34;Check the input to the adjust_affinity method.
 
   Args:
@@ -568,13 +565,8 @@ constraint matrix with prior information</dd>
       constraint matrix with prior information
 
   Raises:
-    TypeError: if affinity or constraint matrix has wrong type
     ValueError: if affinity or constraint matrix has wrong shape, etc.
   &#34;&#34;&#34;
-  if not isinstance(affinity, np.ndarray):
-    raise TypeError(&#34;affinity must be a numpy array&#34;)
-  if not isinstance(constraint_matrix, np.ndarray):
-    raise TypeError(&#34;constraint matrix must be a numpy array&#34;)
   if len(affinity.shape) != 2:
     raise ValueError(&#34;affinity must be 2-dimensional&#34;)
   if affinity.shape[0] != affinity.shape[1]:
@@ -592,7 +584,7 @@ constraint matrix with prior information</dd>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintOptions"><code class="flex name class">
 <span>class <span class="ident">ConstraintOptions</span></span>
-<span>(</span><span>constraint_name, apply_before_refinement, integration_type=None, constraint_propagation_alpha=0.6)</span>
+<span>(</span><span>constraint_name: <a title="spectralcluster.constraint.ConstraintName" href="#spectralcluster.constraint.ConstraintName">ConstraintName</a>, apply_before_refinement: bool, integration_type: Optional[<a title="spectralcluster.constraint.IntegrationType" href="#spectralcluster.constraint.IntegrationType">IntegrationType</a>] = None, constraint_propagation_alpha: float = 0.6)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Constraint options for constrained clustering methods.</p>
@@ -622,10 +614,10 @@ method</dd>
   &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
 
   def __init__(self,
-               constraint_name,
-               apply_before_refinement,
-               integration_type=None,
-               constraint_propagation_alpha=0.6):
+               constraint_name: ConstraintName,
+               apply_before_refinement: bool,
+               integration_type: typing.Optional[IntegrationType] = None,
+               constraint_propagation_alpha: float = 0.6):
     &#34;&#34;&#34;Initialization of the constraint arguments.
 
     Args:
@@ -655,7 +647,7 @@ method</dd>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintPropagation"><code class="flex name class">
 <span>class <span class="ident">ConstraintPropagation</span></span>
-<span>(</span><span>alpha=0.6)</span>
+<span>(</span><span>alpha: float = 0.6)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Constraint Propagation method.</p>
@@ -685,10 +677,12 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
   propagation: A graph-based learning approach and its applications.&#34; IJCV 2013
   &#34;&#34;&#34;
 
-  def __init__(self, alpha=0.6):
+  def __init__(self, alpha: float = 0.6):
     self.alpha = alpha
 
-  def adjust_affinity(self, affinity, constraint_matrix):
+  def adjust_affinity(self,
+                      affinity: np.ndarray,
+                      constraint_matrix: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
     self.check_input(affinity, constraint_matrix)
     adjusted_affinity = np.copy(affinity)
@@ -722,7 +716,7 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.constraint.ConstraintPropagation.adjust_affinity"><code class="name flex">
-<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity, constraint_matrix)</span>
+<span>def <span class="ident">adjust_affinity</span></span>(<span>self, affinity: numpy.ndarray, constraint_matrix: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adjust the affinity matrix with constraints.</p></div>
@@ -730,7 +724,9 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def adjust_affinity(self, affinity, constraint_matrix):
+<pre><code class="python">def adjust_affinity(self,
+                    affinity: np.ndarray,
+                    constraint_matrix: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Adjust the affinity matrix with constraints.&#34;&#34;&#34;
   self.check_input(affinity, constraint_matrix)
   adjusted_affinity = np.copy(affinity)

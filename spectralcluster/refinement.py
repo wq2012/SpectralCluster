@@ -4,6 +4,7 @@ import abc
 import enum
 import numpy as np
 from scipy.ndimage import gaussian_filter
+import typing
 
 
 class RefinementName(enum.Enum):
@@ -34,18 +35,51 @@ class SymmetrizeType(enum.Enum):
   Average = enum.auto()
 
 
+class AffinityRefinementOperation(metaclass=abc.ABCMeta):
+  """Refinement of the affinity matrix."""
+
+  def check_input(self, affinity: np.ndarray):
+    """Check the input to the refine() method.
+
+    Args:
+      affinity: the input affinity matrix.
+
+    Raises:
+      TypeError: if affinity has wrong type
+      ValueError: if affinity has wrong shape, etc.
+    """
+    shape = affinity.shape
+    if len(shape) != 2:
+      raise ValueError("affinity must be 2-dimensional")
+    if shape[0] != shape[1]:
+      raise ValueError("affinity must be a square matrix")
+
+  @abc.abstractmethod
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
+    """An abstract method to perform the refinement operation.
+
+    Args:
+        affinity: the affinity matrix, of size (n_samples, n_samples)
+
+    Returns:
+        a matrix of the same size as affinity
+    """
+    pass
+
+
 class RefinementOptions:
   """Refinement options for the affinity matrix."""
 
-  def __init__(self,
-               gaussian_blur_sigma=1,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False,
-               symmetrize_type=SymmetrizeType.Max,
-               refinement_sequence=None):
+  def __init__(
+      self,
+      gaussian_blur_sigma: int = 1,
+      p_percentile: float = 0.95,
+      thresholding_soft_multiplier: float = 0.01,
+      thresholding_type: ThresholdType = ThresholdType.RowMax,
+      thresholding_with_binarization: bool = False,
+      thresholding_preserve_diagonal: bool = False,
+      symmetrize_type: SymmetrizeType = SymmetrizeType.Max,
+      refinement_sequence: typing.Optional[list[RefinementName]] = None):
     """Initialization of the refinement arguments.
 
     Args:
@@ -78,7 +112,8 @@ class RefinementOptions:
     else:
       self.refinement_sequence = refinement_sequence
 
-  def get_refinement_operator(self, name):
+  def get_refinement_operator(self, name: RefinementName) -> (
+      AffinityRefinementOperation):
     """Get the refinement operator for the affinity matrix.
 
     Args:
@@ -113,40 +148,6 @@ class RefinementOptions:
       raise ValueError("Unknown refinement operation: {}".format(name))
 
 
-class AffinityRefinementOperation(metaclass=abc.ABCMeta):
-  """Refinement of the affinity matrix."""
-
-  def check_input(self, affinity):
-    """Check the input to the refine() method.
-
-    Args:
-      affinity: the input affinity matrix.
-
-    Raises:
-      TypeError: if affinity has wrong type
-      ValueError: if affinity has wrong shape, etc.
-    """
-    if not isinstance(affinity, np.ndarray):
-      raise TypeError("affinity must be a numpy array")
-    shape = affinity.shape
-    if len(shape) != 2:
-      raise ValueError("affinity must be 2-dimensional")
-    if shape[0] != shape[1]:
-      raise ValueError("affinity must be a square matrix")
-
-  @abc.abstractmethod
-  def refine(self, affinity):
-    """An abstract method to perform the refinement operation.
-
-    Args:
-        affinity: the affinity matrix, of size (n_samples, n_samples)
-
-    Returns:
-        a matrix of the same size as affinity
-    """
-    pass
-
-
 class CropDiagonal(AffinityRefinementOperation):
   """Crop the diagonal.
 
@@ -156,7 +157,7 @@ class CropDiagonal(AffinityRefinementOperation):
   normalization.
   """
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     np.fill_diagonal(refined_affinity, 0.0)
@@ -168,10 +169,10 @@ class CropDiagonal(AffinityRefinementOperation):
 class GaussianBlur(AffinityRefinementOperation):
   """Apply Gaussian blur."""
 
-  def __init__(self, sigma=1):
+  def __init__(self, sigma: int = 1):
     self.sigma = sigma
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     return gaussian_filter(affinity, sigma=self.sigma)
 
@@ -180,11 +181,11 @@ class RowWiseThreshold(AffinityRefinementOperation):
   """Apply row wise thresholding."""
 
   def __init__(self,
-               p_percentile=0.95,
-               thresholding_soft_multiplier=0.01,
-               thresholding_type=ThresholdType.RowMax,
-               thresholding_with_binarization=False,
-               thresholding_preserve_diagonal=False):
+               p_percentile: float = 0.95,
+               thresholding_soft_multiplier: float = 0.01,
+               thresholding_type: ThresholdType = ThresholdType.RowMax,
+               thresholding_with_binarization: bool = False,
+               thresholding_preserve_diagonal: bool = False):
     self.p_percentile = p_percentile
     self.multiplier = thresholding_soft_multiplier
     if not isinstance(thresholding_type, ThresholdType):
@@ -193,7 +194,7 @@ class RowWiseThreshold(AffinityRefinementOperation):
     self.thresholding_with_binarization = thresholding_with_binarization
     self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     if self.thresholding_preserve_diagonal:
@@ -227,12 +228,10 @@ class RowWiseThreshold(AffinityRefinementOperation):
 class Symmetrize(AffinityRefinementOperation):
   """The Symmetrization operation."""
 
-  def __init__(self, symmetrize_type=SymmetrizeType.Max):
-    if not isinstance(symmetrize_type, SymmetrizeType):
-      raise TypeError("symmetrize_type must be a SymmetrizeType")
+  def __init__(self, symmetrize_type: SymmetrizeType = SymmetrizeType.Max):
     self.symmetrize_type = symmetrize_type
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     if self.symmetrize_type == SymmetrizeType.Max:
       return np.maximum(affinity, np.transpose(affinity))
@@ -245,7 +244,7 @@ class Symmetrize(AffinityRefinementOperation):
 class Diffuse(AffinityRefinementOperation):
   """The diffusion operation."""
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     return np.matmul(affinity, np.transpose(affinity))
 
@@ -253,7 +252,7 @@ class Diffuse(AffinityRefinementOperation):
 class RowWiseNormalize(AffinityRefinementOperation):
   """The row wise max normalization operation."""
 
-  def refine(self, affinity):
+  def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
     refined_affinity = np.copy(affinity)
     row_max = refined_affinity.max(axis=1)

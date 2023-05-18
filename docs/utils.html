@@ -31,6 +31,7 @@
 
 import enum
 import numpy as np
+import typing
 
 EPS = 1e-10
 
@@ -45,7 +46,7 @@ class EigenGapType(enum.Enum):
   NormalizedDiff = enum.auto()
 
 
-def compute_affinity_matrix(embeddings):
+def compute_affinity_matrix(embeddings: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Compute the affinity matrix from data.
 
   Note that the range of affinity is [0, 1].
@@ -69,7 +70,9 @@ def compute_affinity_matrix(embeddings):
   return affinity
 
 
-def compute_sorted_eigenvectors(input_matrix, descend=True):
+def compute_sorted_eigenvectors(
+    input_matrix: np.ndarray,
+    descend: bool = True) -&gt; tuple[np.ndarray, np.ndarray]:
   &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
 
   Args:
@@ -97,12 +100,12 @@ def compute_sorted_eigenvectors(input_matrix, descend=True):
   return w, v
 
 
-def compute_number_of_clusters(eigenvalues,
-                               max_clusters=None,
-                               stop_eigenvalue=1e-2,
-                               eigengap_type=EigenGapType.Ratio,
-                               descend=True,
-                               eps=EPS):
+def compute_number_of_clusters(eigenvalues: np.ndarray,
+                               max_clusters: typing.Optional[int] = None,
+                               stop_eigenvalue: float = 1e-2,
+                               eigengap_type: EigenGapType = EigenGapType.Ratio,
+                               descend: bool = True,
+                               eps: float = EPS) -&gt; tuple[int, float]:
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.
@@ -156,7 +159,7 @@ def compute_number_of_clusters(eigenvalues,
   return max_delta_index, max_delta
 
 
-def enforce_ordered_labels(labels):
+def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Transform the label sequence to an ordered form.
 
   This is the same type of label sequence used in the paper &#34;Discriminative
@@ -190,7 +193,7 @@ def enforce_ordered_labels(labels):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="spectralcluster.utils.compute_affinity_matrix"><code class="name flex">
-<span>def <span class="ident">compute_affinity_matrix</span></span>(<span>embeddings)</span>
+<span>def <span class="ident">compute_affinity_matrix</span></span>(<span>embeddings: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute the affinity matrix from data.</p>
@@ -209,7 +212,7 @@ def enforce_ordered_labels(labels):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_affinity_matrix(embeddings):
+<pre><code class="python">def compute_affinity_matrix(embeddings: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Compute the affinity matrix from data.
 
   Note that the range of affinity is [0, 1].
@@ -234,7 +237,7 @@ def enforce_ordered_labels(labels):
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_number_of_clusters"><code class="name flex">
-<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues, max_clusters=None, stop_eigenvalue=0.01, eigengap_type=EigenGapType.Ratio, descend=True, eps=1e-10)</span>
+<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues: numpy.ndarray, max_clusters: Optional[int] = None, stop_eigenvalue: float = 0.01, eigengap_type: <a title="spectralcluster.utils.EigenGapType" href="#spectralcluster.utils.EigenGapType">EigenGapType</a> = EigenGapType.Ratio, descend: bool = True, eps: float = 1e-10) ‑> tuple[int, float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute number of clusters using EigenGap principle.</p>
@@ -265,12 +268,12 @@ def enforce_ordered_labels(labels):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_number_of_clusters(eigenvalues,
-                               max_clusters=None,
-                               stop_eigenvalue=1e-2,
-                               eigengap_type=EigenGapType.Ratio,
-                               descend=True,
-                               eps=EPS):
+<pre><code class="python">def compute_number_of_clusters(eigenvalues: np.ndarray,
+                               max_clusters: typing.Optional[int] = None,
+                               stop_eigenvalue: float = 1e-2,
+                               eigengap_type: EigenGapType = EigenGapType.Ratio,
+                               descend: bool = True,
+                               eps: float = EPS) -&gt; tuple[int, float]:
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.
@@ -325,7 +328,7 @@ def enforce_ordered_labels(labels):
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_sorted_eigenvectors"><code class="name flex">
-<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>input_matrix, descend=True)</span>
+<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>input_matrix: numpy.ndarray, descend: bool = True) ‑> tuple[numpy.ndarray, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sort eigenvectors by the real part of eigenvalues.</p>
@@ -348,7 +351,9 @@ eigenvalue</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_sorted_eigenvectors(input_matrix, descend=True):
+<pre><code class="python">def compute_sorted_eigenvectors(
+    input_matrix: np.ndarray,
+    descend: bool = True) -&gt; tuple[np.ndarray, np.ndarray]:
   &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
 
   Args:
@@ -377,7 +382,7 @@ eigenvalue</dd>
 </details>
 </dd>
 <dt id="spectralcluster.utils.enforce_ordered_labels"><code class="name flex">
-<span>def <span class="ident">enforce_ordered_labels</span></span>(<span>labels)</span>
+<span>def <span class="ident">enforce_ordered_labels</span></span>(<span>labels: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Transform the label sequence to an ordered form.</p>
@@ -399,7 +404,7 @@ labels always appear first</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def enforce_ordered_labels(labels):
+<pre><code class="python">def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;Transform the label sequence to an ordered form.
 
   This is the same type of label sequence used in the paper &#34;Discriminative

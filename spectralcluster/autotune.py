@@ -2,6 +2,7 @@
 
 import enum
 import numpy as np
+import typing
 
 MIN_SEARCH_STEP = 1e-04
 
@@ -32,11 +33,11 @@ class AutoTune:
   """
 
   def __init__(self,
-               p_percentile_min=0.60,
-               p_percentile_max=0.95,
-               init_search_step=0.01,
-               search_level=1,
-               proxy=AutoTuneProxy.PercentileSqrtOverNME):
+               p_percentile_min: float = 0.60,
+               p_percentile_max: float = 0.95,
+               init_search_step: float = 0.01,
+               search_level: int = 1,
+               proxy: AutoTuneProxy = AutoTuneProxy.PercentileSqrtOverNME):
     """Initialization of the autotune arguments.
 
     Args:
@@ -54,7 +55,7 @@ class AutoTune:
       raise TypeError("proxy must be an instance of AutoTuneProxy")
     self.proxy = proxy
 
-  def get_percentile_range(self):
+  def get_percentile_range(self) -> list[float]:
     """Get the current percentile search range."""
     num_steps = int(
         np.ceil(
@@ -62,15 +63,18 @@ class AutoTune:
     return list(
         np.linspace(self.p_percentile_min, self.p_percentile_max, num_steps))
 
-  def update_percentile_range(self, p_percentile_min, p_percentile_max,
-                              search_step):
+  def update_percentile_range(self,
+                              p_percentile_min: float,
+                              p_percentile_max: float,
+                              search_step: float) -> list[float]:
     """Update the percentile search range."""
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
     self.search_step = search_step
     return self.get_percentile_range()
 
-  def tune(self, p_percentile_to_ratio):
+  def tune(self, p_percentile_to_ratio: typing.Callable) -> (
+      tuple[np.ndarray, int, float]):
     """Tune the hyper-parameter p_percentile.
 
     Use a proxy ratio of DER to tune the hyper-parameter p_percentile. It also
