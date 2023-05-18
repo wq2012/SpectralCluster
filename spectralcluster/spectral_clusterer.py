@@ -109,7 +109,7 @@ class SpectralClusterer:
       self,
       affinity: np.ndarray,
       constraint_matrix: typing.Optional[np.ndarray] = None) -> (
-          tuple[np.ndarray, int, float]):
+          typing.Tuple[np.ndarray, int, float]):
     """Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -277,7 +277,7 @@ class SpectralClusterer:
             "contains RowWiseThreshold")
 
       def p_percentile_to_ratio(p_percentile: float) -> (
-          tuple[float, np.ndarray, int]):
+          typing.Tuple[float, np.ndarray, int]):
         """Compute the `ratio` given a `p_percentile` value."""
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,

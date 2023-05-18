@@ -43,7 +43,7 @@ def compute_affinity_matrix(embeddings: np.ndarray) -> np.ndarray:
 
 def compute_sorted_eigenvectors(
     input_matrix: np.ndarray,
-    descend: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    descend: bool = True) -> typing.Tuple[np.ndarray, np.ndarray]:
   """Sort eigenvectors by the real part of eigenvalues.
 
   Args:
@@ -76,7 +76,7 @@ def compute_number_of_clusters(eigenvalues: np.ndarray,
                                stop_eigenvalue: float = 1e-2,
                                eigengap_type: EigenGapType = EigenGapType.Ratio,
                                descend: bool = True,
-                               eps: float = EPS) -> tuple[int, float]:
+                               eps: float = EPS) -> typing.Tuple[int, float]:
   """Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.

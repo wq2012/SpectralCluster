@@ -5,6 +5,7 @@ from spectralcluster import laplacian
 from spectralcluster import refinement
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
+import typing
 
 RefinementName = refinement.RefinementName
 ThresholdType = refinement.ThresholdType
@@ -64,7 +65,7 @@ class TestAutotune(unittest.TestCase):
     affinity = utils.compute_affinity_matrix(matrix)
 
     def p_percentile_to_ratio(p_percentile: float) -> (
-        tuple[float, np.ndarray, int]):
+        typing.Tuple[float, np.ndarray, int]):
       """compute the `ratio` given a `p_percentile` value."""
       clusterer.refinement_options.p_percentile = p_percentile
       (eigenvectors, n_clusters,

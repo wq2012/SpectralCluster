@@ -72,7 +72,7 @@ def compute_affinity_matrix(embeddings: np.ndarray) -&gt; np.ndarray:
 
 def compute_sorted_eigenvectors(
     input_matrix: np.ndarray,
-    descend: bool = True) -&gt; tuple[np.ndarray, np.ndarray]:
+    descend: bool = True) -&gt; typing.Tuple[np.ndarray, np.ndarray]:
   &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
 
   Args:
@@ -105,7 +105,7 @@ def compute_number_of_clusters(eigenvalues: np.ndarray,
                                stop_eigenvalue: float = 1e-2,
                                eigengap_type: EigenGapType = EigenGapType.Ratio,
                                descend: bool = True,
-                               eps: float = EPS) -&gt; tuple[int, float]:
+                               eps: float = EPS) -&gt; typing.Tuple[int, float]:
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.
@@ -237,7 +237,7 @@ def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_number_of_clusters"><code class="name flex">
-<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues: numpy.ndarray, max_clusters: Optional[int] = None, stop_eigenvalue: float = 0.01, eigengap_type: <a title="spectralcluster.utils.EigenGapType" href="#spectralcluster.utils.EigenGapType">EigenGapType</a> = EigenGapType.Ratio, descend: bool = True, eps: float = 1e-10) ‑> tuple[int, float]</span>
+<span>def <span class="ident">compute_number_of_clusters</span></span>(<span>eigenvalues: numpy.ndarray, max_clusters: Optional[int] = None, stop_eigenvalue: float = 0.01, eigengap_type: <a title="spectralcluster.utils.EigenGapType" href="#spectralcluster.utils.EigenGapType">EigenGapType</a> = EigenGapType.Ratio, descend: bool = True, eps: float = 1e-10) ‑> Tuple[int, float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute number of clusters using EigenGap principle.</p>
@@ -273,7 +273,7 @@ def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
                                stop_eigenvalue: float = 1e-2,
                                eigengap_type: EigenGapType = EigenGapType.Ratio,
                                descend: bool = True,
-                               eps: float = EPS) -&gt; tuple[int, float]:
+                               eps: float = EPS) -&gt; typing.Tuple[int, float]:
   &#34;&#34;&#34;Compute number of clusters using EigenGap principle.
 
   Use maximum EigenGap principle to find the number of clusters.
@@ -328,7 +328,7 @@ def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
 </details>
 </dd>
 <dt id="spectralcluster.utils.compute_sorted_eigenvectors"><code class="name flex">
-<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>input_matrix: numpy.ndarray, descend: bool = True) ‑> tuple[numpy.ndarray, numpy.ndarray]</span>
+<span>def <span class="ident">compute_sorted_eigenvectors</span></span>(<span>input_matrix: numpy.ndarray, descend: bool = True) ‑> Tuple[numpy.ndarray, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sort eigenvectors by the real part of eigenvalues.</p>
@@ -353,7 +353,7 @@ eigenvalue</dd>
 </summary>
 <pre><code class="python">def compute_sorted_eigenvectors(
     input_matrix: np.ndarray,
-    descend: bool = True) -&gt; tuple[np.ndarray, np.ndarray]:
+    descend: bool = True) -&gt; typing.Tuple[np.ndarray, np.ndarray]:
   &#34;&#34;&#34;Sort eigenvectors by the real part of eigenvalues.
 
   Args:

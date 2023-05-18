@@ -84,7 +84,7 @@ class AutoTune:
       raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
     self.proxy = proxy
 
-  def get_percentile_range(self) -&gt; list[float]:
+  def get_percentile_range(self) -&gt; typing.Sequence[float]:
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
     num_steps = int(
         np.ceil(
@@ -95,7 +95,7 @@ class AutoTune:
   def update_percentile_range(self,
                               p_percentile_min: float,
                               p_percentile_max: float,
-                              search_step: float) -&gt; list[float]:
+                              search_step: float) -&gt; typing.Sequence[float]:
     &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
@@ -230,7 +230,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
       raise TypeError(&#34;proxy must be an instance of AutoTuneProxy&#34;)
     self.proxy = proxy
 
-  def get_percentile_range(self) -&gt; list[float]:
+  def get_percentile_range(self) -&gt; typing.Sequence[float]:
     &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
     num_steps = int(
         np.ceil(
@@ -241,7 +241,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
   def update_percentile_range(self,
                               p_percentile_min: float,
                               p_percentile_max: float,
-                              search_step: float) -&gt; list[float]:
+                              search_step: float) -&gt; typing.Sequence[float]:
     &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max
@@ -309,7 +309,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.autotune.AutoTune.get_percentile_range"><code class="name flex">
-<span>def <span class="ident">get_percentile_range</span></span>(<span>self) ‑> list[float]</span>
+<span>def <span class="ident">get_percentile_range</span></span>(<span>self) ‑> Sequence[float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the current percentile search range.</p></div>
@@ -317,7 +317,7 @@ diarization using normalized maximum eigengap." IEEE Signal Processing Letter
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_percentile_range(self) -&gt; list[float]:
+<pre><code class="python">def get_percentile_range(self) -&gt; typing.Sequence[float]:
   &#34;&#34;&#34;Get the current percentile search range.&#34;&#34;&#34;
   num_steps = int(
       np.ceil(
@@ -414,7 +414,7 @@ estimate the number of clusters.</p>
 </details>
 </dd>
 <dt id="spectralcluster.autotune.AutoTune.update_percentile_range"><code class="name flex">
-<span>def <span class="ident">update_percentile_range</span></span>(<span>self, p_percentile_min: float, p_percentile_max: float, search_step: float) ‑> list[float]</span>
+<span>def <span class="ident">update_percentile_range</span></span>(<span>self, p_percentile_min: float, p_percentile_max: float, search_step: float) ‑> Sequence[float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Update the percentile search range.</p></div>
@@ -425,7 +425,7 @@ estimate the number of clusters.</p>
 <pre><code class="python">def update_percentile_range(self,
                             p_percentile_min: float,
                             p_percentile_max: float,
-                            search_step: float) -&gt; list[float]:
+                            search_step: float) -&gt; typing.Sequence[float]:
   &#34;&#34;&#34;Update the percentile search range.&#34;&#34;&#34;
   self.p_percentile_min = p_percentile_min
   self.p_percentile_max = p_percentile_max

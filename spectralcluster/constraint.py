@@ -175,7 +175,9 @@ class ConstraintPropagation(ConstraintOperation):
 class ConstraintMatrix:
   """Constraint Matrix class."""
 
-  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
+  def __init__(self,
+               speaker_turn_scores: typing.Sequence[float],
+               threshold: float = 1):
     """Initialization of the constraint matrix arguments.
 
     Args:

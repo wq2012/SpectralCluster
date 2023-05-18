@@ -55,7 +55,7 @@ class AutoTune:
       raise TypeError("proxy must be an instance of AutoTuneProxy")
     self.proxy = proxy
 
-  def get_percentile_range(self) -> list[float]:
+  def get_percentile_range(self) -> typing.Sequence[float]:
     """Get the current percentile search range."""
     num_steps = int(
         np.ceil(
@@ -66,7 +66,7 @@ class AutoTune:
   def update_percentile_range(self,
                               p_percentile_min: float,
                               p_percentile_max: float,
-                              search_step: float) -> list[float]:
+                              search_step: float) -> typing.Sequence[float]:
     """Update the percentile search range."""
     self.p_percentile_min = p_percentile_min
     self.p_percentile_max = p_percentile_max

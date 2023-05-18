@@ -79,7 +79,8 @@ class RefinementOptions:
       thresholding_with_binarization: bool = False,
       thresholding_preserve_diagonal: bool = False,
       symmetrize_type: SymmetrizeType = SymmetrizeType.Max,
-      refinement_sequence: typing.Optional[list[RefinementName]] = None):
+      refinement_sequence: typing.Optional[typing.Sequence[RefinementName]] = (
+          None)):
     """Initialization of the refinement arguments.
 
     Args:
@@ -107,8 +108,6 @@ class RefinementOptions:
     self.symmetrize_type = symmetrize_type
     if refinement_sequence is None:
       self.refinement_sequence = []
-    elif not isinstance(refinement_sequence, list):
-      raise TypeError("refinement_sequence must be a list of RefinementName")
     else:
       self.refinement_sequence = refinement_sequence
 

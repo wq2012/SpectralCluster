@@ -204,7 +204,9 @@ class ConstraintPropagation(ConstraintOperation):
 class ConstraintMatrix:
   &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
 
-  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
+  def __init__(self,
+               speaker_turn_scores: typing.Sequence[float],
+               threshold: float = 1):
     &#34;&#34;&#34;Initialization of the constraint matrix arguments.
 
     Args:
@@ -323,7 +325,7 @@ and <code>Average</code>.</p></div>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintMatrix"><code class="flex name class">
 <span>class <span class="ident">ConstraintMatrix</span></span>
-<span>(</span><span>speaker_turn_scores: list[float], threshold: float = 1)</span>
+<span>(</span><span>speaker_turn_scores: Sequence[float], threshold: float = 1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Constraint Matrix class.</p>
@@ -346,7 +348,9 @@ not used.</dd>
 <pre><code class="python">class ConstraintMatrix:
   &#34;&#34;&#34;Constraint Matrix class.&#34;&#34;&#34;
 
-  def __init__(self, speaker_turn_scores: list[float], threshold: float = 1):
+  def __init__(self,
+               speaker_turn_scores: typing.Sequence[float],
+               threshold: float = 1):
     &#34;&#34;&#34;Initialization of the constraint matrix arguments.
 
     Args:

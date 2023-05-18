@@ -138,7 +138,7 @@ class SpectralClusterer:
       self,
       affinity: np.ndarray,
       constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; (
-          tuple[np.ndarray, int, float]):
+          typing.Tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -306,7 +306,7 @@ class SpectralClusterer:
             &#34;contains RowWiseThreshold&#34;)
 
       def p_percentile_to_ratio(p_percentile: float) -&gt; (
-          tuple[float, np.ndarray, int]):
+          typing.Tuple[float, np.ndarray, int]):
         &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
@@ -507,7 +507,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       self,
       affinity: np.ndarray,
       constraint_matrix: typing.Optional[np.ndarray] = None) -&gt; (
-          tuple[np.ndarray, int, float]):
+          typing.Tuple[np.ndarray, int, float]):
     &#34;&#34;&#34;Perform eigen decomposition and estiamte the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
@@ -675,7 +675,7 @@ signature as custom_distance_kmeans.run_kmeans</dd>
             &#34;contains RowWiseThreshold&#34;)
 
       def p_percentile_to_ratio(p_percentile: float) -&gt; (
-          tuple[float, np.ndarray, int]):
+          typing.Tuple[float, np.ndarray, int]):
         &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
         self.refinement_options.p_percentile = p_percentile
         (eigenvectors, n_clusters,
@@ -824,7 +824,7 @@ constraint matrix with prior information</dd>
           &#34;contains RowWiseThreshold&#34;)
 
     def p_percentile_to_ratio(p_percentile: float) -&gt; (
-        tuple[float, np.ndarray, int]):
+        typing.Tuple[float, np.ndarray, int]):
       &#34;&#34;&#34;Compute the `ratio` given a `p_percentile` value.&#34;&#34;&#34;
       self.refinement_options.p_percentile = p_percentile
       (eigenvectors, n_clusters,
