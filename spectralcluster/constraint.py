@@ -41,7 +41,6 @@ class ConstraintOptions:
   # alpha value of the constraint propagation method.
   constraint_propagation_alpha: float = 0.6
 
-
   def __post_init__(self):
     if self.constraint_name == ConstraintName.AffinityIntegration:
       self.constraint_operator = AffinityIntegration(self.integration_type)

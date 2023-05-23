@@ -72,7 +72,6 @@ class CustomKMeans:
   # defined in scipy.spatial.distance can be used.
   custom_dist: typing.Union[str, typing.Callable] = "cosine"
 
-
   def _init_centroids(self, embeddings: np.ndarray):
     """Compute the initial centroids."""
 

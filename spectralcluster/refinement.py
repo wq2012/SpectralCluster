@@ -99,7 +99,6 @@ class RefinementOptions:
   # apply on the affinity matrix.
   refinement_sequence: typing.Optional[typing.Sequence[RefinementName]] = None
 
-
   def get_refinement_operator(self, name: RefinementName) -> (
       AffinityRefinementOperation):
     """Get the refinement operator for the affinity matrix.
