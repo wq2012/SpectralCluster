@@ -3,6 +3,7 @@
 It supports any distance measure defined in scipy.spatial.distance.
 """
 
+from dataclasses import dataclass
 import numpy as np
 from scipy.spatial import distance
 from sklearn.cluster import KMeans
@@ -49,35 +50,28 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   return labels
 
 
+@dataclass
 class CustomKMeans:
   """Class CustomKMeans performs KMeans clustering."""
 
-  def __init__(self,
-               n_clusters: typing.Optional[int] = None,
-               centroids: typing.Optional[np.ndarray] = None,
-               max_iter: int = 10,
-               tol: float = 0.001,
-               custom_dist: typing.Union[str, typing.Callable] = "cosine"):
-    """Constructor of the clusterer.
+  # The number of clusters to form.
+  n_clusters: typing.Optional[int] = None
 
-    A custom kmeans clusterer with any distance measure from
-    scipy.spatial.distance can be used.
+  # The cluster centroids. If given, initial centroids are set as
+  # the input samples. If not, centroids are randomly initialized.
+  centroids: typing.Optional[np.ndarray] = None
 
-    Args:
-      n_clusters: the number of clusters to form
-      centroids: the cluster centroids. if given, initial centroids are set as
-        the input samples. if not, centroids are randomly initialized
-      max_iter: maximum number of iterations of the k-means algorithm to run
-      tol: the relative increment in the results before declaring convergence
-      custom_dist: str or callable. custom distance measure to use. if a string,
-        "cosine", "euclidean", "mahalanobis", or any other distance functions
-        defined in scipy.spatial.distance can be used
-    """
-    self.n_clusters = n_clusters
-    self.centroids = centroids
-    self.max_iter = max_iter
-    self.tol = tol
-    self.custom_dist = custom_dist
+  # Maximum number of iterations of the k-means algorithm to run.
+  max_iter: int = 10
+
+  # The relative increment in the results before declaring convergence.
+  tol: float = 0.001
+
+  # Custom distance measure to use. If a string, "cosine", "euclidean",
+  # "mahalanobis", or any other distance functions
+  # defined in scipy.spatial.distance can be used.
+  custom_dist: typing.Union[str, typing.Callable] = "cosine"
+
 
   def _init_centroids(self, embeddings: np.ndarray):
     """Compute the initial centroids."""

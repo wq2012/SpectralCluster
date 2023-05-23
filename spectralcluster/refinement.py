@@ -1,6 +1,7 @@
 """Affinity matrix refinemnet operations."""
 
 import abc
+from dataclasses import dataclass
 import enum
 import numpy as np
 from scipy.ndimage import gaussian_filter
@@ -67,49 +68,37 @@ class AffinityRefinementOperation(metaclass=abc.ABCMeta):
     pass
 
 
+@dataclass
 class RefinementOptions:
   """Refinement options for the affinity matrix."""
 
-  def __init__(
-      self,
-      gaussian_blur_sigma: int = 1,
-      p_percentile: float = 0.95,
-      thresholding_soft_multiplier: float = 0.01,
-      thresholding_type: ThresholdType = ThresholdType.RowMax,
-      thresholding_with_binarization: bool = False,
-      thresholding_preserve_diagonal: bool = False,
-      symmetrize_type: SymmetrizeType = SymmetrizeType.Max,
-      refinement_sequence: typing.Optional[typing.Sequence[RefinementName]] = (
-          None)):
-    """Initialization of the refinement arguments.
+  # Sigma value of the Gaussian blur operation.
+  gaussian_blur_sigma: int = 1
 
-    Args:
-      gaussian_blur_sigma: sigma value of the Gaussian blur operation
-      p_percentile: the p-percentile for the row wise thresholding
-      thresholding_soft_multiplier: the multiplier for soft threhsold, if this
-        value is 0, then it's a hard thresholding
-      thresholding_type: the type of thresholding operation
-      thresholding_with_binarization: if true, we set values larger than the
-        threshold to 1
-      thresholding_preserve_diagonal: if true, in the row wise thresholding
-        operation, we firstly set diagonals of the affinity matrix to 0, and set
-        the diagonals back to 1 in the end
-      symmetrize_type: a SymmetrizeType
-      refinement_sequence: a list of RefinementName for the sequence of
-        refinement operations to apply on the affinity matrix. If None, we will
-        not refine
-    """
-    self.gaussian_blur_sigma = gaussian_blur_sigma
-    self.p_percentile = p_percentile
-    self.thresholding_soft_multiplier = thresholding_soft_multiplier
-    self.thresholding_type = thresholding_type
-    self.thresholding_with_binarization = thresholding_with_binarization
-    self.thresholding_preserve_diagonal = thresholding_preserve_diagonal
-    self.symmetrize_type = symmetrize_type
-    if refinement_sequence is None:
-      self.refinement_sequence = []
-    else:
-      self.refinement_sequence = refinement_sequence
+  # The p-percentile for the row wise thresholding.
+  p_percentile: float = 0.95
+
+  # The multiplier for soft threhsold, if this value is 0,
+  # then it's a hard thresholding.
+  thresholding_soft_multiplier: float = 0.01
+
+  # The type of thresholding operation.
+  thresholding_type: ThresholdType = ThresholdType.RowMax
+
+  # If true, we set values larger than the threshold to 1.
+  thresholding_with_binarization: bool = False
+
+  # If true, in the row wise thresholding operation, we firstly set diagonals
+  # of the affinity matrix to 0, and set the diagonals back to 1 in the end.
+  thresholding_preserve_diagonal: bool = False
+
+  # A SymmetrizeType.
+  symmetrize_type: SymmetrizeType = SymmetrizeType.Max
+
+  # A list of RefinementName for the sequence of refinement operations to
+  # apply on the affinity matrix.
+  refinement_sequence: typing.Optional[typing.Sequence[RefinementName]] = None
+
 
   def get_refinement_operator(self, name: RefinementName) -> (
       AffinityRefinementOperation):
@@ -125,9 +114,7 @@ class RefinementOptions:
       TypeError: if name is not a RefinementName
       ValueError: if name is an unknown refinement operation
     """
-    if not isinstance(name, RefinementName):
-      raise TypeError("name must be a RefinementName")
-    elif name == RefinementName.CropDiagonal:
+    if name == RefinementName.CropDiagonal:
       return CropDiagonal()
     elif name == RefinementName.GaussianBlur:
       return GaussianBlur(self.gaussian_blur_sigma)

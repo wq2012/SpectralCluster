@@ -1,5 +1,6 @@
 """Constraint information."""
 import abc
+from dataclasses import dataclass
 import enum
 import numpy as np
 import typing
@@ -22,39 +23,31 @@ class IntegrationType(enum.Enum):
   Average = enum.auto()
 
 
+@dataclass
 class ConstraintOptions:
   """Constraint options for constrained clustering methods."""
 
-  def __init__(self,
-               constraint_name: ConstraintName,
-               apply_before_refinement: bool,
-               integration_type: typing.Optional[IntegrationType] = None,
-               constraint_propagation_alpha: float = 0.6):
-    """Initialization of the constraint arguments.
+  # Name of the constrained clustering method.
+  constraint_name: ConstraintName
 
-    Args:
-      constraint_name: a ConstraintName. Name of the constrained clustering
-        method
-      apply_before_refinement: if True, this operation is applied before the
-        affinity refinement. It is suggested to set as True for the
-        ConstraintPropagation method and False for the AffinityIntegration
-        method
-      integration_type: a IntegrationType. Integration type for the Affinity
-        Integration method
-      constraint_propagation_alpha: alpha value of the constraint propagation
-        method
-    """
-    if not isinstance(constraint_name, ConstraintName):
-      raise TypeError("constraint_name must be a ConstraintName")
-    elif constraint_name == ConstraintName.AffinityIntegration:
-      self.constraint_operator = AffinityIntegration(integration_type)
-    elif constraint_name == ConstraintName.ConstraintPropagation:
+  # If True, this operation is applied before the affinity refinement.
+  # It is suggested to set as True for the ConstraintPropagation method
+  # and False for the AffinityIntegration method.
+  apply_before_refinement: bool
+
+  # Integration type for the Affinity Integration method.
+  integration_type: typing.Optional[IntegrationType] = None
+
+  # alpha value of the constraint propagation method.
+  constraint_propagation_alpha: float = 0.6
+
+
+  def __post_init__(self):
+    if self.constraint_name == ConstraintName.AffinityIntegration:
+      self.constraint_operator = AffinityIntegration(self.integration_type)
+    elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
-          constraint_propagation_alpha)
-    else:
-      raise ValueError(
-          "Unsupported constrained name: {}".format(constraint_name))
-    self.apply_before_refinement = apply_before_refinement
+          self.constraint_propagation_alpha)
 
 
 class ConstraintOperation(metaclass=abc.ABCMeta):

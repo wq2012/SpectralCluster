@@ -128,10 +128,11 @@ class SpectralClusterer:
       max_delta_norm: normalized maximum eigen gap
     """
     # Perform refinement operations on the affinity matrix.
-    for refinement_name in self.refinement_options.refinement_sequence:
-      refinement_operator = self.refinement_options.get_refinement_operator(
-          refinement_name)
-      affinity = refinement_operator.refine(affinity)
+    if self.refinement_options.refinement_sequence:
+      for refinement_name in self.refinement_options.refinement_sequence:
+        refinement_operator = self.refinement_options.get_refinement_operator(
+            refinement_name)
+        affinity = refinement_operator.refine(affinity)
 
     if (self.constraint_options and
         not self.constraint_options.apply_before_refinement and

@@ -11,6 +11,7 @@ with Multi-Stage Clustering", arXiv:2210.13690.
 https://arxiv.org/abs/2210.13690
 """
 
+from dataclasses import dataclass
 import enum
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
@@ -54,58 +55,41 @@ class FallbackClustererType(enum.Enum):
   Naive = enum.auto()
 
 
+@dataclass
 class FallbackOptions:
   """Options for fallback options."""
 
-  def __init__(
-      self,
-      spectral_min_embeddings: int = 1,
-      single_cluster_condition: SingleClusterCondition = (
-          SingleClusterCondition.AffinityGmmBic),
-      single_cluster_affinity_threshold: float = 0.75,
-      single_cluster_affinity_diagonal_offset: int = 1,
-      fallback_clusterer_type: FallbackClustererType = (
-          FallbackClustererType.Naive),
-      agglomerative_threshold: float = 0.5,
-      naive_threshold: float = 0.5,
-      naive_adaptation_threshold: typing.Optional[float] = None):
-    """Initialization of the fallback options.
+  # We only run spectral clusterer if we have at least these many embeddings;
+  # otherwise we run fallback clusterer.
+  spectral_min_embeddings: int = 1
 
-    Args:
-      spectral_min_embeddings: we only run spectral clusterer if we have at
-        least these many embeddings; otherwise we run fallback clusterer
-      single_cluster_condition: how do we decide single-vs-multi cluster(s)
-      single_cluster_affinity_threshold: affinity threshold to decide
-        whether there is only a single cluster
-      single_cluster_affinity_diagonal_offset: when using AffinityGmmBic
-        to make single-vs-multi cluster(s) decisions, we only fit the GMM to
-        the upper triangular matrix because the diagonal and near-diagonal
-        values might be very big. By default, we use a value of 1 to only
-        exclude diagonal values. But if embeddings are extracted from
-        overlapping sliding windows, this value could be larger than 1
-      fallback_clusterer_type: which fallback clusterer to use
-      agglomerative_threshold: threshold of agglomerative clustering
-      naive_threshold: threshold for naive clusterer
-      naive_adaptation_threshold: adaptation_threshold for naive clusterer
-    """
-    if not isinstance(spectral_min_embeddings, int):
-      raise TypeError("spectral_min_embeddings must be an integer")
-    if not isinstance(single_cluster_affinity_diagonal_offset, int):
-      raise TypeError(
-          "single_cluster_affinity_diagonal_offset must be an integer")
-    if single_cluster_affinity_diagonal_offset < 0:
-      raise ValueError(
-          "single_cluster_affinity_diagonal_offset ust be a positive integer")
+  # How do we decide single-vs-multi cluster(s).
+  single_cluster_condition: SingleClusterCondition = (
+      SingleClusterCondition.AffinityGmmBic)
 
-    self.spectral_min_embeddings = spectral_min_embeddings
-    self.single_cluster_condition = single_cluster_condition
-    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = (
-        single_cluster_affinity_diagonal_offset)
-    self.fallback_clusterer_type = fallback_clusterer_type
-    self.agglomerative_threshold = agglomerative_threshold
-    self.naive_threshold = naive_threshold
-    self.naive_adaptation_threshold = naive_adaptation_threshold
+  # Affinity threshold to decide whether there is only a single cluster.
+  single_cluster_affinity_threshold: float = 0.75
+
+  # When using AffinityGmmBic to make single-vs-multi cluster(s) decisions,
+  # we only fit the GMM to the upper triangular matrix because the diagonal
+  # and near-diagonal values might be very big. By default, we use a
+  # value of 1 to only exclude diagonal values. But if embeddings are
+  # extracted from overlapping sliding windows, this value could be larger
+  # than 1.
+  single_cluster_affinity_diagonal_offset: int = 1
+
+  # Which fallback clusterer to use.
+  fallback_clusterer_type: FallbackClustererType = (
+      FallbackClustererType.Naive)
+
+  # Threshold of agglomerative clustering.
+  agglomerative_threshold: float = 0.5
+
+  # Threshold for naive clusterer.
+  naive_threshold: float = 0.5
+
+  # Adaptation_threshold for naive clusterer.
+  naive_adaptation_threshold: typing.Optional[float] = None
 
 
 class FallbackClusterer:
