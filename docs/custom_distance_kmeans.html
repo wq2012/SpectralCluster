@@ -33,6 +33,7 @@
 It supports any distance measure defined in scipy.spatial.distance.
 &#34;&#34;&#34;
 
+from dataclasses import dataclass
 import numpy as np
 from scipy.spatial import distance
 from sklearn.cluster import KMeans
@@ -79,35 +80,27 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   return labels
 
 
+@dataclass
 class CustomKMeans:
   &#34;&#34;&#34;Class CustomKMeans performs KMeans clustering.&#34;&#34;&#34;
 
-  def __init__(self,
-               n_clusters: typing.Optional[int] = None,
-               centroids: typing.Optional[np.ndarray] = None,
-               max_iter: int = 10,
-               tol: float = 0.001,
-               custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;):
-    &#34;&#34;&#34;Constructor of the clusterer.
+  # The number of clusters to form.
+  n_clusters: typing.Optional[int] = None
 
-    A custom kmeans clusterer with any distance measure from
-    scipy.spatial.distance can be used.
+  # The cluster centroids. If given, initial centroids are set as
+  # the input samples. If not, centroids are randomly initialized.
+  centroids: typing.Optional[np.ndarray] = None
 
-    Args:
-      n_clusters: the number of clusters to form
-      centroids: the cluster centroids. if given, initial centroids are set as
-        the input samples. if not, centroids are randomly initialized
-      max_iter: maximum number of iterations of the k-means algorithm to run
-      tol: the relative increment in the results before declaring convergence
-      custom_dist: str or callable. custom distance measure to use. if a string,
-        &#34;cosine&#34;, &#34;euclidean&#34;, &#34;mahalanobis&#34;, or any other distance functions
-        defined in scipy.spatial.distance can be used
-    &#34;&#34;&#34;
-    self.n_clusters = n_clusters
-    self.centroids = centroids
-    self.max_iter = max_iter
-    self.tol = tol
-    self.custom_dist = custom_dist
+  # Maximum number of iterations of the k-means algorithm to run.
+  max_iter: int = 10
+
+  # The relative increment in the results before declaring convergence.
+  tol: float = 0.001
+
+  # Custom distance measure to use. If a string, &#34;cosine&#34;, &#34;euclidean&#34;,
+  # &#34;mahalanobis&#34;, or any other distance functions
+  # defined in scipy.spatial.distance can be used.
+  custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;
 
   def _init_centroids(self, embeddings: np.ndarray):
     &#34;&#34;&#34;Compute the initial centroids.&#34;&#34;&#34;
@@ -262,59 +255,32 @@ functions defined in scipy.spatial.distance can be used</dd>
 <span>(</span><span>n_clusters: Optional[int] = None, centroids: Optional[numpy.ndarray] = None, max_iter: int = 10, tol: float = 0.001, custom_dist: Union[str, Callable] = 'cosine')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class CustomKMeans performs KMeans clustering.</p>
-<p>Constructor of the clusterer.</p>
-<p>A custom kmeans clusterer with any distance measure from
-scipy.spatial.distance can be used.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>n_clusters</code></strong></dt>
-<dd>the number of clusters to form</dd>
-<dt><strong><code>centroids</code></strong></dt>
-<dd>the cluster centroids. if given, initial centroids are set as
-the input samples. if not, centroids are randomly initialized</dd>
-<dt><strong><code>max_iter</code></strong></dt>
-<dd>maximum number of iterations of the k-means algorithm to run</dd>
-<dt><strong><code>tol</code></strong></dt>
-<dd>the relative increment in the results before declaring convergence</dd>
-<dt><strong><code>custom_dist</code></strong></dt>
-<dd>str or callable. custom distance measure to use. if a string,
-"cosine", "euclidean", "mahalanobis", or any other distance functions
-defined in scipy.spatial.distance can be used</dd>
-</dl></div>
+<div class="desc"><p>Class CustomKMeans performs KMeans clustering.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CustomKMeans:
+<pre><code class="python">@dataclass
+class CustomKMeans:
   &#34;&#34;&#34;Class CustomKMeans performs KMeans clustering.&#34;&#34;&#34;
 
-  def __init__(self,
-               n_clusters: typing.Optional[int] = None,
-               centroids: typing.Optional[np.ndarray] = None,
-               max_iter: int = 10,
-               tol: float = 0.001,
-               custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;):
-    &#34;&#34;&#34;Constructor of the clusterer.
+  # The number of clusters to form.
+  n_clusters: typing.Optional[int] = None
 
-    A custom kmeans clusterer with any distance measure from
-    scipy.spatial.distance can be used.
+  # The cluster centroids. If given, initial centroids are set as
+  # the input samples. If not, centroids are randomly initialized.
+  centroids: typing.Optional[np.ndarray] = None
 
-    Args:
-      n_clusters: the number of clusters to form
-      centroids: the cluster centroids. if given, initial centroids are set as
-        the input samples. if not, centroids are randomly initialized
-      max_iter: maximum number of iterations of the k-means algorithm to run
-      tol: the relative increment in the results before declaring convergence
-      custom_dist: str or callable. custom distance measure to use. if a string,
-        &#34;cosine&#34;, &#34;euclidean&#34;, &#34;mahalanobis&#34;, or any other distance functions
-        defined in scipy.spatial.distance can be used
-    &#34;&#34;&#34;
-    self.n_clusters = n_clusters
-    self.centroids = centroids
-    self.max_iter = max_iter
-    self.tol = tol
-    self.custom_dist = custom_dist
+  # Maximum number of iterations of the k-means algorithm to run.
+  max_iter: int = 10
+
+  # The relative increment in the results before declaring convergence.
+  tol: float = 0.001
+
+  # Custom distance measure to use. If a string, &#34;cosine&#34;, &#34;euclidean&#34;,
+  # &#34;mahalanobis&#34;, or any other distance functions
+  # defined in scipy.spatial.distance can be used.
+  custom_dist: typing.Union[str, typing.Callable] = &#34;cosine&#34;
 
   def _init_centroids(self, embeddings: np.ndarray):
     &#34;&#34;&#34;Compute the initial centroids.&#34;&#34;&#34;
@@ -382,6 +348,29 @@ defined in scipy.spatial.distance can be used</dd>
               embeddings[each_centroid_samples], axis=0)
     return labels</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.centroids"><code class="name">var <span class="ident">centroids</span> : Optional[numpy.ndarray]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.custom_dist"><code class="name">var <span class="ident">custom_dist</span> : Union[str, Callable]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.max_iter"><code class="name">var <span class="ident">max_iter</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.n_clusters"><code class="name">var <span class="ident">n_clusters</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.tol"><code class="name">var <span class="ident">tol</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="spectralcluster.custom_distance_kmeans.CustomKMeans.predict"><code class="name flex">
@@ -492,8 +481,13 @@ defined in scipy.spatial.distance can be used</dd>
 <ul>
 <li>
 <h4><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans" href="#spectralcluster.custom_distance_kmeans.CustomKMeans">CustomKMeans</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.centroids" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.centroids">centroids</a></code></li>
+<li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.custom_dist" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.custom_dist">custom_dist</a></code></li>
+<li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.max_iter" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.max_iter">max_iter</a></code></li>
+<li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.n_clusters" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.n_clusters">n_clusters</a></code></li>
 <li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.predict" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.predict">predict</a></code></li>
+<li><code><a title="spectralcluster.custom_distance_kmeans.CustomKMeans.tol" href="#spectralcluster.custom_distance_kmeans.CustomKMeans.tol">tol</a></code></li>
 </ul>
 </li>
 </ul>

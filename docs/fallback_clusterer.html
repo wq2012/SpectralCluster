@@ -48,6 +48,7 @@ with Multi-Stage Clustering&#34;, arXiv:2210.13690.
 https://arxiv.org/abs/2210.13690
 &#34;&#34;&#34;
 
+from dataclasses import dataclass
 import enum
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
@@ -91,58 +92,41 @@ class FallbackClustererType(enum.Enum):
   Naive = enum.auto()
 
 
+@dataclass
 class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(
-      self,
-      spectral_min_embeddings: int = 1,
-      single_cluster_condition: SingleClusterCondition = (
-          SingleClusterCondition.AffinityGmmBic),
-      single_cluster_affinity_threshold: float = 0.75,
-      single_cluster_affinity_diagonal_offset: int = 1,
-      fallback_clusterer_type: FallbackClustererType = (
-          FallbackClustererType.Naive),
-      agglomerative_threshold: float = 0.5,
-      naive_threshold: float = 0.5,
-      naive_adaptation_threshold: typing.Optional[float] = None):
-    &#34;&#34;&#34;Initialization of the fallback options.
+  # We only run spectral clusterer if we have at least these many embeddings;
+  # otherwise we run fallback clusterer.
+  spectral_min_embeddings: int = 1
 
-    Args:
-      spectral_min_embeddings: we only run spectral clusterer if we have at
-        least these many embeddings; otherwise we run fallback clusterer
-      single_cluster_condition: how do we decide single-vs-multi cluster(s)
-      single_cluster_affinity_threshold: affinity threshold to decide
-        whether there is only a single cluster
-      single_cluster_affinity_diagonal_offset: when using AffinityGmmBic
-        to make single-vs-multi cluster(s) decisions, we only fit the GMM to
-        the upper triangular matrix because the diagonal and near-diagonal
-        values might be very big. By default, we use a value of 1 to only
-        exclude diagonal values. But if embeddings are extracted from
-        overlapping sliding windows, this value could be larger than 1
-      fallback_clusterer_type: which fallback clusterer to use
-      agglomerative_threshold: threshold of agglomerative clustering
-      naive_threshold: threshold for naive clusterer
-      naive_adaptation_threshold: adaptation_threshold for naive clusterer
-    &#34;&#34;&#34;
-    if not isinstance(spectral_min_embeddings, int):
-      raise TypeError(&#34;spectral_min_embeddings must be an integer&#34;)
-    if not isinstance(single_cluster_affinity_diagonal_offset, int):
-      raise TypeError(
-          &#34;single_cluster_affinity_diagonal_offset must be an integer&#34;)
-    if single_cluster_affinity_diagonal_offset &lt; 0:
-      raise ValueError(
-          &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
+  # How do we decide single-vs-multi cluster(s).
+  single_cluster_condition: SingleClusterCondition = (
+      SingleClusterCondition.AffinityGmmBic)
 
-    self.spectral_min_embeddings = spectral_min_embeddings
-    self.single_cluster_condition = single_cluster_condition
-    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = (
-        single_cluster_affinity_diagonal_offset)
-    self.fallback_clusterer_type = fallback_clusterer_type
-    self.agglomerative_threshold = agglomerative_threshold
-    self.naive_threshold = naive_threshold
-    self.naive_adaptation_threshold = naive_adaptation_threshold
+  # Affinity threshold to decide whether there is only a single cluster.
+  single_cluster_affinity_threshold: float = 0.75
+
+  # When using AffinityGmmBic to make single-vs-multi cluster(s) decisions,
+  # we only fit the GMM to the upper triangular matrix because the diagonal
+  # and near-diagonal values might be very big. By default, we use a
+  # value of 1 to only exclude diagonal values. But if embeddings are
+  # extracted from overlapping sliding windows, this value could be larger
+  # than 1.
+  single_cluster_affinity_diagonal_offset: int = 1
+
+  # Which fallback clusterer to use.
+  fallback_clusterer_type: FallbackClustererType = (
+      FallbackClustererType.Naive)
+
+  # Threshold of agglomerative clustering.
+  agglomerative_threshold: float = 0.5
+
+  # Threshold for naive clusterer.
+  naive_threshold: float = 0.5
+
+  # Adaptation_threshold for naive clusterer.
+  naive_adaptation_threshold: typing.Optional[float] = None
 
 
 class FallbackClusterer:
@@ -443,91 +427,82 @@ AgglomerativeClustering.</p>
 <span>(</span><span>spectral_min_embeddings: int = 1, single_cluster_condition: <a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a> = SingleClusterCondition.AffinityGmmBic, single_cluster_affinity_threshold: float = 0.75, single_cluster_affinity_diagonal_offset: int = 1, fallback_clusterer_type: <a title="spectralcluster.fallback_clusterer.FallbackClustererType" href="#spectralcluster.fallback_clusterer.FallbackClustererType">FallbackClustererType</a> = FallbackClustererType.Naive, agglomerative_threshold: float = 0.5, naive_threshold: float = 0.5, naive_adaptation_threshold: Optional[float] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Options for fallback options.</p>
-<p>Initialization of the fallback options.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>spectral_min_embeddings</code></strong></dt>
-<dd>we only run spectral clusterer if we have at
-least these many embeddings; otherwise we run fallback clusterer</dd>
-<dt><strong><code>single_cluster_condition</code></strong></dt>
-<dd>how do we decide single-vs-multi cluster(s)</dd>
-<dt><strong><code>single_cluster_affinity_threshold</code></strong></dt>
-<dd>affinity threshold to decide
-whether there is only a single cluster</dd>
-<dt><strong><code>single_cluster_affinity_diagonal_offset</code></strong></dt>
-<dd>when using AffinityGmmBic
-to make single-vs-multi cluster(s) decisions, we only fit the GMM to
-the upper triangular matrix because the diagonal and near-diagonal
-values might be very big. By default, we use a value of 1 to only
-exclude diagonal values. But if embeddings are extracted from
-overlapping sliding windows, this value could be larger than 1</dd>
-<dt><strong><code>fallback_clusterer_type</code></strong></dt>
-<dd>which fallback clusterer to use</dd>
-<dt><strong><code>agglomerative_threshold</code></strong></dt>
-<dd>threshold of agglomerative clustering</dd>
-<dt><strong><code>naive_threshold</code></strong></dt>
-<dd>threshold for naive clusterer</dd>
-<dt><strong><code>naive_adaptation_threshold</code></strong></dt>
-<dd>adaptation_threshold for naive clusterer</dd>
-</dl></div>
+<div class="desc"><p>Options for fallback options.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FallbackOptions:
+<pre><code class="python">@dataclass
+class FallbackOptions:
   &#34;&#34;&#34;Options for fallback options.&#34;&#34;&#34;
 
-  def __init__(
-      self,
-      spectral_min_embeddings: int = 1,
-      single_cluster_condition: SingleClusterCondition = (
-          SingleClusterCondition.AffinityGmmBic),
-      single_cluster_affinity_threshold: float = 0.75,
-      single_cluster_affinity_diagonal_offset: int = 1,
-      fallback_clusterer_type: FallbackClustererType = (
-          FallbackClustererType.Naive),
-      agglomerative_threshold: float = 0.5,
-      naive_threshold: float = 0.5,
-      naive_adaptation_threshold: typing.Optional[float] = None):
-    &#34;&#34;&#34;Initialization of the fallback options.
+  # We only run spectral clusterer if we have at least these many embeddings;
+  # otherwise we run fallback clusterer.
+  spectral_min_embeddings: int = 1
 
-    Args:
-      spectral_min_embeddings: we only run spectral clusterer if we have at
-        least these many embeddings; otherwise we run fallback clusterer
-      single_cluster_condition: how do we decide single-vs-multi cluster(s)
-      single_cluster_affinity_threshold: affinity threshold to decide
-        whether there is only a single cluster
-      single_cluster_affinity_diagonal_offset: when using AffinityGmmBic
-        to make single-vs-multi cluster(s) decisions, we only fit the GMM to
-        the upper triangular matrix because the diagonal and near-diagonal
-        values might be very big. By default, we use a value of 1 to only
-        exclude diagonal values. But if embeddings are extracted from
-        overlapping sliding windows, this value could be larger than 1
-      fallback_clusterer_type: which fallback clusterer to use
-      agglomerative_threshold: threshold of agglomerative clustering
-      naive_threshold: threshold for naive clusterer
-      naive_adaptation_threshold: adaptation_threshold for naive clusterer
-    &#34;&#34;&#34;
-    if not isinstance(spectral_min_embeddings, int):
-      raise TypeError(&#34;spectral_min_embeddings must be an integer&#34;)
-    if not isinstance(single_cluster_affinity_diagonal_offset, int):
-      raise TypeError(
-          &#34;single_cluster_affinity_diagonal_offset must be an integer&#34;)
-    if single_cluster_affinity_diagonal_offset &lt; 0:
-      raise ValueError(
-          &#34;single_cluster_affinity_diagonal_offset ust be a positive integer&#34;)
+  # How do we decide single-vs-multi cluster(s).
+  single_cluster_condition: SingleClusterCondition = (
+      SingleClusterCondition.AffinityGmmBic)
 
-    self.spectral_min_embeddings = spectral_min_embeddings
-    self.single_cluster_condition = single_cluster_condition
-    self.single_cluster_affinity_threshold = single_cluster_affinity_threshold
-    self.single_cluster_affinity_diagonal_offset = (
-        single_cluster_affinity_diagonal_offset)
-    self.fallback_clusterer_type = fallback_clusterer_type
-    self.agglomerative_threshold = agglomerative_threshold
-    self.naive_threshold = naive_threshold
-    self.naive_adaptation_threshold = naive_adaptation_threshold</code></pre>
+  # Affinity threshold to decide whether there is only a single cluster.
+  single_cluster_affinity_threshold: float = 0.75
+
+  # When using AffinityGmmBic to make single-vs-multi cluster(s) decisions,
+  # we only fit the GMM to the upper triangular matrix because the diagonal
+  # and near-diagonal values might be very big. By default, we use a
+  # value of 1 to only exclude diagonal values. But if embeddings are
+  # extracted from overlapping sliding windows, this value could be larger
+  # than 1.
+  single_cluster_affinity_diagonal_offset: int = 1
+
+  # Which fallback clusterer to use.
+  fallback_clusterer_type: FallbackClustererType = (
+      FallbackClustererType.Naive)
+
+  # Threshold of agglomerative clustering.
+  agglomerative_threshold: float = 0.5
+
+  # Threshold for naive clusterer.
+  naive_threshold: float = 0.5
+
+  # Adaptation_threshold for naive clusterer.
+  naive_adaptation_threshold: typing.Optional[float] = None</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.agglomerative_threshold"><code class="name">var <span class="ident">agglomerative_threshold</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.fallback_clusterer_type"><code class="name">var <span class="ident">fallback_clusterer_type</span> : <a title="spectralcluster.fallback_clusterer.FallbackClustererType" href="#spectralcluster.fallback_clusterer.FallbackClustererType">FallbackClustererType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.naive_adaptation_threshold"><code class="name">var <span class="ident">naive_adaptation_threshold</span> : Optional[float]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.naive_threshold"><code class="name">var <span class="ident">naive_threshold</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_diagonal_offset"><code class="name">var <span class="ident">single_cluster_affinity_diagonal_offset</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_threshold"><code class="name">var <span class="ident">single_cluster_affinity_threshold</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_condition"><code class="name">var <span class="ident">single_cluster_condition</span> : <a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.fallback_clusterer.FallbackOptions.spectral_min_embeddings"><code class="name">var <span class="ident">spectral_min_embeddings</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 <dt id="spectralcluster.fallback_clusterer.SingleClusterCondition"><code class="flex name class">
 <span>class <span class="ident">SingleClusterCondition</span></span>
@@ -627,6 +602,16 @@ overlapping sliding windows, this value could be larger than 1</dd>
 </li>
 <li>
 <h4><code><a title="spectralcluster.fallback_clusterer.FallbackOptions" href="#spectralcluster.fallback_clusterer.FallbackOptions">FallbackOptions</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.agglomerative_threshold" href="#spectralcluster.fallback_clusterer.FallbackOptions.agglomerative_threshold">agglomerative_threshold</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.fallback_clusterer_type" href="#spectralcluster.fallback_clusterer.FallbackOptions.fallback_clusterer_type">fallback_clusterer_type</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.naive_adaptation_threshold" href="#spectralcluster.fallback_clusterer.FallbackOptions.naive_adaptation_threshold">naive_adaptation_threshold</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.naive_threshold" href="#spectralcluster.fallback_clusterer.FallbackOptions.naive_threshold">naive_threshold</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_diagonal_offset" href="#spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_diagonal_offset">single_cluster_affinity_diagonal_offset</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_threshold" href="#spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_affinity_threshold">single_cluster_affinity_threshold</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_condition" href="#spectralcluster.fallback_clusterer.FallbackOptions.single_cluster_condition">single_cluster_condition</a></code></li>
+<li><code><a title="spectralcluster.fallback_clusterer.FallbackOptions.spectral_min_embeddings" href="#spectralcluster.fallback_clusterer.FallbackOptions.spectral_min_embeddings">spectral_min_embeddings</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="spectralcluster.fallback_clusterer.SingleClusterCondition" href="#spectralcluster.fallback_clusterer.SingleClusterCondition">SingleClusterCondition</a></code></h4>

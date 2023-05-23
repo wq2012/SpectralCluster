@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Constraint information.&#34;&#34;&#34;
 import abc
+from dataclasses import dataclass
 import enum
 import numpy as np
 import typing
@@ -51,39 +52,30 @@ class IntegrationType(enum.Enum):
   Average = enum.auto()
 
 
+@dataclass
 class ConstraintOptions:
   &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
 
-  def __init__(self,
-               constraint_name: ConstraintName,
-               apply_before_refinement: bool,
-               integration_type: typing.Optional[IntegrationType] = None,
-               constraint_propagation_alpha: float = 0.6):
-    &#34;&#34;&#34;Initialization of the constraint arguments.
+  # Name of the constrained clustering method.
+  constraint_name: ConstraintName
 
-    Args:
-      constraint_name: a ConstraintName. Name of the constrained clustering
-        method
-      apply_before_refinement: if True, this operation is applied before the
-        affinity refinement. It is suggested to set as True for the
-        ConstraintPropagation method and False for the AffinityIntegration
-        method
-      integration_type: a IntegrationType. Integration type for the Affinity
-        Integration method
-      constraint_propagation_alpha: alpha value of the constraint propagation
-        method
-    &#34;&#34;&#34;
-    if not isinstance(constraint_name, ConstraintName):
-      raise TypeError(&#34;constraint_name must be a ConstraintName&#34;)
-    elif constraint_name == ConstraintName.AffinityIntegration:
-      self.constraint_operator = AffinityIntegration(integration_type)
-    elif constraint_name == ConstraintName.ConstraintPropagation:
+  # If True, this operation is applied before the affinity refinement.
+  # It is suggested to set as True for the ConstraintPropagation method
+  # and False for the AffinityIntegration method.
+  apply_before_refinement: bool
+
+  # Integration type for the Affinity Integration method.
+  integration_type: typing.Optional[IntegrationType] = None
+
+  # alpha value of the constraint propagation method.
+  constraint_propagation_alpha: float = 0.6
+
+  def __post_init__(self):
+    if self.constraint_name == ConstraintName.AffinityIntegration:
+      self.constraint_operator = AffinityIntegration(self.integration_type)
+    elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
-          constraint_propagation_alpha)
-    else:
-      raise ValueError(
-          &#34;Unsupported constrained name: {}&#34;.format(constraint_name))
-    self.apply_before_refinement = apply_before_refinement
+          self.constraint_propagation_alpha)
 
 
 class ConstraintOperation(metaclass=abc.ABCMeta):
@@ -591,63 +583,55 @@ constraint matrix with prior information</dd>
 <span>(</span><span>constraint_name: <a title="spectralcluster.constraint.ConstraintName" href="#spectralcluster.constraint.ConstraintName">ConstraintName</a>, apply_before_refinement: bool, integration_type: Optional[<a title="spectralcluster.constraint.IntegrationType" href="#spectralcluster.constraint.IntegrationType">IntegrationType</a>] = None, constraint_propagation_alpha: float = 0.6)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Constraint options for constrained clustering methods.</p>
-<p>Initialization of the constraint arguments.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>constraint_name</code></strong></dt>
-<dd>a ConstraintName. Name of the constrained clustering
-method</dd>
-<dt><strong><code>apply_before_refinement</code></strong></dt>
-<dd>if True, this operation is applied before the
-affinity refinement. It is suggested to set as True for the
-ConstraintPropagation method and False for the AffinityIntegration
-method</dd>
-<dt><strong><code>integration_type</code></strong></dt>
-<dd>a IntegrationType. Integration type for the Affinity
-Integration method</dd>
-<dt><strong><code>constraint_propagation_alpha</code></strong></dt>
-<dd>alpha value of the constraint propagation
-method</dd>
-</dl></div>
+<div class="desc"><p>Constraint options for constrained clustering methods.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ConstraintOptions:
+<pre><code class="python">@dataclass
+class ConstraintOptions:
   &#34;&#34;&#34;Constraint options for constrained clustering methods.&#34;&#34;&#34;
 
-  def __init__(self,
-               constraint_name: ConstraintName,
-               apply_before_refinement: bool,
-               integration_type: typing.Optional[IntegrationType] = None,
-               constraint_propagation_alpha: float = 0.6):
-    &#34;&#34;&#34;Initialization of the constraint arguments.
+  # Name of the constrained clustering method.
+  constraint_name: ConstraintName
 
-    Args:
-      constraint_name: a ConstraintName. Name of the constrained clustering
-        method
-      apply_before_refinement: if True, this operation is applied before the
-        affinity refinement. It is suggested to set as True for the
-        ConstraintPropagation method and False for the AffinityIntegration
-        method
-      integration_type: a IntegrationType. Integration type for the Affinity
-        Integration method
-      constraint_propagation_alpha: alpha value of the constraint propagation
-        method
-    &#34;&#34;&#34;
-    if not isinstance(constraint_name, ConstraintName):
-      raise TypeError(&#34;constraint_name must be a ConstraintName&#34;)
-    elif constraint_name == ConstraintName.AffinityIntegration:
-      self.constraint_operator = AffinityIntegration(integration_type)
-    elif constraint_name == ConstraintName.ConstraintPropagation:
+  # If True, this operation is applied before the affinity refinement.
+  # It is suggested to set as True for the ConstraintPropagation method
+  # and False for the AffinityIntegration method.
+  apply_before_refinement: bool
+
+  # Integration type for the Affinity Integration method.
+  integration_type: typing.Optional[IntegrationType] = None
+
+  # alpha value of the constraint propagation method.
+  constraint_propagation_alpha: float = 0.6
+
+  def __post_init__(self):
+    if self.constraint_name == ConstraintName.AffinityIntegration:
+      self.constraint_operator = AffinityIntegration(self.integration_type)
+    elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
-          constraint_propagation_alpha)
-    else:
-      raise ValueError(
-          &#34;Unsupported constrained name: {}&#34;.format(constraint_name))
-    self.apply_before_refinement = apply_before_refinement</code></pre>
+          self.constraint_propagation_alpha)</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="spectralcluster.constraint.ConstraintOptions.apply_before_refinement"><code class="name">var <span class="ident">apply_before_refinement</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOptions.constraint_name"><code class="name">var <span class="ident">constraint_name</span> : <a title="spectralcluster.constraint.ConstraintName" href="#spectralcluster.constraint.ConstraintName">ConstraintName</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOptions.constraint_propagation_alpha"><code class="name">var <span class="ident">constraint_propagation_alpha</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="spectralcluster.constraint.ConstraintOptions.integration_type"><code class="name">var <span class="ident">integration_type</span> : Optional[<a title="spectralcluster.constraint.IntegrationType" href="#spectralcluster.constraint.IntegrationType">IntegrationType</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 <dt id="spectralcluster.constraint.ConstraintPropagation"><code class="flex name class">
 <span>class <span class="ident">ConstraintPropagation</span></span>
@@ -843,6 +827,12 @@ propagation: A graph-based learning approach and its applications." IJCV 2013</p
 </li>
 <li>
 <h4><code><a title="spectralcluster.constraint.ConstraintOptions" href="#spectralcluster.constraint.ConstraintOptions">ConstraintOptions</a></code></h4>
+<ul class="">
+<li><code><a title="spectralcluster.constraint.ConstraintOptions.apply_before_refinement" href="#spectralcluster.constraint.ConstraintOptions.apply_before_refinement">apply_before_refinement</a></code></li>
+<li><code><a title="spectralcluster.constraint.ConstraintOptions.constraint_name" href="#spectralcluster.constraint.ConstraintOptions.constraint_name">constraint_name</a></code></li>
+<li><code><a title="spectralcluster.constraint.ConstraintOptions.constraint_propagation_alpha" href="#spectralcluster.constraint.ConstraintOptions.constraint_propagation_alpha">constraint_propagation_alpha</a></code></li>
+<li><code><a title="spectralcluster.constraint.ConstraintOptions.integration_type" href="#spectralcluster.constraint.ConstraintOptions.integration_type">integration_type</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="spectralcluster.constraint.ConstraintPropagation" href="#spectralcluster.constraint.ConstraintPropagation">ConstraintPropagation</a></code></h4>
