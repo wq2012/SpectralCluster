@@ -6,3 +6,4 @@ spectralcluster.egg-info/*
 .coverage
 .DS_Store
 .pytype
+coverage.xml
