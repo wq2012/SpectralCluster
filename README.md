@@ -262,6 +262,10 @@ Our papers are cited as:
 }
 ```
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=wq2012/SpectralCluster&type=Date)](https://star-history.com/#wq2012/SpectralCluster&Date)
+
 ## Misc
 
 We also have fully supervised speaker diarization systems, powered by
