@@ -32,11 +32,13 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   """
   if not custom_dist:  # Scikit-learn KMeans
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0)
+        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0,
+        n_init="auto")
   else:
     # Initialization using the k-means++ method in Scikit-learn
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=1, random_state=0)
+        n_clusters=n_clusters, init="k-means++", max_iter=1, random_state=0,
+        n_init="auto")
     kmeans_clusterer.fit(spectral_embeddings)
     centroids = kmeans_clusterer.cluster_centers_
     # Run the cusotom K-means

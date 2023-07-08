@@ -110,7 +110,7 @@ class FallbackClusterer:
     if options.fallback_clusterer_type == FallbackClustererType.Agglomerative:
       self.clusterer = AgglomerativeClustering(
           n_clusters=None,
-          affinity="cosine",
+          metric="cosine",
           linkage="average",
           distance_threshold=options.agglomerative_threshold)
     elif options.fallback_clusterer_type == FallbackClustererType.Naive:
