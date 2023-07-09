@@ -100,5 +100,32 @@ class TestGetClusterCentroids(unittest.TestCase):
     np.testing.assert_equal(expected, centroids)
 
 
+class TestChainLabels(unittest.TestCase):
+  """Tests for the chain_labels function."""
+
+  def test_chain(self):
+    pre_labels = np.array([
+        0, 0, 1, 1, 2, 3, 1, 1, 5, 4,
+    ])
+    main_labels = np.array([
+        0, 0, 1, 1, 1, 1,
+    ])
+    expected = np.array([
+        0, 0, 0, 0, 1, 1, 0, 0, 1, 1,
+    ])
+    results = utils.chain_labels(pre_labels, main_labels)
+    np.testing.assert_equal(expected, results)
+
+  def test_bad_shape(self):
+    pre_labels = np.array([
+        0, 0, 1, 1, 2, 3, 1, 1, 5, 4,
+    ])
+    main_labels = np.array([
+        0, 0, 1, 1, 1,
+    ])
+    with self.assertRaises(ValueError):
+      utils.chain_labels(pre_labels, main_labels)
+
+
 if __name__ == "__main__":
   unittest.main()

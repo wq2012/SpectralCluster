@@ -174,4 +174,27 @@ def get_cluster_centroids(
     cluster_embeddings = embeddings[labels == i, :]
     cluster_centroid = np.mean(cluster_embeddings, axis=0)
     centroids.append(cluster_centroid)
-  return np.vstack(centroids)
+  return np.stack(centroids)
+
+def chain_labels(pre_labels: np.ndarray, main_labels: np.ndarray
+                 ) -> np.ndarray:
+  """Chain the results with pre-clusterer.
+
+  Args:
+    pre_labels: labels of pre-clusterer of shape (n_samples, )
+    main_labels: labels of main clusterer of shape (U1, )
+
+  Returns:
+    final labels of shape (n_samples, )
+
+  ValueError: if main_labels has wrong shape
+  """
+  U1 = max(pre_labels) + 1
+  if U1 != main_labels.shape[0]:
+    raise ValueError(
+      "pre_labels has {} values while main_labels has {} rows.".format(
+          U1, main_labels.shape[0]))
+  final_labels = np.zeros(pre_labels.shape)
+  for i in range(U1):
+    final_labels[pre_labels == i] = main_labels[i]
+  return final_labels

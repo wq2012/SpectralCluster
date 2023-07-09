@@ -177,7 +177,7 @@ class SpectralClusterer:
       labels: numpy array of shape (n_samples,)
     """
     # Run AHC on the input to reduce the size.
-    # Note that linkage needs to be "complete", ecause "average" and "single"
+    # Note that linkage needs to be "complete", because "average" and "single"
     # do not work very well here.
     # Alternatively, we can use "euclidean" and "ward", but that requires
     # that the inputs are L2 normalized first.
@@ -188,19 +188,13 @@ class SpectralClusterer:
     ahc_labels = ahc.fit_predict(embeddings)
 
     # Compute the centroids of the AHC clusters.
-    ahc_centroids = []
-    for i in range(self.max_spectral_size):
-      ahc_cluster_embeddings = embeddings[ahc_labels == i, :]
-      ahc_centroids.append(np.mean(ahc_cluster_embeddings, axis=0))
-    ahc_centroids = np.stack(ahc_centroids)
+    ahc_centroids = utils.get_cluster_centroids(embeddings, ahc_labels)
 
     # Run spectral clustering on AHC centroids.
     spectral_labels = self.predict(ahc_centroids)
 
     # Convert spectral labels to final labels.
-    final_labels = np.zeros(ahc_labels.shape)
-    for i in range(self.max_spectral_size):
-      final_labels[ahc_labels == i] = spectral_labels[i]
+    final_labels = utils.chain_labels(ahc_labels, spectral_labels)
 
     return final_labels
 
