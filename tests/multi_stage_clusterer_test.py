@@ -69,6 +69,42 @@ class TestMultiStageClusterer(unittest.TestCase):
     expected = np.array([0, 1, 0, 2, 3, 2])
     np.testing.assert_equal(expected, labels)
 
+  def test_compression(self):
+    embeddings = [
+      [1, 2],
+      [3, -1],
+      [1, 1],
+      [-2, -1],
+      [0, 1],
+      [-2, 0],
+      [1, 2],
+      [3, -1],
+      ]
+    for embedding in embeddings:
+      labels = self.multi_stage.streaming_predict(np.array(embedding))
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 1, 0, 2, 3, 2, 0, 1])
+    np.testing.assert_equal(expected, labels)
+
+  def test_double_compression(self):
+    embeddings = [
+      [1, 2],
+      [3, -1],
+      [1, 1],
+      [-2, -1],
+      [0, 1],
+      [-2, 0],
+      [1, 2],
+      [3, -1],
+      [1, 1],
+      [-2, -1],
+      ]
+    for embedding in embeddings:
+      labels = self.multi_stage.streaming_predict(np.array(embedding))
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 1, 0, 2, 3, 2, 0, 1, 0, 2])
+    np.testing.assert_equal(expected, labels)
+
 
 if __name__ == "__main__":
   unittest.main()

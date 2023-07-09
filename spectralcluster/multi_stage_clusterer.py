@@ -64,6 +64,10 @@ class MultiStageClusterer:
     # Number of clustered embeddings.
     self.num_embeddings = 0
 
+    # Array of shape (n_samples,), mapping from original embedding to compressed
+    # centroid.
+    self.compression_labels = None
+
   def streaming_predict(
       self,
       embedding: np.ndarray
@@ -81,18 +85,28 @@ class MultiStageClusterer:
       self.cache = embedding
       return np.array([0])
 
+    self.cache = np.vstack([self.cache, embedding])
+
     # Using fallback or main clusterer only.
     if self.num_embeddings <= self.U1:
-      self.cache = np.vstack([self.cache, embedding])
       return self.main.predict(self.cache)
 
-    # Run preclusterer.
-    if self.num_embeddings <= self.U2:
-      self.cache = np.vstack([self.cache, embedding])
-      pre_labels = self.pre.fit_predict(self.cache)
-      pre_centroids = utils.get_cluster_centroids(self.cache, pre_labels)
-      main_labels = self.main.predict(pre_centroids)
-      return utils.chain_labels(pre_labels, main_labels)
+    # Run pre-clusterer.
+    if self.compression_labels is not None:
+      self.compression_labels = np.append(
+          self.compression_labels, max(self.compression_labels) + 1)
+    pre_labels = self.pre.fit_predict(self.cache)
+    pre_centroids = utils.get_cluster_centroids(self.cache, pre_labels)
+    main_labels = self.main.predict(pre_centroids)
 
-    # TODO: Dynamic compression.
-    raise NotImplementedError("Dynamic compression not implemented yet.")
+    final_labels = utils.chain_labels(
+        self.compression_labels,
+        utils.chain_labels(pre_labels, main_labels))
+
+    # Dynamic compression.
+    if self.cache.shape[0] == self.U2:
+      self.cache = pre_centroids
+      self.compression_labels = utils.chain_labels(
+        self.compression_labels, pre_labels)
+
+    return final_labels

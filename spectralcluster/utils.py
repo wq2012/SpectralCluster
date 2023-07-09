@@ -177,12 +177,15 @@ def get_cluster_centroids(
   return np.stack(centroids)
 
 
-def chain_labels(pre_labels: np.ndarray, main_labels: np.ndarray
-                 ) -> np.ndarray:
+def chain_labels(
+    pre_labels: typing.Optional[np.ndarray],
+    main_labels: np.ndarray
+    ) -> np.ndarray:
   """Chain the results with pre-clusterer.
 
   Args:
-    pre_labels: labels of pre-clusterer of shape (n_samples, )
+    pre_labels: labels of pre-clusterer of shape (n_samples, ); if None,
+      simply return main_labels
     main_labels: labels of main clusterer of shape (U1, )
 
   Returns:
@@ -190,7 +193,9 @@ def chain_labels(pre_labels: np.ndarray, main_labels: np.ndarray
 
   ValueError: if main_labels has wrong shape
   """
-  U1 = max(pre_labels) + 1
+  if pre_labels is None:
+    return main_labels
+  U1 = int(max(pre_labels) + 1)
   if U1 != main_labels.shape[0]:
     raise ValueError(
       "pre_labels has {} values while main_labels has {} rows.".format(
