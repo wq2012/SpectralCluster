@@ -238,12 +238,12 @@ constraint_matrix = constraint.ConstraintMatrix(
 
 In the [multi-stage clustering paper](https://arxiv.org/abs/2210.13690),
 we introduced a high efficient **streaming** clustering approach. This is
-implemented as the `MultiStageClustering` class in `multi_stage_clustering.py`.
+implemented as the `MultiStageClusterer` class in `multi_stage_clusterer.py`.
 
 > Note: We did NOT implement speaker turn detection in this open source library.
 We only implemented fallback, main, pre-clusterer and dynamic compression here.
 
-The `MultiStageClustering` class has a method named `streaming_predict`.
+The `MultiStageClusterer` class has a method named `streaming_predict`.
 In streaming clustering, every time we feed a **single** new embedding to the
 `streaming_predict` function, and it will return the sequence of cluster labels
 for **all** inputs, including corrections for the predictions on previous
