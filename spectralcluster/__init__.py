@@ -5,6 +5,7 @@ from . import configs
 from . import constraint
 from . import fallback_clusterer
 from . import laplacian
+from . import multi_stage_clusterer
 from . import naive_clusterer
 from . import refinement
 from . import spectral_clusterer
@@ -23,6 +24,8 @@ SingleClusterCondition = fallback_clusterer.SingleClusterCondition
 FallbackClustererType = fallback_clusterer.FallbackClustererType
 
 LaplacianType = laplacian.LaplacianType
+
+MultiStageClusterer = multi_stage_clusterer.MultiStageClusterer
 
 NaiveClusterer = naive_clusterer.NaiveClusterer
 
