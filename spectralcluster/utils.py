@@ -176,6 +176,7 @@ def get_cluster_centroids(
     centroids.append(cluster_centroid)
   return np.stack(centroids)
 
+
 def chain_labels(pre_labels: np.ndarray, main_labels: np.ndarray
                  ) -> np.ndarray:
   """Chain the results with pre-clusterer.
