@@ -76,6 +76,28 @@ class TestEnforceOrderedLabels(unittest.TestCase):
     result = utils.enforce_ordered_labels(labels)
     np.testing.assert_equal(expected, result)
 
+class TestGetClusterCentroids(unittest.TestCase):
+  """Tests for the def get_cluster_centroids function."""
+
+  def test_get_centroids(self):
+    embeddings = np.array([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+      [7, 8],
+      [9, 0]])
+
+    labels = np.array([0, 1, 1, 2, 0])
+
+    expected = np.array([
+      [5, 1],
+      [4, 5],
+      [7, 8]])
+
+    centroids = utils.get_cluster_centroids(embeddings, labels)
+
+    np.testing.assert_equal(expected, centroids)
+
 
 if __name__ == "__main__":
   unittest.main()

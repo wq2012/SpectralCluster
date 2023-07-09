@@ -154,3 +154,24 @@ def enforce_ordered_labels(labels: np.ndarray) -> np.ndarray:
   for key in label_map:
     new_labels[labels == key] = label_map[key]
   return new_labels
+
+
+def get_cluster_centroids(
+    embeddings: np.ndarray, labels: np.ndarray
+    ) -> np.ndarray:
+  """Get the centroids of each cluster from the embeddings.
+
+  Args:
+    embeddings: numpy array of shape (n_samples, n_features)
+    labels: numpy array of shape (n_samples, )
+
+  Returns:
+    numpy array of shape (n_clusters, n_features)
+  """
+  n_clusters = max(labels) + 1
+  centroids = []
+  for i in range(n_clusters):
+    cluster_embeddings = embeddings[labels == i, :]
+    cluster_centroid = np.mean(cluster_embeddings, axis=0)
+    centroids.append(cluster_centroid)
+  return np.vstack(centroids)

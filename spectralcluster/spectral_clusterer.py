@@ -183,7 +183,7 @@ class SpectralClusterer:
     # that the inputs are L2 normalized first.
     ahc = AgglomerativeClustering(
         n_clusters=self.max_spectral_size,
-        affinity="cosine",
+        metric="cosine",
         linkage="complete")
     ahc_labels = ahc.fit_predict(embeddings)
 
