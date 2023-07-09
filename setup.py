@@ -2,7 +2,7 @@
 
 import setuptools
 
-VERSION = "0.2.18"
+VERSION = "0.2.19"
 
 with open("README.md", "r") as file_object:
     LONG_DESCRIPTION = file_object.read()

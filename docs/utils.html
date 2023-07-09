@@ -182,7 +182,57 @@ def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
       label_map[element] = max_label
   for key in label_map:
     new_labels[labels == key] = label_map[key]
-  return new_labels</code></pre>
+  return new_labels
+
+
+def get_cluster_centroids(
+    embeddings: np.ndarray, labels: np.ndarray
+    ) -&gt; np.ndarray:
+  &#34;&#34;&#34;Get the centroids of each cluster from the embeddings.
+
+  Args:
+    embeddings: numpy array of shape (n_samples, n_features)
+    labels: numpy array of shape (n_samples, )
+
+  Returns:
+    numpy array of shape (n_clusters, n_features)
+  &#34;&#34;&#34;
+  n_clusters = max(labels) + 1
+  centroids = []
+  for i in range(n_clusters):
+    cluster_embeddings = embeddings[labels == i, :]
+    cluster_centroid = np.mean(cluster_embeddings, axis=0)
+    centroids.append(cluster_centroid)
+  return np.stack(centroids)
+
+
+def chain_labels(
+    pre_labels: typing.Optional[np.ndarray],
+    main_labels: np.ndarray
+    ) -&gt; np.ndarray:
+  &#34;&#34;&#34;Chain the results with pre-clusterer.
+
+  Args:
+    pre_labels: labels of pre-clusterer of shape (n_samples, ); if None,
+      simply return main_labels
+    main_labels: labels of main clusterer of shape (U1, )
+
+  Returns:
+    final labels of shape (n_samples, )
+
+  ValueError: if main_labels has wrong shape
+  &#34;&#34;&#34;
+  if pre_labels is None:
+    return main_labels
+  U1 = int(max(pre_labels) + 1)
+  if U1 != main_labels.shape[0]:
+    raise ValueError(
+      &#34;pre_labels has {} values while main_labels has {} rows.&#34;.format(
+          U1, main_labels.shape[0]))
+  final_labels = np.zeros(pre_labels.shape)
+  for i in range(U1):
+    final_labels[pre_labels == i] = main_labels[i]
+  return final_labels</code></pre>
 </details>
 </section>
 <section>
@@ -192,6 +242,55 @@ def enforce_ordered_labels(labels: np.ndarray) -&gt; np.ndarray:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="spectralcluster.utils.chain_labels"><code class="name flex">
+<span>def <span class="ident">chain_labels</span></span>(<span>pre_labels: Optional[numpy.ndarray], main_labels: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Chain the results with pre-clusterer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pre_labels</code></strong></dt>
+<dd>labels of pre-clusterer of shape (n_samples, ); if None,
+simply return main_labels</dd>
+<dt><strong><code>main_labels</code></strong></dt>
+<dd>labels of main clusterer of shape (U1, )</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>final labels of shape (n_samples, )
+ValueError: if main_labels has wrong shape</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chain_labels(
+    pre_labels: typing.Optional[np.ndarray],
+    main_labels: np.ndarray
+    ) -&gt; np.ndarray:
+  &#34;&#34;&#34;Chain the results with pre-clusterer.
+
+  Args:
+    pre_labels: labels of pre-clusterer of shape (n_samples, ); if None,
+      simply return main_labels
+    main_labels: labels of main clusterer of shape (U1, )
+
+  Returns:
+    final labels of shape (n_samples, )
+
+  ValueError: if main_labels has wrong shape
+  &#34;&#34;&#34;
+  if pre_labels is None:
+    return main_labels
+  U1 = int(max(pre_labels) + 1)
+  if U1 != main_labels.shape[0]:
+    raise ValueError(
+      &#34;pre_labels has {} values while main_labels has {} rows.&#34;.format(
+          U1, main_labels.shape[0]))
+  final_labels = np.zeros(pre_labels.shape)
+  for i in range(U1):
+    final_labels[pre_labels == i] = main_labels[i]
+  return final_labels</code></pre>
+</details>
+</dd>
 <dt id="spectralcluster.utils.compute_affinity_matrix"><code class="name flex">
 <span>def <span class="ident">compute_affinity_matrix</span></span>(<span>embeddings: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
@@ -430,6 +529,45 @@ labels always appear first</dd>
   return new_labels</code></pre>
 </details>
 </dd>
+<dt id="spectralcluster.utils.get_cluster_centroids"><code class="name flex">
+<span>def <span class="ident">get_cluster_centroids</span></span>(<span>embeddings: numpy.ndarray, labels: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the centroids of each cluster from the embeddings.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>embeddings</code></strong></dt>
+<dd>numpy array of shape (n_samples, n_features)</dd>
+<dt><strong><code>labels</code></strong></dt>
+<dd>numpy array of shape (n_samples, )</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>numpy array of shape (n_clusters, n_features)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cluster_centroids(
+    embeddings: np.ndarray, labels: np.ndarray
+    ) -&gt; np.ndarray:
+  &#34;&#34;&#34;Get the centroids of each cluster from the embeddings.
+
+  Args:
+    embeddings: numpy array of shape (n_samples, n_features)
+    labels: numpy array of shape (n_samples, )
+
+  Returns:
+    numpy array of shape (n_clusters, n_features)
+  &#34;&#34;&#34;
+  n_clusters = max(labels) + 1
+  centroids = []
+  for i in range(n_clusters):
+    cluster_embeddings = embeddings[labels == i, :]
+    cluster_centroid = np.mean(cluster_embeddings, axis=0)
+    centroids.append(cluster_centroid)
+  return np.stack(centroids)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -486,10 +624,12 @@ labels always appear first</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="spectralcluster.utils.chain_labels" href="#spectralcluster.utils.chain_labels">chain_labels</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_affinity_matrix" href="#spectralcluster.utils.compute_affinity_matrix">compute_affinity_matrix</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_number_of_clusters" href="#spectralcluster.utils.compute_number_of_clusters">compute_number_of_clusters</a></code></li>
 <li><code><a title="spectralcluster.utils.compute_sorted_eigenvectors" href="#spectralcluster.utils.compute_sorted_eigenvectors">compute_sorted_eigenvectors</a></code></li>
 <li><code><a title="spectralcluster.utils.enforce_ordered_labels" href="#spectralcluster.utils.enforce_ordered_labels">enforce_ordered_labels</a></code></li>
+<li><code><a title="spectralcluster.utils.get_cluster_centroids" href="#spectralcluster.utils.get_cluster_centroids">get_cluster_centroids</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

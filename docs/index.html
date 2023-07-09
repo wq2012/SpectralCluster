@@ -34,6 +34,7 @@ from . import configs
 from . import constraint
 from . import fallback_clusterer
 from . import laplacian
+from . import multi_stage_clusterer
 from . import naive_clusterer
 from . import refinement
 from . import spectral_clusterer
@@ -52,6 +53,8 @@ SingleClusterCondition = fallback_clusterer.SingleClusterCondition
 FallbackClustererType = fallback_clusterer.FallbackClustererType
 
 LaplacianType = laplacian.LaplacianType
+
+MultiStageClusterer = multi_stage_clusterer.MultiStageClusterer
 
 NaiveClusterer = naive_clusterer.NaiveClusterer
 
@@ -95,6 +98,10 @@ TURNTODIARIZE_REFINEMENT_SEQUENCE = configs.TURNTODIARIZE_REFINEMENT_SEQUENCE</c
 <dd>
 <div class="desc"><p>Laplacian matrix.</p></div>
 </dd>
+<dt><code class="name"><a title="spectralcluster.multi_stage_clusterer" href="multi_stage_clusterer.html">spectralcluster.multi_stage_clusterer</a></code></dt>
+<dd>
+<div class="desc"><p>Implementation of multi-stage clustering …</p></div>
+</dd>
 <dt><code class="name"><a title="spectralcluster.naive_clusterer" href="naive_clusterer.html">spectralcluster.naive_clusterer</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -134,6 +141,7 @@ TURNTODIARIZE_REFINEMENT_SEQUENCE = configs.TURNTODIARIZE_REFINEMENT_SEQUENCE</c
 <li><code><a title="spectralcluster.custom_distance_kmeans" href="custom_distance_kmeans.html">spectralcluster.custom_distance_kmeans</a></code></li>
 <li><code><a title="spectralcluster.fallback_clusterer" href="fallback_clusterer.html">spectralcluster.fallback_clusterer</a></code></li>
 <li><code><a title="spectralcluster.laplacian" href="laplacian.html">spectralcluster.laplacian</a></code></li>
+<li><code><a title="spectralcluster.multi_stage_clusterer" href="multi_stage_clusterer.html">spectralcluster.multi_stage_clusterer</a></code></li>
 <li><code><a title="spectralcluster.naive_clusterer" href="naive_clusterer.html">spectralcluster.naive_clusterer</a></code></li>
 <li><code><a title="spectralcluster.refinement" href="refinement.html">spectralcluster.refinement</a></code></li>
 <li><code><a title="spectralcluster.spectral_clusterer" href="spectral_clusterer.html">spectralcluster.spectral_clusterer</a></code></li>

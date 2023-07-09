@@ -62,11 +62,13 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   &#34;&#34;&#34;
   if not custom_dist:  # Scikit-learn KMeans
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=300, random_state=0)
+        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=300, random_state=0,
+        n_init=&#34;auto&#34;)
   else:
     # Initialization using the k-means++ method in Scikit-learn
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=1, random_state=0)
+        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=1, random_state=0,
+        n_init=&#34;auto&#34;)
     kmeans_clusterer.fit(spectral_embeddings)
     centroids = kmeans_clusterer.cluster_centers_
     # Run the cusotom K-means
@@ -227,11 +229,13 @@ functions defined in scipy.spatial.distance can be used</dd>
   &#34;&#34;&#34;
   if not custom_dist:  # Scikit-learn KMeans
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=300, random_state=0)
+        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=300, random_state=0,
+        n_init=&#34;auto&#34;)
   else:
     # Initialization using the k-means++ method in Scikit-learn
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=1, random_state=0)
+        n_clusters=n_clusters, init=&#34;k-means++&#34;, max_iter=1, random_state=0,
+        n_init=&#34;auto&#34;)
     kmeans_clusterer.fit(spectral_embeddings)
     centroids = kmeans_clusterer.cluster_centers_
     # Run the cusotom K-means

@@ -206,30 +206,24 @@ class SpectralClusterer:
       labels: numpy array of shape (n_samples,)
     &#34;&#34;&#34;
     # Run AHC on the input to reduce the size.
-    # Note that linkage needs to be &#34;complete&#34;, ecause &#34;average&#34; and &#34;single&#34;
+    # Note that linkage needs to be &#34;complete&#34;, because &#34;average&#34; and &#34;single&#34;
     # do not work very well here.
     # Alternatively, we can use &#34;euclidean&#34; and &#34;ward&#34;, but that requires
     # that the inputs are L2 normalized first.
     ahc = AgglomerativeClustering(
         n_clusters=self.max_spectral_size,
-        affinity=&#34;cosine&#34;,
+        metric=&#34;cosine&#34;,
         linkage=&#34;complete&#34;)
     ahc_labels = ahc.fit_predict(embeddings)
 
     # Compute the centroids of the AHC clusters.
-    ahc_centroids = []
-    for i in range(self.max_spectral_size):
-      ahc_cluster_embeddings = embeddings[ahc_labels == i, :]
-      ahc_centroids.append(np.mean(ahc_cluster_embeddings, axis=0))
-    ahc_centroids = np.stack(ahc_centroids)
+    ahc_centroids = utils.get_cluster_centroids(embeddings, ahc_labels)
 
     # Run spectral clustering on AHC centroids.
     spectral_labels = self.predict(ahc_centroids)
 
     # Convert spectral labels to final labels.
-    final_labels = np.zeros(ahc_labels.shape)
-    for i in range(self.max_spectral_size):
-      final_labels[ahc_labels == i] = spectral_labels[i]
+    final_labels = utils.chain_labels(ahc_labels, spectral_labels)
 
     return final_labels
 
@@ -576,30 +570,24 @@ signature as custom_distance_kmeans.run_kmeans</dd>
       labels: numpy array of shape (n_samples,)
     &#34;&#34;&#34;
     # Run AHC on the input to reduce the size.
-    # Note that linkage needs to be &#34;complete&#34;, ecause &#34;average&#34; and &#34;single&#34;
+    # Note that linkage needs to be &#34;complete&#34;, because &#34;average&#34; and &#34;single&#34;
     # do not work very well here.
     # Alternatively, we can use &#34;euclidean&#34; and &#34;ward&#34;, but that requires
     # that the inputs are L2 normalized first.
     ahc = AgglomerativeClustering(
         n_clusters=self.max_spectral_size,
-        affinity=&#34;cosine&#34;,
+        metric=&#34;cosine&#34;,
         linkage=&#34;complete&#34;)
     ahc_labels = ahc.fit_predict(embeddings)
 
     # Compute the centroids of the AHC clusters.
-    ahc_centroids = []
-    for i in range(self.max_spectral_size):
-      ahc_cluster_embeddings = embeddings[ahc_labels == i, :]
-      ahc_centroids.append(np.mean(ahc_cluster_embeddings, axis=0))
-    ahc_centroids = np.stack(ahc_centroids)
+    ahc_centroids = utils.get_cluster_centroids(embeddings, ahc_labels)
 
     # Run spectral clustering on AHC centroids.
     spectral_labels = self.predict(ahc_centroids)
 
     # Convert spectral labels to final labels.
-    final_labels = np.zeros(ahc_labels.shape)
-    for i in range(self.max_spectral_size):
-      final_labels[ahc_labels == i] = spectral_labels[i]
+    final_labels = utils.chain_labels(ahc_labels, spectral_labels)
 
     return final_labels
 
