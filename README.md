@@ -231,6 +231,40 @@ constraint_matrix = constraint.ConstraintMatrix(
     speaker_turn_scores, threshold=1).compute_diagonals()
 ```
 
+### Multi-stage clustering
+
+![multi-stage-clustering-diagram](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/multi-stage-clustering.png)
+
+
+In the [multi-stage clustering paper](https://arxiv.org/abs/2210.13690),
+we introduced a high efficient **streaming** clustering approach. This is
+implemented as the `MultiStageClustering` class in `multi_stage_clustering.py`.
+
+The `MultiStageClustering` class has a method named `streaming_predict`.
+In streaming clustering, every time we feed a **single** new embedding to the
+`streaming_predict` function, and it will return the sequence of cluster labels
+for **all** inputs, including corrections for the predictions on previous
+embeddings.
+
+Example usage:
+
+```python
+from spectralcluster import MultiStageClusterer
+from spectralcluster import SpectralClusterer
+
+main_clusterer = SpectralClusterer()
+
+multi_stage = MultiStageClusterer(
+    main_clusterer=main_clusterer,
+    fallback_threshold=0.5,
+    L=50,
+    U1=200,
+    U2=400)
+
+for embedding in embeddings:
+    labels = multi_stage.streaming_predict(embedding)
+```
+
 ## Citations
 
 Our papers are cited as:
