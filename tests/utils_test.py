@@ -76,6 +76,7 @@ class TestEnforceOrderedLabels(unittest.TestCase):
     result = utils.enforce_ordered_labels(labels)
     np.testing.assert_equal(expected, result)
 
+
 class TestGetClusterCentroids(unittest.TestCase):
   """Tests for the def get_cluster_centroids function."""
 
