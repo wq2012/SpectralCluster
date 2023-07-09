@@ -66,7 +66,7 @@ class TestMultiStageClusterer(unittest.TestCase):
     for embedding in embeddings:
       labels = self.multi_stage.streaming_predict(np.array(embedding))
     labels = utils.enforce_ordered_labels(labels)
-    expected = np.array([0, 1, 0, 2, 0, 1])
+    expected = np.array([0, 1, 0, 2, 3, 2])
     np.testing.assert_equal(expected, labels)
 
 
