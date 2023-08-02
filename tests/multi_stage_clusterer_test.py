@@ -8,6 +8,58 @@ from spectralcluster import spectral_clusterer
 from spectralcluster import utils
 
 
+class TestMatchLabels(unittest.TestCase):
+  """Tests for the match_labels function."""
+  def test_short(self):
+    current = np.array([1, 0])
+    previous = np.array([0])
+    expected = np.array([0, 1])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_current_more(self):
+    current = np.array([0, 1, 2, 3, 4, 5])
+    previous = np.array([0, 0, 0, 1, 2])
+    expected = np.array([0, 3, 4, 1, 2, 5])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_previous_more(self):
+    current = np.array([0, 0, 0, 1, 1, 1, 2, 2])
+    previous = np.array([0, 0, 1, 2, 2, 3, 4])
+    expected = np.array([0, 0, 0, 2, 2, 2, 4, 4])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_medium(self):
+    current = np.array([1, 1, 1, 0, 0, 1])
+    previous = np.array([0, 0, 0, 1, 1])
+    expected = np.array([0, 0, 0, 1, 1, 0])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_medium_new_speaker(self):
+    current = np.array([1, 1, 1, 0, 0, 2])
+    previous = np.array([0, 0, 0, 1, 1])
+    expected = np.array([0, 0, 0, 1, 1, 2])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_medium_no_order_based(self):
+    current = np.array([0, 1, 1, 0, 0, 2])
+    previous = np.array([0, 0, 0, 1, 1])
+    expected = np.array([1, 0, 0, 1, 1, 2])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+  def test_long(self):
+    current = np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5])
+    previous = np.array([0, 0, 3, 3, 1, 1, 4, 4, 5, 5, 2])
+    expected = np.array([0, 0, 3, 3, 1, 1, 4, 4, 5, 5, 2, 2])
+    np.testing.assert_equal(expected, multi_stage_clusterer.match_labels(
+        current, previous))
+
+
 class TestMultiStageClusterer(unittest.TestCase):
   """Tests for the MultiStageClusterer class."""
 
@@ -80,6 +132,42 @@ class TestMultiStageClusterer(unittest.TestCase):
       [1, 2],
       [3, -1],
       ]
+    for embedding in embeddings:
+      labels = self.multi_stage.streaming_predict(np.array(embedding))
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 1, 0, 2, 3, 2, 0, 1])
+    np.testing.assert_equal(expected, labels)
+
+  def test_compression_order_based_deflicker(self):
+    embeddings = [
+      [1, 2],
+      [3, -1],
+      [1, 1],
+      [-2, -1],
+      [0, 1],
+      [-2, 0],
+      [1, 2],
+      [3, -1],
+      ]
+    self.multi_stage.deflicker = multi_stage_clusterer.Deflicker.OrderBased
+    for embedding in embeddings:
+      labels = self.multi_stage.streaming_predict(np.array(embedding))
+    labels = utils.enforce_ordered_labels(labels)
+    expected = np.array([0, 1, 0, 2, 3, 2, 0, 1])
+    np.testing.assert_equal(expected, labels)
+
+  def test_compression_hungarian_deflicker(self):
+    embeddings = [
+      [1, 2],
+      [3, -1],
+      [1, 1],
+      [-2, -1],
+      [0, 1],
+      [-2, 0],
+      [1, 2],
+      [3, -1],
+      ]
+    self.multi_stage.deflicker = multi_stage_clusterer.Deflicker.Hungarian
     for embedding in embeddings:
       labels = self.multi_stage.streaming_predict(np.array(embedding))
     labels = utils.enforce_ordered_labels(labels)

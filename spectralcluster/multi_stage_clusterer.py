@@ -8,11 +8,60 @@ Multi-stage clustering class is introduced in this paper:
   arXiv:2210.13690 (2022).
 """
 
+import enum
 import numpy as np
+from scipy import optimize
 from sklearn.cluster import AgglomerativeClustering
 from spectralcluster import fallback_clusterer
 from spectralcluster import spectral_clusterer
 from spectralcluster import utils
+
+
+class Deflicker(enum.Enum):
+  """Method to deflicker the streaming output labels."""
+  # No deflicker.
+  NoDeflicker = enum.auto()
+
+  # Deflicker by enforcing order-based outputs.
+  OrderBased = enum.auto()
+
+  # Deflicker by matching previous output using Hungarian algorithm.
+  Hungarian = enum.auto()
+
+
+def match_labels(
+    current: np.ndarray,
+    previous: np.ndarray) -> np.ndarray:
+  """Match current labels with previous labels using Hungarian algorithm."""
+  # We can assign each label in current to one or many label(s) in previous.
+  current = utils.enforce_ordered_labels(current).astype(np.int32)
+  previous = previous.astype(np.int32)
+  current_crop = current[:-1]
+  if current_crop.shape != previous.shape:
+    raise ValueError("current must have one more element than previous .")
+  num_current = max(current_crop) + 1
+  num_previous = max(max(previous) + 1, num_current)
+
+  # Compute cost matrix.
+  cost = np.zeros((num_current, num_previous), dtype=np.int32)
+  for i in range(num_current):
+    for j in range(num_previous):
+      cost[i, j] = np.sum(np.logical_and(current_crop == i, previous == j))
+
+  # Solve assignment problem.
+  row_ind, col_ind = optimize.linear_sum_assignment(cost, maximize=True)
+
+  # Map labels.
+  label_map = {}
+  for i, j in zip(row_ind, col_ind):
+    label_map[i] = j
+
+  new_labels = current.copy()
+  for i in range(max(current) + 1):
+    if i in label_map:
+      new_labels[current == i] = label_map[i]
+
+  return new_labels
 
 
 class MultiStageClusterer:
@@ -25,7 +74,10 @@ class MultiStageClusterer:
       L: int = 50,
       U1: int = 100,
       U2: int = 600,
+      deflicker: Deflicker = Deflicker.NoDeflicker
   ):
+    self.deflicker = deflicker
+
     # Main clusterer.
     self.main = main_clusterer
 
@@ -68,6 +120,8 @@ class MultiStageClusterer:
     # centroid.
     self.compression_labels = None
 
+    self.previous_output = None
+
   def streaming_predict(
       self,
       embedding: np.ndarray
@@ -83,13 +137,17 @@ class MultiStageClusterer:
     # First input.
     if self.num_embeddings == 1:
       self.cache = embedding
-      return np.array([0])
+      final_labels = np.array([0])
+      self.previous_output = final_labels
+      return final_labels
 
     self.cache = np.vstack([self.cache, embedding])
 
     # Using fallback or main clusterer only.
     if self.num_embeddings <= self.U1:
-      return self.main.predict(self.cache)
+      final_labels = self.main.predict(self.cache)
+      self.previous_output = final_labels
+      return final_labels
 
     # Run pre-clusterer.
     if self.compression_labels is not None:
@@ -109,4 +167,14 @@ class MultiStageClusterer:
       self.compression_labels = utils.chain_labels(
         self.compression_labels, pre_labels)
 
+    # Deflicker.
+    if self.num_embeddings > 1:
+      if self.deflicker == Deflicker.OrderBased:
+        final_labels = utils.enforce_ordered_labels(
+            final_labels)
+      elif self.deflicker == Deflicker.Hungarian:
+        final_labels = match_labels(
+          final_labels, self.previous_output)
+
+    self.previous_output = final_labels
     return final_labels

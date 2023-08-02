@@ -25,6 +25,7 @@ FallbackClustererType = fallback_clusterer.FallbackClustererType
 
 LaplacianType = laplacian.LaplacianType
 
+Deflicker = multi_stage_clusterer.Deflicker
 MultiStageClusterer = multi_stage_clusterer.MultiStageClusterer
 
 NaiveClusterer = naive_clusterer.NaiveClusterer
