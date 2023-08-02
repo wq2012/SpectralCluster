@@ -26,13 +26,11 @@ pip3 install spectralcluster==0.1.0
 
 **This is not a Google product.**
 
-**This is not the original C++ implementation used by the paper.**
+**This is not the original C++ implementation used by the papers.**
 
-## Dependencies
-
-* numpy
-* scipy
-* scikit-learn
+Please consider this repo as a "demonstration" of the algorithms,
+instead of a "reproduction" of what we use at Google. Some features
+might be missing or incomplete.
 
 ## Installation
 
