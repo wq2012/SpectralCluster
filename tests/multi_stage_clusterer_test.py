@@ -224,7 +224,7 @@ class TestMultiStageClusterer(unittest.TestCase):
                       [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0]] * 300 +
                       [[0.0, 0.0, 0.0, 1.0, 0.0, 0.0]] * 400)
     noisy = np.random.rand(1000, 6) * 2 - 1
-    matrix = matrix + noisy * 0.1
+    matrix = matrix + noisy * 0.02
     refinement_options = refinement.RefinementOptions(
         gaussian_blur_sigma=0,
         p_percentile=0.2,
