@@ -4,7 +4,7 @@
 ## Overview
 
 This is a Python re-implementation of the spectral clustering and
-constrained spectral clustering algorithms in these papers:
+constrained spectral clustering algorithms presented in these papers:
 
 * [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/)
 * [Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection](https://arxiv.org/abs/2109.11641)
@@ -50,7 +50,7 @@ python3 -m pip install spectralcluster
 
 Simply use the `predict()` method of class `SpectralClusterer` to perform
 spectral clustering. The example below should be closest to the original C++
-implemention used our
+implemention used by our
 [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/).
 
 ```python
@@ -90,7 +90,7 @@ For the complete list of parameters of `SpectralClusterer`, see
 
 In our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/), we apply a sequence of refinment operations on the affinity matrix, which is critical to the performance on the speaker diarization results.
 
-You can specify your refinment operations like this:
+You can specify your refinement operations like this:
 
 ```
 from spectralcluster import RefinementOptions
@@ -235,21 +235,23 @@ constraint_matrix = constraint.ConstraintMatrix(
 
 
 In the [multi-stage clustering paper](https://arxiv.org/abs/2210.13690),
-we introduced a high efficient **streaming** clustering approach. This is
-implemented as the `MultiStageClusterer` class in `multi_stage_clusterer.py`.
+we introduced a highly efficient **streaming** clustering approach. This is
+implemented as the `MultiStageClusterer` class in
+`spectralcluster/multi_stage_clusterer.py`.
 
 > Note: We did NOT implement speaker turn detection in this open source library.
 We only implemented fallback, main, pre-clusterer and dynamic compression here.
 
 The `MultiStageClusterer` class has a method named `streaming_predict`.
 In streaming clustering, every time we feed a **single** new embedding to the
-`streaming_predict` function, and it will return the sequence of cluster labels
+`streaming_predict` function, it will return the sequence of cluster labels
 for **all** inputs, including corrections for the predictions on previous
 embeddings.
 
 Example usage:
 
 ```python
+from spectralcluster import Deflicker
 from spectralcluster import MultiStageClusterer
 from spectralcluster import SpectralClusterer
 
@@ -260,7 +262,8 @@ multi_stage = MultiStageClusterer(
     fallback_threshold=0.5,
     L=50,
     U1=200,
-    U2=400)
+    U2=400,
+    deflicker=Deflicker.Hungarian)
 
 for embedding in embeddings:
     labels = multi_stage.streaming_predict(embedding)
