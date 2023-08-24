@@ -280,7 +280,7 @@ class SpectralClusterer:
              affinity, constraint_matrix)
         if self.autotune.proxy == AutoTuneProxy.PercentileSqrtOverNME:
           ratio = np.sqrt(1 - p_percentile) / max_delta_norm
-        elif self.autotune.proxy == AutoTuneProxy.PercentileSqrtOverNME:
+        elif self.autotune.proxy == AutoTuneProxy.PercentileOverNME:
           ratio = (1 - p_percentile) / max_delta_norm
         else:
           raise ValueError("Unsupported value of AutoTuneProxy")

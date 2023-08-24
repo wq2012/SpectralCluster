@@ -7,3 +7,4 @@ spectralcluster.egg-info/*
 .DS_Store
 .pytype
 coverage.xml
+.venv
