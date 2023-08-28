@@ -1,14 +1,21 @@
 # Spectral Clustering
-[![Python application](https://github.com/wq2012/SpectralCluster/workflows/Python%20application/badge.svg)](https://github.com/wq2012/SpectralCluster/actions) [![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster) [![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster) [![Downloads](https://pepy.tech/badge/spectralcluster)](https://pepy.tech/project/spectralcluster) [![codecov](https://codecov.io/gh/wq2012/SpectralCluster/branch/master/graph/badge.svg)](https://codecov.io/gh/wq2012/SpectralCluster) [![Documentation](https://img.shields.io/badge/api-documentation-blue.svg)](https://wq2012.github.io/SpectralCluster)
+[![Python application](https://github.com/wq2012/SpectralCluster/workflows/Python%20application/badge.svg)](https://github.com/wq2012/SpectralCluster/actions)
+[![PyPI Version](https://img.shields.io/pypi/v/spectralcluster.svg)](https://pypi.python.org/pypi/spectralcluster)
+[![Python Versions](https://img.shields.io/pypi/pyversions/spectralcluster.svg)](https://pypi.org/project/spectralcluster)
+[![Downloads](https://static.pepy.tech/badge/spectralcluster)](https://www.pepy.tech/projects/spectralcluster)
+[![codecov](https://codecov.io/gh/wq2012/SpectralCluster/branch/master/graph/badge.svg)](https://codecov.io/gh/wq2012/SpectralCluster)
+[![Documentation](https://img.shields.io/badge/api-documentation-blue.svg)](https://wq2012.github.io/SpectralCluster)
 
 ## Overview
 
-This is a Python re-implementation of the spectral clustering and
-constrained spectral clustering algorithms presented in these papers:
+This is a Python re-implementation of the spectral clustering algorithms
+presented in these papers:
 
-* [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/)
-* [Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection](https://arxiv.org/abs/2109.11641)
-* [Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization with Multi-Stage Clustering](https://arxiv.org/abs/2210.13690)
+| Algorithm                       | Paper       |
+| ------------------------------- | ----------- |
+| Refined Laplacian matrix        | [Speaker Diarization with LSTM](https://google.github.io/speaker-id/publications/LstmDiarization/) |
+| Constrained spectral clustering | [Turn-to-Diarize: Online Speaker Diarization Constrained by Transformer Transducer Speaker Turn Detection](https://arxiv.org/abs/2109.11641) |
+| Multi-stage clustering          | [Highly Efficient Real-Time Streaming and Fully On-Device Speaker Diarization with Multi-Stage Clustering](https://arxiv.org/abs/2210.13690)
 
 ![refinement](https://raw.githubusercontent.com/wq2012/SpectralCluster/master/resources/refinement.png)
 
