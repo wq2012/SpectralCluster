@@ -317,6 +317,8 @@ We also have fully supervised speaker diarization systems, powered by
 [uis-rnn](https://github.com/google/uis-rnn).
 Check this [Google AI Blog](https://ai.googleblog.com/2018/11/accurate-online-speaker-diarization.html).
 
+Also check out our recent work on [DiarizationLM](https://arxiv.org/abs/2401.03506).
+
 To learn more about speaker diarization, you can check out:
 * A curated list of resources:
 [awesome-diarization](https://github.com/wq2012/awesome-diarization)
