@@ -2,10 +2,13 @@
 
 import setuptools
 
-VERSION = "0.2.21"
+VERSION = "0.2.22"
 
 with open("README.md", "r") as file_object:
     LONG_DESCRIPTION = file_object.read()
+
+with open("requirements.txt") as file_object:
+    INSTALL_REQUIRES = file_object.read().splitlines()
 
 setuptools.setup(
     name="spectralcluster",
@@ -22,4 +25,5 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
+    install_requires=INSTALL_REQUIRES,
 )
