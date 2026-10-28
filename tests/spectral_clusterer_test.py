@@ -498,6 +498,86 @@ class TestSpectralClusterer(unittest.TestCase):
     expected = np.array([0, 0, 0, 0, 0, 0])
     np.testing.assert_equal(expected, labels)
 
+  def test_fit_predict_and_predict_with_affinity(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    refinement_options = refinement.RefinementOptions(
+        gaussian_blur_sigma=0,
+        p_percentile=0.95,
+        refinement_sequence=ICASSP2018_REFINEMENT_SEQUENCE)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        refinement_options=refinement_options, random_state=42)
+    labels_fit = utils.enforce_ordered_labels(clusterer.fit_predict(matrix))
+    affinity = utils.compute_affinity_matrix(matrix)
+    labels_aff = utils.enforce_ordered_labels(
+        clusterer.predict_with_affinity(affinity))
+    expected = np.array([0, 0, 1, 1, 0, 1])
+    np.testing.assert_equal(expected, labels_fit)
+    np.testing.assert_equal(expected, labels_aff)
+
+    with self.assertRaises(TypeError):
+      clusterer.predict_with_affinity([[1.0, 0.0], [0.0, 1.0]])
+    with self.assertRaises(ValueError):
+      clusterer.predict_with_affinity(np.zeros((2, 3)))
+
+    fallback_options = FallbackOptions(
+        single_cluster_condition=SingleClusterCondition.FallbackClusterer)
+    single_clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=1, fallback_options=fallback_options)
+    with self.assertRaises(ValueError):
+      single_clusterer.predict_with_affinity(affinity)
+
+  def test_percentile_over_nme_and_validation_errors(self):
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    refinement_options = refinement.RefinementOptions(
+        thresholding_type=ThresholdType.Percentile,
+        refinement_sequence=[RefinementName.RowWiseThreshold])
+    auto_tune = autotune.AutoTune(
+        p_percentile_min=0.60,
+        p_percentile_max=0.95,
+        init_search_step=0.05,
+        search_level=1,
+        proxy=AutoTuneProxy.PercentileOverNME)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=2,
+        refinement_options=refinement_options,
+        autotune=auto_tune,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = utils.enforce_ordered_labels(clusterer.predict(matrix))
+    np.testing.assert_equal(np.array([0, 0, 1, 1, 0, 1]), labels)
+
+    with self.assertRaises(TypeError):
+      clusterer.predict([[1.0, 0.0]])
+    with self.assertRaises(ValueError):
+      clusterer.predict(np.array([1.0, 0.0]))
+
+    bad_size_clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=4, max_spectral_size=3)
+    with self.assertRaises(ValueError):
+      bad_size_clusterer.predict(matrix)
+    with self.assertRaises(RuntimeError):
+      bad_size_clusterer.predict(matrix, constraint_matrix=np.eye(6))
+
+    no_thresh_clusterer = spectral_clusterer.SpectralClusterer(
+        autotune=auto_tune,
+        refinement_options=refinement.RefinementOptions(refinement_sequence=[]))
+    with self.assertRaises(ValueError):
+      no_thresh_clusterer.predict(matrix)
+
 
 if __name__ == "__main__":
   unittest.main()

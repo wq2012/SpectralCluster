@@ -91,6 +91,9 @@ class FallbackOptions:
   # Adaptation_threshold for naive clusterer.
   naive_adaptation_threshold: typing.Optional[float] = None
 
+  # Random seed for GaussianMixture in AffinityGmmBic.
+  random_state: int = 0
+
 
 class FallbackClusterer:
   """Fallback clusterer.
@@ -169,8 +172,10 @@ def check_single_cluster(fallback_options: FallbackOptions,
     affinity_values = np.expand_dims(affinity[upper_indices], 1)
 
     # Fit GMM and compare BIC.
-    gmm1 = GaussianMixture(n_components=1, random_state=0)
-    gmm2 = GaussianMixture(n_components=2, random_state=0)
+    gmm1 = GaussianMixture(
+        n_components=1, random_state=fallback_options.random_state)
+    gmm2 = GaussianMixture(
+        n_components=2, random_state=fallback_options.random_state)
     gmm1.fit(affinity_values)
     gmm2.fit(affinity_values)
     bic1 = gmm1.bic(affinity_values)
@@ -178,6 +183,10 @@ def check_single_cluster(fallback_options: FallbackOptions,
     return bic1 < bic2
   elif (fallback_options.single_cluster_condition ==
         SingleClusterCondition.FallbackClusterer):
+    if embeddings is None:
+      raise ValueError(
+          "embeddings must be provided when single_cluster_condition is "
+          "FallbackClusterer")
     temp_clusterer = FallbackClusterer(fallback_options)
     temp_labels = temp_clusterer.predict(embeddings)
     if np.unique(temp_labels).size == 1:

@@ -13,7 +13,8 @@ import typing
 def run_kmeans(spectral_embeddings: np.ndarray,
                n_clusters: int,
                custom_dist: typing.Union[str, typing.Callable],
-               max_iter: int) -> np.ndarray:
+               max_iter: int,
+               random_state: int = 0) -> np.ndarray:
   """Run CustomKMeans with a custom distance measure support.
 
   Perform a custom kmeans clustering with any distance measure defined
@@ -26,6 +27,7 @@ def run_kmeans(spectral_embeddings: np.ndarray,
       string, "cosine", "euclidean", "mahalanobis", or any other distance
       functions defined in scipy.spatial.distance can be used
     max_iter: the maximum number of iterations for the custom k-means
+    random_state: random seed for k-means initialization
 
   Returns:
     labels: predicted clustering labels of all samples
@@ -33,13 +35,13 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   if not custom_dist:  # Scikit-learn KMeans
     kmeans_clusterer = KMeans(
         n_clusters=n_clusters, init="k-means++", max_iter=max_iter,
-        random_state=0, n_init="auto")
+        random_state=random_state, n_init="auto")
     return kmeans_clusterer.fit_predict(spectral_embeddings)
   else:
     # Initialization using the k-means++ method in Scikit-learn
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=1, random_state=0,
-        n_init="auto")
+        n_clusters=n_clusters, init="k-means++", max_iter=1,
+        random_state=random_state, n_init="auto")
     kmeans_clusterer.fit(spectral_embeddings)
     centroids = kmeans_clusterer.cluster_centers_
     # Run the custom K-means
@@ -47,7 +49,8 @@ def run_kmeans(spectral_embeddings: np.ndarray,
         n_clusters=n_clusters,
         centroids=centroids,
         max_iter=max_iter,
-        custom_dist=custom_dist)
+        custom_dist=custom_dist,
+        random_state=random_state)
 
   labels = kmeans_clusterer.predict(spectral_embeddings)
   return labels
@@ -75,11 +78,15 @@ class CustomKMeans:
   # defined in scipy.spatial.distance can be used.
   custom_dist: typing.Union[str, typing.Callable] = "cosine"
 
+  # Random seed for centroid initialization when centroids is None.
+  random_state: int = 0
+
   def _init_centroids(self, embeddings: np.ndarray):
     """Compute the initial centroids."""
 
     n_samples = embeddings.shape[0]
-    idx = np.random.choice(
+    rng = np.random.RandomState(self.random_state)
+    idx = rng.choice(
         np.arange(n_samples), size=self.n_clusters, replace=False)
     self.centroids = embeddings[idx, :]
 

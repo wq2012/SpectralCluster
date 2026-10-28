@@ -43,7 +43,8 @@ class SpectralClusterer:
       max_spectral_size: typing.Optional[int] = None,
       affinity_function: typing.Callable = utils.compute_affinity_matrix,
       post_eigen_cluster_function: typing.Callable = (
-          custom_distance_kmeans.run_kmeans)):
+          custom_distance_kmeans.run_kmeans),
+      random_state: int = 0):
     """Constructor of the clusterer.
 
     Args:
@@ -82,6 +83,7 @@ class SpectralClusterer:
       post_eigen_cluster_function: a function to cluster the spectral embeddings
         after the eigenvalue computations. This function must have the same
         signature as custom_distance_kmeans.run_kmeans
+      random_state: random seed for k-means initialization
     """
     self.min_clusters = min_clusters
     self.max_clusters = max_clusters
@@ -91,7 +93,8 @@ class SpectralClusterer:
       self.refinement_options = refinement_options
     self.autotune = autotune
     if not fallback_options:
-      self.fallback_options = fallback_clusterer.FallbackOptions()
+      self.fallback_options = fallback_clusterer.FallbackOptions(
+          random_state=random_state)
     else:
       self.fallback_options = fallback_options
     self.laplacian_type = laplacian_type
@@ -104,6 +107,7 @@ class SpectralClusterer:
     self.max_spectral_size = max_spectral_size
     self.affinity_function = affinity_function
     self.post_eigen_cluster_function = post_eigen_cluster_function
+    self.random_state = random_state
 
   def _compute_eigenvectors_ncluster(
       self,
@@ -198,56 +202,33 @@ class SpectralClusterer:
 
     return final_labels
 
-  def predict(
+  def predict_with_affinity(
       self,
-      embeddings: np.ndarray,
-      constraint_matrix: typing.Optional[np.ndarray] = None) -> np.ndarray:
-    """Perform spectral clustering on data embeddings.
-
-    The spectral clustering is performed on an affinity matrix.
+      affinity: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None,
+      embeddings: typing.Optional[np.ndarray] = None) -> np.ndarray:
+    """Perform spectral clustering directly on a precomputed affinity matrix.
 
     Args:
-      embeddings: numpy array of shape (n_samples, n_features)
+      affinity: numpy array of shape (n_samples, n_samples)
       constraint_matrix: numpy array of shape (n_samples, n_samples). The
         constraint matrix with prior information
+      embeddings: optional numpy array of shape (n_samples, n_features), only
+        used if single_cluster_condition is FallbackClusterer
 
     Returns:
       labels: numpy array of shape (n_samples,)
 
     Raises:
-      TypeError: if embeddings has wrong type
-      ValueError: if embeddings has wrong shape
-      RuntimeError: if max_spectral_size is set and constraint_matrix is given
+      TypeError: if affinity has wrong type
+      ValueError: if affinity has wrong shape
     """
-    num_embeddings = embeddings.shape[0]
+    if not isinstance(affinity, np.ndarray):
+      raise TypeError("affinity must be a numpy array")
+    if len(affinity.shape) != 2 or affinity.shape[0] != affinity.shape[1]:
+      raise ValueError("affinity must be a 2D square matrix")
 
-    if not isinstance(embeddings, np.ndarray):
-      raise TypeError("embeddings must be a numpy array")
-    if len(embeddings.shape) != 2:
-      raise ValueError("embeddings must be 2-dimensional")
-
-    # Check whether we need to run fallback clusterer instead.
-    if (num_embeddings <
-        self.fallback_options.spectral_min_embeddings):
-      temp_clusterer = fallback_clusterer.FallbackClusterer(
-          self.fallback_options)
-      return temp_clusterer.predict(embeddings)
-
-    # Check whether the input size is too big for running spectral clustering.
-    if (self.max_spectral_size is not None
-        and num_embeddings > self.max_spectral_size):
-      if constraint_matrix is not None:
-        raise RuntimeError(
-            "Cannot handle constraint_matrix when max_spectral_size is set")
-      if (self.max_spectral_size < 2 or
-         (self.max_clusters and self.max_spectral_size <= self.max_clusters) or
-         (self.min_clusters and self.max_spectral_size <= self.min_clusters)):
-        raise ValueError(
-            "max_spectral_size should be a relatively big number")
-      return self._reduce_size_and_predict(embeddings)
-
-    # Compute affinity matrix.
-    affinity = self.affinity_function(embeddings)
+    num_embeddings = affinity.shape[0]
 
     # Make single-vs-multi cluster(s) decision.
     if self.min_clusters == 1:
@@ -265,7 +246,8 @@ class SpectralClusterer:
 
     if self.autotune:
       # Use Auto-tuning method to find a good p_percentile.
-      if (RefinementName.RowWiseThreshold
+      if (not self.refinement_options.refinement_sequence or
+          RefinementName.RowWiseThreshold
           not in self.refinement_options.refinement_sequence):
         raise ValueError(
             "AutoTune is only effective when the refinement sequence "
@@ -308,9 +290,85 @@ class SpectralClusterer:
 
     # Run clustering algorithm on spectral embeddings. This defaults
     # to customized K-means.
-    labels = self.post_eigen_cluster_function(
+    if self.post_eigen_cluster_function is custom_distance_kmeans.run_kmeans:
+      return self.post_eigen_cluster_function(
+          spectral_embeddings=spectral_embeddings,
+          n_clusters=n_clusters,
+          custom_dist=self.custom_dist,
+          max_iter=self.max_iter,
+          random_state=self.random_state)
+    return self.post_eigen_cluster_function(
         spectral_embeddings=spectral_embeddings,
         n_clusters=n_clusters,
         custom_dist=self.custom_dist,
         max_iter=self.max_iter)
-    return labels
+
+  def predict(
+      self,
+      embeddings: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -> np.ndarray:
+    """Perform spectral clustering on data embeddings.
+
+    The spectral clustering is performed on an affinity matrix.
+
+    Args:
+      embeddings: numpy array of shape (n_samples, n_features)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Returns:
+      labels: numpy array of shape (n_samples,)
+
+    Raises:
+      TypeError: if embeddings has wrong type
+      ValueError: if embeddings has wrong shape
+      RuntimeError: if max_spectral_size is set and constraint_matrix is given
+    """
+    if not isinstance(embeddings, np.ndarray):
+      raise TypeError("embeddings must be a numpy array")
+    if len(embeddings.shape) != 2:
+      raise ValueError("embeddings must be 2-dimensional")
+
+    num_embeddings = embeddings.shape[0]
+
+    # Check whether we need to run fallback clusterer instead.
+    if (num_embeddings <
+        self.fallback_options.spectral_min_embeddings):
+      temp_clusterer = fallback_clusterer.FallbackClusterer(
+          self.fallback_options)
+      return temp_clusterer.predict(embeddings)
+
+    # Check whether the input size is too big for running spectral clustering.
+    if (self.max_spectral_size is not None
+        and num_embeddings > self.max_spectral_size):
+      if constraint_matrix is not None:
+        raise RuntimeError(
+            "Cannot handle constraint_matrix when max_spectral_size is set")
+      if (self.max_spectral_size < 2 or
+         (self.max_clusters and self.max_spectral_size <= self.max_clusters) or
+         (self.min_clusters and self.max_spectral_size <= self.min_clusters)):
+        raise ValueError(
+            "max_spectral_size should be a relatively big number")
+      return self._reduce_size_and_predict(embeddings)
+
+    # Compute affinity matrix.
+    affinity = self.affinity_function(embeddings)
+
+    return self.predict_with_affinity(
+        affinity, constraint_matrix=constraint_matrix, embeddings=embeddings)
+
+  def fit_predict(
+      self,
+      embeddings: np.ndarray,
+      constraint_matrix: typing.Optional[np.ndarray] = None) -> np.ndarray:
+    """Perform spectral clustering on data embeddings (sklearn-compatible).
+
+    Args:
+      embeddings: numpy array of shape (n_samples, n_features)
+      constraint_matrix: numpy array of shape (n_samples, n_samples). The
+        constraint matrix with prior information
+
+    Returns:
+      labels: numpy array of shape (n_samples,)
+    """
+    return self.predict(embeddings, constraint_matrix=constraint_matrix)
