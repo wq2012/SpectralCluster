@@ -54,6 +54,9 @@ class TestNaiveClusterer(unittest.TestCase):
     self.assertEqual(0, label)
     self.assertEqual(2, clusterer.centroids[0].count)
 
+    with self.assertRaises(ValueError):
+      NaiveClusterer(threshold=0.5, adaptation_threshold=0.2)
+
 
 if __name__ == "__main__":
   unittest.main()

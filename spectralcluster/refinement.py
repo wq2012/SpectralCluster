@@ -7,6 +7,8 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import typing
 
+EPS = 1e-10
+
 
 class RefinementName(enum.Enum):
   """The names of the refinement operations."""
@@ -239,7 +241,7 @@ class RowWiseNormalize(AffinityRefinementOperation):
 
   def refine(self, affinity: np.ndarray) -> np.ndarray:
     self.check_input(affinity)
-    refined_affinity = np.copy(affinity)
+    refined_affinity = np.copy(affinity).astype(float)
     row_max = refined_affinity.max(axis=1)
-    refined_affinity /= np.expand_dims(row_max, axis=1)
+    refined_affinity /= np.expand_dims(np.maximum(row_max, EPS), axis=1)
     return refined_affinity

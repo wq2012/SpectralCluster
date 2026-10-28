@@ -30,7 +30,7 @@ def compute_affinity_matrix(embeddings: np.ndarray) -> np.ndarray:
   """
   # Normalize the data.
   l2_norms = np.linalg.norm(embeddings, axis=1)
-  embeddings_normalized = embeddings / l2_norms[:, None]
+  embeddings_normalized = embeddings / np.maximum(l2_norms[:, None], EPS)
   # Compute cosine similarities. Range is [-1,1].
   cosine_similarities = np.matmul(embeddings_normalized,
                                   np.transpose(embeddings_normalized))
@@ -107,7 +107,8 @@ def compute_number_of_clusters(eigenvalues: np.ndarray,
       if eigengap_type == EigenGapType.Ratio:
         delta = eigenvalues[i + 1] / (eigenvalues[i] + eps)
       elif eigengap_type == EigenGapType.NormalizedDiff:
-        delta = (eigenvalues[i + 1] - eigenvalues[i]) / np.max(eigenvalues)
+        delta = (eigenvalues[i + 1] - eigenvalues[i]) / np.maximum(
+            np.max(eigenvalues), eps)
       else:
         raise ValueError("Unsupported eigengap_type")
       if delta > max_delta:
@@ -120,7 +121,8 @@ def compute_number_of_clusters(eigenvalues: np.ndarray,
       if eigengap_type == EigenGapType.Ratio:
         delta = eigenvalues[i - 1] / (eigenvalues[i] + eps)
       elif eigengap_type == EigenGapType.NormalizedDiff:
-        delta = (eigenvalues[i - 1] - eigenvalues[i]) / np.max(eigenvalues)
+        delta = (eigenvalues[i - 1] - eigenvalues[i]) / np.maximum(
+            np.max(eigenvalues), eps)
       else:
         raise ValueError("Unsupported eigengap_type")
       if delta > max_delta:

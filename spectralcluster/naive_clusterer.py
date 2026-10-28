@@ -1,6 +1,8 @@
 import numpy as np
 import typing
 
+EPS = 1e-10
+
 
 class NaiveCentroid:
   """A cluster centroid of the Naive clustering algorithm."""
@@ -18,8 +20,8 @@ class NaiveCentroid:
 
   def cosine(self, embedding: np.ndarray) -> float:
     """Compute cosine similarity to a new embedding."""
-    return np.dot(self.embedding, embedding) / (
-        np.linalg.norm(self.embedding) * np.linalg.norm(embedding))
+    denom = np.linalg.norm(self.embedding) * np.linalg.norm(embedding)
+    return np.dot(self.embedding, embedding) / max(float(denom), EPS)
 
 
 class NaiveClusterer:

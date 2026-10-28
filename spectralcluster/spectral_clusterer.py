@@ -304,7 +304,7 @@ class SpectralClusterer:
       # Perform row wise re-normalization.
       rows_norm = np.linalg.norm(spectral_embeddings, axis=1, ord=2)
       spectral_embeddings = spectral_embeddings / np.reshape(
-          rows_norm, (num_embeddings, 1))
+          np.maximum(rows_norm, utils.EPS), (num_embeddings, 1))
 
     # Run clustering algorithm on spectral embeddings. This defaults
     # to customized K-means.

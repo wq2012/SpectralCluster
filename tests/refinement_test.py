@@ -107,6 +107,23 @@ class TestRowWiseNormalize(unittest.TestCase):
                                                                 0.25]])
     np.testing.assert_allclose(expected, adjusted_matrix, atol=0.001)
 
+  def test_integer_matrix_and_validation_errors(self):
+    int_matrix = np.array([[1, 2], [4, 2]])
+    adjusted_matrix = refinement.RowWiseNormalize().refine(int_matrix)
+    expected = np.array([[0.5, 1.0], [1.0, 0.5]])
+    np.testing.assert_allclose(expected, adjusted_matrix, atol=0.001)
+
+    with self.assertRaises(ValueError):
+      refinement.CropDiagonal().refine(np.zeros((3,)))
+    with self.assertRaises(ValueError):
+      refinement.CropDiagonal().refine(np.zeros((2, 3)))
+    with self.assertRaises(ValueError):
+      refinement.RefinementOptions().get_refinement_operator("invalid")
+    with self.assertRaises(TypeError):
+      refinement.RowWiseThreshold(thresholding_type="invalid")
+    with self.assertRaises(ValueError):
+      refinement.Symmetrize(symmetrize_type="invalid").refine(int_matrix)
+
 
 if __name__ == "__main__":
   unittest.main()
