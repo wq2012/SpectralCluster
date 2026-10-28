@@ -8,6 +8,7 @@ Multi-stage clustering class is introduced in this paper:
   arXiv:2210.13690 (2022).
 """
 
+import copy
 import enum
 import numpy as np
 from scipy import optimize
@@ -79,12 +80,13 @@ class MultiStageClusterer:
     self.deflicker = deflicker
 
     # Main clusterer.
-    self.main = main_clusterer
+    self.main = copy.copy(main_clusterer)
+    self.main.fallback_options = copy.copy(main_clusterer.fallback_options)
 
     if self.main.max_spectral_size:
       raise ValueError(
-        "Do not set max_spectral_size for SpectralClusterer when"
-        "using MultiStageClusterer.")
+          "Do not set max_spectral_size for SpectralClusterer when "
+          "using MultiStageClusterer.")
 
     # Lower bound of main clusterer.
     self.main.fallback_options.spectral_min_embeddings = L
@@ -100,9 +102,9 @@ class MultiStageClusterer:
 
     # Other configs for fallback.
     self.main.fallback_options.single_cluster_condition = (
-      fallback_clusterer.SingleClusterCondition.FallbackClusterer)
+        fallback_clusterer.SingleClusterCondition.FallbackClusterer)
     self.main.fallback_options.fallback_clusterer_type = (
-      fallback_clusterer.FallbackClustererType.Agglomerative)
+        fallback_clusterer.FallbackClustererType.Agglomerative)
 
     # Pre-clusterer.
     self.pre = AgglomerativeClustering(
@@ -110,6 +112,10 @@ class MultiStageClusterer:
         metric="cosine",
         linkage="complete")
 
+    self.reset()
+
+  def reset(self):
+    """Reset cached streaming state."""
     # All cached centroids.
     self.cache = None
 
@@ -128,7 +134,7 @@ class MultiStageClusterer:
   ) -> np.ndarray:
     """A streaming prediction function.
 
-    Note that this is not a simple online prediction class It not only
+    Note that this is not a simple online prediction class. It not only
     predicts the label of the next input, but also makes corrections to
     previously predicted labels.
     """
@@ -136,7 +142,7 @@ class MultiStageClusterer:
 
     # First input.
     if self.num_embeddings == 1:
-      self.cache = embedding
+      self.cache = np.atleast_2d(embedding)
       final_labels = np.array([0])
       self.previous_output = final_labels
       return final_labels
@@ -146,26 +152,24 @@ class MultiStageClusterer:
     # Using fallback or main clusterer only.
     if self.num_embeddings <= self.U1:
       final_labels = self.main.predict(self.cache)
-      self.previous_output = final_labels
-      return final_labels
+    else:
+      # Run pre-clusterer.
+      if self.compression_labels is not None:
+        self.compression_labels = np.append(
+            self.compression_labels, max(self.compression_labels) + 1)
+      pre_labels = self.pre.fit_predict(self.cache)
+      pre_centroids = utils.get_cluster_centroids(self.cache, pre_labels)
+      main_labels = self.main.predict(pre_centroids)
 
-    # Run pre-clusterer.
-    if self.compression_labels is not None:
-      self.compression_labels = np.append(
-          self.compression_labels, max(self.compression_labels) + 1)
-    pre_labels = self.pre.fit_predict(self.cache)
-    pre_centroids = utils.get_cluster_centroids(self.cache, pre_labels)
-    main_labels = self.main.predict(pre_centroids)
+      final_labels = utils.chain_labels(
+          self.compression_labels,
+          utils.chain_labels(pre_labels, main_labels))
 
-    final_labels = utils.chain_labels(
-        self.compression_labels,
-        utils.chain_labels(pre_labels, main_labels))
-
-    # Dynamic compression.
-    if self.cache.shape[0] == self.U2:
-      self.cache = pre_centroids
-      self.compression_labels = utils.chain_labels(
-        self.compression_labels, pre_labels)
+      # Dynamic compression.
+      if self.cache.shape[0] == self.U2:
+        self.cache = pre_centroids
+        self.compression_labels = utils.chain_labels(
+            self.compression_labels, pre_labels)
 
     # Deflicker.
     if self.num_embeddings > 1:
@@ -174,7 +178,7 @@ class MultiStageClusterer:
             final_labels)
       elif self.deflicker == Deflicker.Hungarian:
         final_labels = match_labels(
-          final_labels, self.previous_output)
+            final_labels, self.previous_output)
 
     self.previous_output = final_labels
     return final_labels

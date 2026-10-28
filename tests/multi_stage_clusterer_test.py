@@ -244,6 +244,21 @@ class TestMultiStageClusterer(unittest.TestCase):
     expected = np.array([0] * 100 + [1] * 200 + [2] * 300 + [3] * 400)
     np.testing.assert_equal(expected, labels)
 
+  def test_reset_and_validation_errors(self):
+    self.multi_stage.streaming_predict(np.array([1.0, 2.0]))
+    self.assertEqual((1, 2), self.multi_stage.cache.shape)
+    self.multi_stage.reset()
+    self.assertIsNone(self.multi_stage.cache)
+    self.assertEqual(0, self.multi_stage.num_embeddings)
+
+    with self.assertRaises(ValueError):
+      multi_stage_clusterer.match_labels(
+          np.array([0, 1, 0]), np.array([0]))
+
+    bad_main = spectral_clusterer.SpectralClusterer(max_spectral_size=50)
+    with self.assertRaises(ValueError):
+      multi_stage_clusterer.MultiStageClusterer(main_clusterer=bad_main)
+
 
 if __name__ == "__main__":
   unittest.main()
