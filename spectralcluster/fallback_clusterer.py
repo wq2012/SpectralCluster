@@ -118,7 +118,7 @@ class FallbackClusterer:
           threshold=options.naive_threshold,
           adaptation_threshold=options.naive_adaptation_threshold)
     else:
-      ValueError("Unsupported fallback_clusterer_type")
+      raise ValueError("Unsupported fallback_clusterer_type")
 
   def predict(self, embeddings: np.ndarray) -> np.ndarray:
     return self.clusterer.fit_predict(embeddings)
@@ -169,8 +169,8 @@ def check_single_cluster(fallback_options: FallbackOptions,
     affinity_values = np.expand_dims(affinity[upper_indices], 1)
 
     # Fit GMM and compare BIC.
-    gmm1 = GaussianMixture(n_components=1)
-    gmm2 = GaussianMixture(n_components=2)
+    gmm1 = GaussianMixture(n_components=1, random_state=0)
+    gmm2 = GaussianMixture(n_components=2, random_state=0)
     gmm1.fit(affinity_values)
     gmm2.fit(affinity_values)
     bic1 = gmm1.bic(affinity_values)

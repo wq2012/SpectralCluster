@@ -53,6 +53,11 @@ class TestFallbackClusterer(unittest.TestCase):
     expected = np.array([0, 0, 1, 1, 0, 1])
     np.testing.assert_equal(expected, labels)
 
+  def test_invalid_fallback_clusterer_type(self):
+    options = FallbackOptions(fallback_clusterer_type=None)
+    with self.assertRaises(ValueError):
+      FallbackClusterer(options)
+
 
 class TestCheckSingleCluster(unittest.TestCase):
 
@@ -71,6 +76,23 @@ class TestCheckSingleCluster(unittest.TestCase):
     self.assertFalse(
         fallback_clusterer.check_single_cluster(
             fallback_options, None, affinity))
+
+  def test_affinity_gmm_bic_invalid_offset(self):
+    affinity = np.array([[1, 2, 2], [2, 1, 1], [2, 1, 1]])
+    fallback_options = fallback_clusterer.FallbackOptions(
+        single_cluster_condition=SingleClusterCondition.AffinityGmmBic,
+        single_cluster_affinity_diagonal_offset=2)
+    with self.assertRaises(ValueError):
+      fallback_clusterer.check_single_cluster(
+          fallback_options, None, affinity)
+
+  def test_invalid_single_cluster_condition(self):
+    affinity = np.array([[1, 2, 2], [2, 1, 1], [2, 1, 1]])
+    fallback_options = fallback_clusterer.FallbackOptions(
+        single_cluster_condition=None)
+    with self.assertRaises(TypeError):
+      fallback_clusterer.check_single_cluster(
+          fallback_options, None, affinity)
 
 
 if __name__ == "__main__":
