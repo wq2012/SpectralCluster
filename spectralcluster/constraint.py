@@ -36,17 +36,21 @@ class ConstraintOptions:
   apply_before_refinement: bool
 
   # Integration type for the Affinity Integration method.
-  integration_type: typing.Optional[IntegrationType] = None
+  integration_type: typing.Optional[IntegrationType] = IntegrationType.Max
 
   # alpha value of the constraint propagation method.
   constraint_propagation_alpha: float = 0.6
 
   def __post_init__(self):
     if self.constraint_name == ConstraintName.AffinityIntegration:
-      self.constraint_operator = AffinityIntegration(self.integration_type)
+      integration_type = self.integration_type or IntegrationType.Max
+      self.constraint_operator = AffinityIntegration(integration_type)
     elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
           self.constraint_propagation_alpha)
+    else:
+      raise ValueError("Unsupported constraint name: {}".format(
+          self.constraint_name))
 
 
 class ConstraintOperation(metaclass=abc.ABCMeta):
