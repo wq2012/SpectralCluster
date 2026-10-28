@@ -65,6 +65,7 @@ class TestMultiStageClusterer(unittest.TestCase):
 
   def setUp(self):
     super().setUp()
+    np.random.seed(0)
     refinement_options = refinement.RefinementOptions(
         gaussian_blur_sigma=0,
         p_percentile=0.95,

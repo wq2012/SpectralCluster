@@ -9,7 +9,7 @@ class TestCustomDistanceKmeans(unittest.TestCase):
 
   def setUp(self):
     super().setUp()
-    pass
+    np.random.seed(0)
 
   def test_6by2_matrix_cosine_dist(self):
     matrix = np.array([

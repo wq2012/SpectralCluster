@@ -9,6 +9,10 @@ from spectralcluster import utils
 class Icassp2018Test(unittest.TestCase):
   """Tests for ICASSP 2018 configs."""
 
+  def setUp(self):
+    super().setUp()
+    np.random.seed(0)
+
   def test_1000by6_matrix(self):
     matrix = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]] * 400 +
                       [[0.0, 1.0, 0.0, 0.0, 0.0, 0.0]] * 300 +

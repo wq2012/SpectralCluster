@@ -28,7 +28,7 @@ class TestSpectralClusterer(unittest.TestCase):
 
   def setUp(self):
     super().setUp()
-    pass
+    np.random.seed(0)
 
   def test_6by2_matrix(self):
     matrix = np.array([
@@ -577,6 +577,13 @@ class TestSpectralClusterer(unittest.TestCase):
         refinement_options=refinement.RefinementOptions(refinement_sequence=[]))
     with self.assertRaises(ValueError):
       no_thresh_clusterer.predict(matrix)
+
+    custom_clusterer = spectral_clusterer.SpectralClusterer(
+        max_clusters=2,
+        post_eigen_cluster_function=lambda **kwargs: np.zeros(
+            kwargs["spectral_embeddings"].shape[0], dtype=int))
+    np.testing.assert_equal(np.zeros(6, dtype=int),
+                            custom_clusterer.predict(matrix))
 
 
 if __name__ == "__main__":
