@@ -49,14 +49,14 @@ class ConstraintOptions:
   apply_before_refinement: bool
 
   # Integration type for the Affinity Integration method.
-  integration_type: typing.Optional[IntegrationType] = IntegrationType.Max
+  integration_type: typing.Optional[IntegrationType] = IntegrationType.Smooth
 
   # alpha value of the constraint propagation method.
   constraint_propagation_alpha: float = 0.6
 
   def __post_init__(self):
     if self.constraint_name == ConstraintName.AffinityIntegration:
-      integration_type = self.integration_type or IntegrationType.Max
+      integration_type = self.integration_type or IntegrationType.Smooth
       self.constraint_operator = AffinityIntegration(integration_type)
     elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
@@ -121,7 +121,8 @@ class AffinityIntegration(ConstraintOperation):
   `Max`, `Average`, and `Smooth`.
   """
 
-  def __init__(self, integration_type: IntegrationType = IntegrationType.Max):
+  def __init__(
+      self, integration_type: IntegrationType = IntegrationType.Smooth):
     self.integration_type = integration_type
 
   def adjust_affinity(self,
@@ -140,10 +141,12 @@ class AffinityIntegration(ConstraintOperation):
     elif self.integration_type == IntegrationType.Average:
       return 0.5 * (affinity + constraint_matrix)
     elif self.integration_type == IntegrationType.Smooth:
-      return np.where(
-          constraint_matrix >= 0,
-          1.0 - (1.0 - constraint_matrix) * (1.0 - affinity),
-          (1.0 + constraint_matrix) * affinity)
+      return np.clip(
+          np.where(
+              constraint_matrix >= 0,
+              1.0 - (1.0 - constraint_matrix) * (1.0 - affinity),
+              (1.0 + constraint_matrix) * affinity),
+          0.0, 1.0)
     else:
       raise ValueError("Unsupported integration type: {}".format(
           self.integration_type))
