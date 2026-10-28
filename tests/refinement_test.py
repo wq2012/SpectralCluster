@@ -118,11 +118,14 @@ class TestRowWiseNormalize(unittest.TestCase):
     with self.assertRaises(ValueError):
       refinement.CropDiagonal().refine(np.zeros((2, 3)))
     with self.assertRaises(ValueError):
-      refinement.RefinementOptions().get_refinement_operator("invalid")
+      refinement.RefinementOptions().get_refinement_operator(
+          "invalid")  # pytype: disable=wrong-arg-types
     with self.assertRaises(TypeError):
-      refinement.RowWiseThreshold(thresholding_type="invalid")
+      refinement.RowWiseThreshold(
+          thresholding_type="invalid")  # pytype: disable=wrong-arg-types
     with self.assertRaises(ValueError):
-      refinement.Symmetrize(symmetrize_type="invalid").refine(int_matrix)
+      refinement.Symmetrize(  # pytype: disable=wrong-arg-types
+          symmetrize_type="invalid").refine(int_matrix)
 
 
 if __name__ == "__main__":

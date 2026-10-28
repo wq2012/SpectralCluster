@@ -95,7 +95,7 @@ class TestAutotune(unittest.TestCase):
         search_level=3)
     call_count = 0
 
-    def mock_p_percentile_to_ratio(p_percentile: float):
+    def mock_p_percentile_to_ratio(p_percentile):
       nonlocal call_count
       call_count += 1
       # Minimum ratio is at p_percentile = 0.70 (already in level-1 grid).
@@ -108,7 +108,7 @@ class TestAutotune(unittest.TestCase):
 
   def test_invalid_proxy_and_early_stop(self):
     with self.assertRaises(TypeError):
-      autotune.AutoTune(proxy="invalid")
+      autotune.AutoTune(proxy="invalid")  # pytype: disable=wrong-arg-types
 
     auto_tune = autotune.AutoTune(
         p_percentile_min=0.60,

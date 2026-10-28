@@ -54,7 +54,8 @@ class TestFallbackClusterer(unittest.TestCase):
     np.testing.assert_equal(expected, labels)
 
   def test_invalid_fallback_clusterer_type(self):
-    options = FallbackOptions(fallback_clusterer_type=None)
+    options = FallbackOptions(
+        fallback_clusterer_type=None)  # pytype: disable=wrong-arg-types
     with self.assertRaises(ValueError):
       FallbackClusterer(options)
 
@@ -89,7 +90,7 @@ class TestCheckSingleCluster(unittest.TestCase):
   def test_invalid_single_cluster_condition(self):
     affinity = np.array([[1, 2, 2], [2, 1, 1], [2, 1, 1]])
     fallback_options = fallback_clusterer.FallbackOptions(
-        single_cluster_condition=None)
+        single_cluster_condition=None)  # pytype: disable=wrong-arg-types
     with self.assertRaises(TypeError):
       fallback_clusterer.check_single_cluster(
           fallback_options, None, affinity)

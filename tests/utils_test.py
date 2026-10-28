@@ -44,7 +44,8 @@ class TestComputeSortedEigenvectors(unittest.TestCase):
     self.assertGreater(w[0], w[1])
 
     with self.assertRaises(TypeError):
-      utils.compute_sorted_eigenvectors([[1.0, 0.0], [0.0, 1.0]])
+      utils.compute_sorted_eigenvectors(
+          [[1.0, 0.0], [0.0, 1.0]])  # pytype: disable=wrong-arg-types
     with self.assertRaises(ValueError):
       utils.compute_sorted_eigenvectors(np.zeros((3,)))
     with self.assertRaises(ValueError):
@@ -90,7 +91,9 @@ class TestComputeNumberOfClusters(unittest.TestCase):
     np.testing.assert_allclose(0.6, max_delta_norm, atol=0.01)
 
     with self.assertRaises(TypeError):
-      utils.compute_number_of_clusters(eigenvalues, eigengap_type="invalid")
+      utils.compute_number_of_clusters(
+          eigenvalues,
+          eigengap_type="invalid")  # pytype: disable=wrong-arg-types
 
 
 class TestEnforceOrderedLabels(unittest.TestCase):

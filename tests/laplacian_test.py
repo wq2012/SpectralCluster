@@ -47,7 +47,8 @@ class TestComputeLaplacian(unittest.TestCase):
   def test_invalid_laplacian_type(self):
     affinity = np.eye(3)
     with self.assertRaises(TypeError):
-      laplacian.compute_laplacian(affinity, laplacian_type=None)
+      laplacian.compute_laplacian(
+          affinity, laplacian_type=None)  # pytype: disable=wrong-arg-types
 
 
 if __name__ == "__main__":

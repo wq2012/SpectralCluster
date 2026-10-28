@@ -522,7 +522,8 @@ class TestSpectralClusterer(unittest.TestCase):
     np.testing.assert_equal(expected, labels_aff)
 
     with self.assertRaises(TypeError):
-      clusterer.predict_with_affinity([[1.0, 0.0], [0.0, 1.0]])
+      clusterer.predict_with_affinity(
+          [[1.0, 0.0], [0.0, 1.0]])  # pytype: disable=wrong-arg-types
     with self.assertRaises(ValueError):
       clusterer.predict_with_affinity(np.zeros((2, 3)))
 
@@ -561,7 +562,7 @@ class TestSpectralClusterer(unittest.TestCase):
     np.testing.assert_equal(np.array([0, 0, 1, 1, 0, 1]), labels)
 
     with self.assertRaises(TypeError):
-      clusterer.predict([[1.0, 0.0]])
+      clusterer.predict([[1.0, 0.0]])  # pytype: disable=wrong-arg-types
     with self.assertRaises(ValueError):
       clusterer.predict(np.array([1.0, 0.0]))
 

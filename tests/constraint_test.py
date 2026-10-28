@@ -36,11 +36,11 @@ class TestAffinityIntegration(unittest.TestCase):
         np.maximum(affinity, constraint_matrix))
 
     with self.assertRaises(ValueError):
-      constraint.ConstraintOptions(
+      constraint.ConstraintOptions(  # pytype: disable=wrong-arg-types
           constraint_name="invalid", apply_before_refinement=False)
 
     with self.assertRaises(ValueError):
-      constraint.AffinityIntegration(
+      constraint.AffinityIntegration(  # pytype: disable=wrong-arg-types
           integration_type="invalid").adjust_affinity(
               affinity, constraint_matrix)
 
