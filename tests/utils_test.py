@@ -36,6 +36,20 @@ class TestComputeSortedEigenvectors(unittest.TestCase):
     self.assertLess(w[0], w[1])
     self.assertLess(w[1], w[2])
 
+  def test_asymmetric_and_invalid_inputs(self):
+    asymmetric = np.array([[1.0, 2.0], [0.5, 3.0]])
+    w, v = utils.compute_sorted_eigenvectors(asymmetric, descend=True)
+    self.assertEqual((2,), w.shape)
+    self.assertEqual((2, 2), v.shape)
+    self.assertGreater(w[0], w[1])
+
+    with self.assertRaises(TypeError):
+      utils.compute_sorted_eigenvectors([[1.0, 0.0], [0.0, 1.0]])
+    with self.assertRaises(ValueError):
+      utils.compute_sorted_eigenvectors(np.zeros((3,)))
+    with self.assertRaises(ValueError):
+      utils.compute_sorted_eigenvectors(np.zeros((2, 3)))
+
 
 class TestComputeNumberOfClusters(unittest.TestCase):
   """Tests for the compute_number_of_clusters function."""
@@ -65,6 +79,18 @@ class TestComputeNumberOfClusters(unittest.TestCase):
         eigenvalues, max_clusters=3, descend=False)
     self.assertEqual(2, result)
     np.testing.assert_allclose(0.88, max_delta_norm, atol=0.01)
+
+  def test_normalized_diff_ascend_and_errors(self):
+    eigenvalues = np.array([0.0, 0.1, 0.2, 0.8, 1.0])
+    result, max_delta_norm = utils.compute_number_of_clusters(
+        eigenvalues,
+        eigengap_type=utils.EigenGapType.NormalizedDiff,
+        descend=False)
+    self.assertEqual(3, result)
+    np.testing.assert_allclose(0.6, max_delta_norm, atol=0.01)
+
+    with self.assertRaises(TypeError):
+      utils.compute_number_of_clusters(eigenvalues, eigengap_type="invalid")
 
 
 class TestEnforceOrderedLabels(unittest.TestCase):

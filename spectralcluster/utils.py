@@ -52,13 +52,29 @@ def compute_sorted_eigenvectors(
 
   Returns:
     w: sorted eigenvalues of shape (M,)
-    v: sorted eigenvectors, where v[;, i] corresponds to ith largest
+    v: sorted eigenvectors, where v[:, i] corresponds to ith largest
        eigenvalue
+
+  Raises:
+    TypeError: if input_matrix is not a numpy array
+    ValueError: if input_matrix is not a 2D square matrix
   """
-  # Eigen decomposition.
-  eigenvalues, eigenvectors = np.linalg.eig(input_matrix)
-  eigenvalues = eigenvalues.real
-  eigenvectors = eigenvectors.real
+  if not isinstance(input_matrix, np.ndarray):
+    raise TypeError("input_matrix must be a numpy array")
+  if len(input_matrix.shape) != 2:
+    raise ValueError("input_matrix must be 2-dimensional")
+  if input_matrix.shape[0] != input_matrix.shape[1]:
+    raise ValueError("input_matrix must be a square matrix")
+
+  # Eigen decomposition: use eigh if real and symmetric, otherwise eig.
+  if (np.isrealobj(input_matrix) and
+      np.all(np.isfinite(input_matrix)) and
+      np.allclose(input_matrix, input_matrix.T)):
+    eigenvalues, eigenvectors = np.linalg.eigh(input_matrix)
+  else:
+    eigenvalues, eigenvectors = np.linalg.eig(input_matrix)
+    eigenvalues = eigenvalues.real
+    eigenvectors = eigenvectors.real
   if descend:
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
