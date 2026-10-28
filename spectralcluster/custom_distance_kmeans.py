@@ -32,8 +32,9 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   """
   if not custom_dist:  # Scikit-learn KMeans
     kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0,
-        n_init="auto")
+        n_clusters=n_clusters, init="k-means++", max_iter=max_iter,
+        random_state=0, n_init="auto")
+    return kmeans_clusterer.fit_predict(spectral_embeddings)
   else:
     # Initialization using the k-means++ method in Scikit-learn
     kmeans_clusterer = KMeans(
@@ -103,17 +104,16 @@ class CustomKMeans:
                        (n_samples, self.n_clusters))
     if self.centroids is None:
       self._init_centroids(embeddings)
-    else:
-      n_centroids, c_n_features = self.centroids.shape
-      if n_centroids != self.n_clusters:
-        raise ValueError("The shape of the initial centroids (%s)"
-                         "does not match the number of clusters %d" %
-                         (str(self.centroids.shape), self.n_clusters))
-      if n_features != c_n_features:
-        raise ValueError(
-            "The number of features of the initial centroids %d"
-            "does not match the number of features of the data %d." %
-            (c_n_features, n_features))
+    n_centroids, c_n_features = self.centroids.shape
+    if n_centroids != self.n_clusters:
+      raise ValueError("The shape of the initial centroids (%s)"
+                       "does not match the number of clusters %d" %
+                       (str(self.centroids.shape), self.n_clusters))
+    if n_features != c_n_features:
+      raise ValueError(
+          "The number of features of the initial centroids %d"
+          "does not match the number of features of the data %d." %
+          (c_n_features, n_features))
 
     sample_ids = np.arange(n_samples)
     prev_mean_dist = 0
