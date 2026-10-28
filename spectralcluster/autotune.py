@@ -47,19 +47,29 @@ class AutoTune:
       search_level: hierarchical search level for auto-tuning
       proxy: which proxy to minimize for auto-tuning
     """
-    self.p_percentile_min = p_percentile_min
-    self.p_percentile_max = p_percentile_max
-    self.search_step = init_search_step
+    self.init_p_percentile_min = p_percentile_min
+    self.init_p_percentile_max = p_percentile_max
+    self.init_search_step = init_search_step
+    self.reset()
     self.search_level = search_level
     if not isinstance(proxy, AutoTuneProxy):
       raise TypeError("proxy must be an instance of AutoTuneProxy")
     self.proxy = proxy
 
+  def reset(self):
+    """Reset the percentile search range to initial values."""
+    self.p_percentile_min = self.init_p_percentile_min
+    self.p_percentile_max = self.init_p_percentile_max
+    self.search_step = self.init_search_step
+
   def get_percentile_range(self) -> typing.Sequence[float]:
     """Get the current percentile search range."""
     num_steps = int(
         np.ceil(
-            (self.p_percentile_max - self.p_percentile_min) / self.search_step))
+            np.round(
+                (self.p_percentile_max - self.p_percentile_min) /
+                self.search_step,
+                decimals=8))) + 1
     return list(
         np.linspace(self.p_percentile_min, self.p_percentile_max, num_steps))
 
@@ -91,18 +101,20 @@ class AutoTune:
       n_clusters: number of clusters as an integer
       best_p_percentile: p_percentile value that minimizes the ratio
     """
+    self.reset()
     p_percentile_range = self.get_percentile_range()
     searched = dict()
     for _ in range(self.search_level):
       min_ratio = np.inf
       for index, p_percentile in enumerate(p_percentile_range):
         if p_percentile in searched:
-          continue
-        # ratio is a proxy value of DER. We minimize this ratio
-        # to find a good p_percentile
-        ratio, eigenvectors_p, n_clusters_p = p_percentile_to_ratio(
-            p_percentile)
-        searched[p_percentile] = ratio
+          ratio, eigenvectors_p, n_clusters_p = searched[p_percentile]
+        else:
+          # ratio is a proxy value of DER. We minimize this ratio
+          # to find a good p_percentile
+          ratio, eigenvectors_p, n_clusters_p = p_percentile_to_ratio(
+              p_percentile)
+          searched[p_percentile] = (ratio, eigenvectors_p, n_clusters_p)
         if ratio < min_ratio:
           min_ratio = ratio
           eigenvectors = eigenvectors_p
@@ -129,4 +141,5 @@ class AutoTune:
       p_percentile_range = self.update_percentile_range(p_percentile_min,
                                                         p_percentile_max,
                                                         self.search_step)
+    self.reset()
     return eigenvectors, n_clusters, best_p_percentile

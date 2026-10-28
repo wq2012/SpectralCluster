@@ -286,7 +286,9 @@ class SpectralClusterer:
           raise ValueError("Unsupported value of AutoTuneProxy")
         return ratio, eigenvectors, n_clusters
 
-      eigenvectors, n_clusters, _ = self.autotune.tune(p_percentile_to_ratio)
+      eigenvectors, n_clusters, best_p_percentile = self.autotune.tune(
+          p_percentile_to_ratio)
+      self.refinement_options.p_percentile = best_p_percentile
     else:
       # Do not use Auto-tune.
       eigenvectors, n_clusters, _ = self._compute_eigenvectors_ncluster(

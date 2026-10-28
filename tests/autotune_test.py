@@ -80,6 +80,46 @@ class TestAutotune(unittest.TestCase):
     self.assertEqual(n_clusters, 2)
     self.assertEqual(p_percentile, 0.6)
 
+    # Calling tune() a second time should produce the exact same result.
+    eigenvectors2, n_clusters2, p_percentile2 = clusterer.autotune.tune(
+        p_percentile_to_ratio)
+    np.testing.assert_equal(eigenvectors, eigenvectors2)
+    self.assertEqual(n_clusters, n_clusters2)
+    self.assertEqual(p_percentile, p_percentile2)
+
+  def test_multi_level_search_preserves_optimum(self):
+    auto_tune = autotune.AutoTune(
+        p_percentile_min=0.50,
+        p_percentile_max=0.90,
+        init_search_step=0.10,
+        search_level=3)
+    call_count = 0
+
+    def mock_p_percentile_to_ratio(p_percentile: float):
+      nonlocal call_count
+      call_count += 1
+      # Minimum ratio is at p_percentile = 0.70 (already in level-1 grid).
+      ratio = abs(p_percentile - 0.70) + 0.1
+      return ratio, np.eye(4), 2
+
+    _, n_clusters, best_p = auto_tune.tune(mock_p_percentile_to_ratio)
+    self.assertEqual(n_clusters, 2)
+    self.assertAlmostEqual(best_p, 0.70, places=5)
+
+  def test_invalid_proxy_and_early_stop(self):
+    with self.assertRaises(TypeError):
+      autotune.AutoTune(proxy="invalid")
+
+    auto_tune = autotune.AutoTune(
+        p_percentile_min=0.60,
+        p_percentile_max=0.6001,
+        init_search_step=1e-5,
+        search_level=3)
+    _, n_clusters, best_p = auto_tune.tune(
+        lambda p: (1.0, np.eye(2), 2))
+    self.assertEqual(n_clusters, 2)
+    self.assertAlmostEqual(best_p, 0.60, places=3)
+
 
 if __name__ == "__main__":
   unittest.main()
