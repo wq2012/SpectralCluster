@@ -143,11 +143,10 @@ class ConstraintPropagation(ConstraintOperation):
                       constraint_matrix: np.ndarray) -> np.ndarray:
     """Adjust the affinity matrix with constraints."""
     self.check_input(affinity, constraint_matrix)
-    adjusted_affinity = np.copy(affinity)
-    degree = np.diag(np.sum(affinity, axis=1))
-    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + EPS))
+    degree = np.sum(affinity, axis=1)
+    degree_norm = 1.0 / (np.sqrt(degree) + EPS)
     # Compute affinity_norm as D^(-1/2)AD^(-1/2)
-    affinity_norm = degree_norm.dot(affinity).dot(degree_norm)
+    affinity_norm = degree_norm[:, None] * affinity * degree_norm[None, :]
     # The closed form of the final converged constraint matrix is:
     # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
     # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a

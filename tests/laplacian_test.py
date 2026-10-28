@@ -44,6 +44,11 @@ class TestComputeLaplacian(unittest.TestCase):
                          [-0.4, -0.2, 0.6, 0], [0, -0.33, 0, 0.33]])
     np.testing.assert_allclose(expected, laplacian_norm, atol=0.01)
 
+  def test_invalid_laplacian_type(self):
+    affinity = np.eye(3)
+    with self.assertRaises(TypeError):
+      laplacian.compute_laplacian(affinity, laplacian_type=None)
+
 
 if __name__ == "__main__":
   unittest.main()

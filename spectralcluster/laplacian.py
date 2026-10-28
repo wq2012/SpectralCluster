@@ -38,8 +38,8 @@ def compute_laplacian(affinity: np.ndarray,
     TypeError: if laplacian_type is not a LaplacianType
     ValueError: if laplacian_type is not supported
   """
-  degree = np.diag(np.sum(affinity, axis=1))
-  laplacian = degree - affinity
+  degree = np.sum(affinity, axis=1)
+  laplacian = np.diag(degree) - affinity
   if not isinstance(laplacian_type, LaplacianType):
     raise TypeError("laplacian_type must be a LaplacianType")
   elif laplacian_type == LaplacianType.Affinity:
@@ -48,13 +48,11 @@ def compute_laplacian(affinity: np.ndarray,
     return laplacian
   elif laplacian_type == LaplacianType.RandomWalk:
     # Random walk normalized version
-    degree_norm = np.diag(1 / (np.diag(degree) + eps))
-    laplacian_norm = degree_norm.dot(laplacian)
-    return laplacian_norm
+    degree_norm = 1.0 / (degree + eps)
+    return degree_norm[:, None] * laplacian
   elif laplacian_type == LaplacianType.GraphCut:
     # Graph cut normalized version
-    degree_norm = np.diag(1 / (np.sqrt(np.diag(degree)) + eps))
-    laplacian_norm = degree_norm.dot(laplacian).dot(degree_norm)
-    return laplacian_norm
+    degree_norm = 1.0 / (np.sqrt(degree) + eps)
+    return degree_norm[:, None] * laplacian * degree_norm[None, :]
   else:
     raise ValueError("Unsupported laplacian_type.")
