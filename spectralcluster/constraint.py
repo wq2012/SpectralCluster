@@ -150,14 +150,14 @@ class ConstraintPropagation(ConstraintOperation):
     # The closed form of the final converged constraint matrix is:
     # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
     # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a
-    # `temp_value` for readibility
+    # `temp_value` for readability
     temp_value = np.linalg.inv(
         np.eye(affinity.shape[0]) - self.alpha * affinity_norm)
     final_constraint_matrix = (
         1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
     # `is_positive` is a mask matrix where values of the final_constraint_matrix
     # are positive. The affinity matrix is adjusted by the final constraint
-    # matrix using equation (4) in refernce paper [1]
+    # matrix using equation (4) in reference paper [1]
     is_positive = final_constraint_matrix > 0
     affinity1 = 1 - (1 - final_constraint_matrix * is_positive) * (
         1 - affinity * is_positive)

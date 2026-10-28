@@ -103,7 +103,7 @@ def compute_number_of_clusters(eigenvalues: np.ndarray,
     stop_eigenvalue: we do not look at eigen values smaller than this
     eigengap_type: the type of the eigengap computation
     descend: sort eigenvalues in a descending order. Default is True
-    eps: a small value for numerial stability
+    eps: a small value for numerical stability
 
   Returns:
     max_delta_index: number of clusters as an integer

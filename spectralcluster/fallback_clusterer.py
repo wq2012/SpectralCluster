@@ -101,7 +101,7 @@ class FallbackClusterer:
   """
 
   def __init__(self, options: FallbackOptions):
-    """Initilization of the fallback clusterer.
+    """Initialization of the fallback clusterer.
 
     Args:
       options: an object of FallbackOptions
@@ -134,7 +134,7 @@ def check_single_cluster(fallback_options: FallbackOptions,
   Args:
     fallback_options: an object of FallbackOptions
     embeddings: numpy array of shape (n_samples, n_features)
-    affinity: the affinity matrix of shape (n_samples, (n_samples)
+    affinity: the affinity matrix of shape (n_samples, n_samples)
 
   Returns:
     a boolean, where True means there is only a single cluster

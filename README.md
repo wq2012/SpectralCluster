@@ -57,7 +57,7 @@ python3 -m pip install spectralcluster
 
 Simply use the `predict()` method of class `SpectralClusterer` to perform
 spectral clustering. The example below should be closest to the original C++
-implemention used by our
+implementation used by our
 [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/).
 
 ```python
@@ -95,7 +95,7 @@ For the complete list of parameters of `SpectralClusterer`, see
 
 ### Refinement operations
 
-In our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/), we apply a sequence of refinment operations on the affinity matrix, which is critical to the performance on the speaker diarization results.
+In our [ICASSP 2018 paper](https://google.github.io/speaker-id/publications/LstmDiarization/), we apply a sequence of refinement operations on the affinity matrix, which is critical to the performance on the speaker diarization results.
 
 You can specify your refinement operations like this:
 
@@ -152,7 +152,7 @@ You can also use other affinity functions by setting `affinity_function` when in
 
 ### Auto-tune
 
-We also support auto-tuning the `p_percentile` parameter of the `RowWiseThreshold` refinement operation, which was original proposed in [this paper](https://arxiv.org/abs/2003.02405).
+We also support auto-tuning the `p_percentile` parameter of the `RowWiseThreshold` refinement operation, which was originally proposed in [this paper](https://arxiv.org/abs/2003.02405).
 
 You can enable this by passing in an `AutoTune` object to the `autotune` argument when initializing your `SpectralClusterer` object.
 
@@ -180,7 +180,7 @@ clustering methods, such as when the number of embeddings is too small.
 
 When initializing the `SpectralClusterer` object, you can pass in a `FallbackOptions` object to the `fallback_options` argument, to use a fallback clusterer under certain conditions.
 
-Also, spectral clustering and eigen-gap may not work well at making single-vs-multi cluster decisions. When `min_clusters=1`, we can also specify `FallbackOptions.single_cluster_condition` and `FallbackOptions.single_cluster_affinity_threshold` to help determine single cluster cases by thresdholding the affinity matrix.
+Also, spectral clustering and eigen-gap may not work well at making single-vs-multi cluster decisions. When `min_clusters=1`, we can also specify `FallbackOptions.single_cluster_condition` and `FallbackOptions.single_cluster_affinity_threshold` to help determine single cluster cases by thresholding the affinity matrix.
 
 For the complete list of parameters of `FallbackOptions`, see `spectralcluster/fallback_clusterer.py`.
 
@@ -283,7 +283,7 @@ Our papers are cited as:
 ```
 @inproceedings{wang2018speaker,
   title={{Speaker Diarization with LSTM}},
-  author={Wang, Quan and Downey, Carlton and Wan, Li and Mansfield, Philip Andrew and Moreno, Ignacio Lopz},
+  author={Wang, Quan and Downey, Carlton and Wan, Li and Mansfield, Philip Andrew and Moreno, Ignacio Lopez},
   booktitle={2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   pages={5239--5243},
   year={2018},

@@ -11,7 +11,7 @@ class LaplacianType(enum.Enum):
   # The affinity matrix, not a Laplacian: W
   Affinity = enum.auto()
 
-  # The unnormalied Laplacian: L = D - W
+  # The unnormalized Laplacian: L = D - W
   Unnormalized = enum.auto()
 
   # The random walk view normalized Laplacian:  D^{-1} * L
@@ -29,7 +29,7 @@ def compute_laplacian(affinity: np.ndarray,
   Args:
     affinity: the affinity matrix of input data
     laplacian_type: a LaplacianType
-    eps: a small value for numerial stability
+    eps: a small value for numerical stability
 
   Returns:
     the Laplacian matrix

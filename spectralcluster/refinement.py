@@ -1,4 +1,4 @@
-"""Affinity matrix refinemnet operations."""
+"""Affinity matrix refinement operations."""
 
 import abc
 from dataclasses import dataclass
@@ -80,7 +80,7 @@ class RefinementOptions:
   # The p-percentile for the row wise thresholding.
   p_percentile: float = 0.95
 
-  # The multiplier for soft threhsold, if this value is 0,
+  # The multiplier for soft threshold, if this value is 0,
   # then it's a hard thresholding.
   thresholding_soft_multiplier: float = 0.01
 

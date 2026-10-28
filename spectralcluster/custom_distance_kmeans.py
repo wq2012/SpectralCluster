@@ -20,7 +20,7 @@ def run_kmeans(spectral_embeddings: np.ndarray,
   in scipy.spatial.distance.
 
   Args:
-    spectral_embeddings: input spectracl embedding observations
+    spectral_embeddings: input spectral embedding observations
     n_clusters: the number of clusters to form
     custom_dist: str or callable. custom distance measure for k-means. if a
       string, "cosine", "euclidean", "mahalanobis", or any other distance
@@ -42,7 +42,7 @@ def run_kmeans(spectral_embeddings: np.ndarray,
         n_init="auto")
     kmeans_clusterer.fit(spectral_embeddings)
     centroids = kmeans_clusterer.cluster_centers_
-    # Run the cusotom K-means
+    # Run the custom K-means
     kmeans_clusterer = CustomKMeans(
         n_clusters=n_clusters,
         centroids=centroids,
@@ -106,12 +106,12 @@ class CustomKMeans:
       self._init_centroids(embeddings)
     n_centroids, c_n_features = self.centroids.shape
     if n_centroids != self.n_clusters:
-      raise ValueError("The shape of the initial centroids (%s)"
+      raise ValueError("The shape of the initial centroids (%s) "
                        "does not match the number of clusters %d" %
                        (str(self.centroids.shape), self.n_clusters))
     if n_features != c_n_features:
       raise ValueError(
-          "The number of features of the initial centroids %d"
+          "The number of features of the initial centroids %d "
           "does not match the number of features of the data %d." %
           (c_n_features, n_features))
 

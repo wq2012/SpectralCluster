@@ -110,7 +110,7 @@ class SpectralClusterer:
       affinity: np.ndarray,
       constraint_matrix: typing.Optional[np.ndarray] = None) -> (
           typing.Tuple[np.ndarray, int, float]):
-    """Perform eigen decomposition and estiamte the number of clusters.
+    """Perform eigen decomposition and estimate the number of clusters.
 
     Perform affinity refinement, eigen decomposition and sort eigenvectors by
     the real part of eigenvalues. Estimate the number of clusters using EigenGap
@@ -142,7 +142,7 @@ class SpectralClusterer:
           affinity, constraint_matrix)
 
     if not self.laplacian_type or self.laplacian_type == LaplacianType.Affinity:
-      # Perform eigen decomposion.
+      # Perform eigen decomposition.
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(affinity)
       # Get number of clusters.
       n_clusters, max_delta_norm = utils.compute_number_of_clusters(
@@ -155,7 +155,7 @@ class SpectralClusterer:
       # Compute Laplacian matrix
       laplacian_norm = laplacian.compute_laplacian(
           affinity, laplacian_type=self.laplacian_type)
-      # Perform eigen decomposion. Eigen values are sorted in an ascending
+      # Perform eigen decomposition. Eigen values are sorted in an ascending
       # order
       (eigenvalues, eigenvectors) = utils.compute_sorted_eigenvectors(
           laplacian_norm, descend=False)
@@ -268,7 +268,7 @@ class SpectralClusterer:
       if (RefinementName.RowWiseThreshold
           not in self.refinement_options.refinement_sequence):
         raise ValueError(
-            "AutoTune is only effective when the refinement sequence"
+            "AutoTune is only effective when the refinement sequence "
             "contains RowWiseThreshold")
 
       def p_percentile_to_ratio(p_percentile: float) -> (
