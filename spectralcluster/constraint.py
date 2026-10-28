@@ -16,11 +16,24 @@ class ConstraintName(enum.Enum):
   # The Constraint Propagation method
   ConstraintPropagation = enum.auto()
 
+  # Normalized Constraint Propagation (E2CP with zero-diagonal propagation
+  # graph, normalized/clipped propagated constraints, and preserved diagonal)
+  NormalizedConstraintPropagation = enum.auto()
+
 
 class IntegrationType(enum.Enum):
   """The integration types for the Affinity Integration method."""
+  # For non-negative constraints (Must-Link or unconstrained), take
+  # np.maximum(affinity, constraint_matrix). For negative constraints
+  # (Cannot-Link), scale affinity by (1 + constraint_matrix) * affinity.
   Max = enum.auto()
+
+  # Take 0.5 * (affinity + constraint_matrix).
   Average = enum.auto()
+
+  # Smooth adjustment from E2CP (Eq. 13 in Lu et al. 2013):
+  # 1 - (1 - C) * (1 - A) for C >= 0, and (1 + C) * A for C < 0.
+  Smooth = enum.auto()
 
 
 @dataclass
@@ -48,6 +61,10 @@ class ConstraintOptions:
     elif self.constraint_name == ConstraintName.ConstraintPropagation:
       self.constraint_operator = ConstraintPropagation(
           self.constraint_propagation_alpha)
+    elif (self.constraint_name ==
+          ConstraintName.NormalizedConstraintPropagation):
+      self.constraint_operator = ConstraintPropagation(
+          self.constraint_propagation_alpha, normalize=True)
     else:
       raise ValueError("Unsupported constraint name: {}".format(
           self.constraint_name))
@@ -100,8 +117,8 @@ class AffinityIntegration(ConstraintOperation):
   """The Affinity Integration method.
 
   Basic operations to integrate the affinity matrix with given pairwise
-  constraints in the constraint matrix. Current integration types include `Max`
-  and `Average`.
+  constraints in the constraint matrix. Current integration types include
+  `Max`, `Average`, and `Smooth`.
   """
 
   def __init__(self, integration_type: IntegrationType = IntegrationType.Max):
@@ -113,9 +130,20 @@ class AffinityIntegration(ConstraintOperation):
     """Adjust the affinity matrix with constraints."""
     self.check_input(affinity, constraint_matrix)
     if self.integration_type == IntegrationType.Max:
-      return np.maximum(affinity, constraint_matrix)
+      # For non-negative entries (Must-Link or unconstrained), take the
+      # element-wise maximum. For negative entries (Cannot-Link), scale
+      # affinity down by (1 + constraint_matrix) * affinity.
+      return np.where(
+          constraint_matrix >= 0,
+          np.maximum(affinity, constraint_matrix),
+          np.clip((1.0 + constraint_matrix) * affinity, 0.0, 1.0))
     elif self.integration_type == IntegrationType.Average:
       return 0.5 * (affinity + constraint_matrix)
+    elif self.integration_type == IntegrationType.Smooth:
+      return np.where(
+          constraint_matrix >= 0,
+          1.0 - (1.0 - constraint_matrix) * (1.0 - affinity),
+          (1.0 + constraint_matrix) * affinity)
     else:
       raise ValueError("Unsupported integration type: {}".format(
           self.integration_type))
@@ -135,26 +163,48 @@ class ConstraintPropagation(ConstraintOperation):
   propagation: A graph-based learning approach and its applications." IJCV 2013
   """
 
-  def __init__(self, alpha: float = 0.6):
+  def __init__(self, alpha: float = 0.6, normalize: bool = False):
+    if alpha <= 0 or alpha >= 1:
+      raise ValueError("alpha must be in (0, 1)")
     self.alpha = alpha
+    self.normalize = normalize
 
   def adjust_affinity(self,
                       affinity: np.ndarray,
                       constraint_matrix: np.ndarray) -> np.ndarray:
     """Adjust the affinity matrix with constraints."""
     self.check_input(affinity, constraint_matrix)
-    degree = np.sum(affinity, axis=1)
+    propagation_affinity = np.copy(affinity).astype(float)
+    if self.normalize:
+      np.fill_diagonal(propagation_affinity, 0.0)
+    degree = np.sum(propagation_affinity, axis=1)
     degree_norm = 1.0 / (np.sqrt(degree) + EPS)
     # Compute affinity_norm as D^(-1/2)AD^(-1/2)
-    affinity_norm = degree_norm[:, None] * affinity * degree_norm[None, :]
+    affinity_norm = (
+        degree_norm[:, None] * propagation_affinity * degree_norm[None, :])
     # The closed form of the final converged constraint matrix is:
     # (1-alpha)^2 * (I-alpha*affinity_norm)^(-1) * constraint_matrix *
     # (I-alpha*affinity_norm)^(-1). We save (I-alpha*affinity_norm)^(-1) as a
     # `temp_value` for readability
     temp_value = np.linalg.inv(
         np.eye(affinity.shape[0]) - self.alpha * affinity_norm)
-    final_constraint_matrix = (
-        1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
+    if self.normalize:
+      final_constraint_matrix = (
+          1 - self.alpha)**2 * temp_value.dot(
+              constraint_matrix).dot(temp_value.T)
+      max_abs = np.max(np.abs(final_constraint_matrix))
+      if max_abs > EPS:
+        final_constraint_matrix = final_constraint_matrix / max_abs
+      has_init = constraint_matrix != 0
+      final_constraint_matrix = np.where(
+          has_init & (
+              np.abs(constraint_matrix) > np.abs(final_constraint_matrix)),
+          constraint_matrix,
+          final_constraint_matrix)
+      final_constraint_matrix = np.clip(final_constraint_matrix, -1.0, 1.0)
+    else:
+      final_constraint_matrix = (
+          1 - self.alpha)**2 * temp_value.dot(constraint_matrix).dot(temp_value)
     # `is_positive` is a mask matrix where values of the final_constraint_matrix
     # are positive. The affinity matrix is adjusted by the final constraint
     # matrix using equation (4) in reference paper [1]
@@ -164,6 +214,9 @@ class ConstraintPropagation(ConstraintOperation):
     affinity2 = (1 + final_constraint_matrix * np.invert(is_positive)) * (
         affinity * np.invert(is_positive))
     adjusted_affinity = affinity1 + affinity2
+    if self.normalize:
+      adjusted_affinity = np.clip(adjusted_affinity, 0.0, 1.0)
+      np.fill_diagonal(adjusted_affinity, np.diag(affinity))
     return adjusted_affinity
 
 

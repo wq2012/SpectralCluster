@@ -586,6 +586,195 @@ class TestSpectralClusterer(unittest.TestCase):
     np.testing.assert_equal(np.zeros(6, dtype=int),
                             custom_clusterer.predict(matrix))
 
+  def test_affinity_integration_cannot_link_and_smooth(self):
+    # Sample 4 ([0.8, 0.6]) is closer to cluster 0 ({0, 1}) than cluster 1
+    # ({2, 3, 5}), so unconstrained clustering gives [0, 0, 1, 1, 0, 1].
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.0, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.8, 0.6],
+        [0.0, 1.1],
+    ])
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.6,
+        thresholding_type=ThresholdType.Percentile,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=[
+            RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+        ])
+    unconstrained_clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=2,
+        max_clusters=2,
+        refinement_options=refinement_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    unconstrained_labels = utils.enforce_ordered_labels(
+        unconstrained_clusterer.predict(matrix))
+    np.testing.assert_equal(
+        np.array([0, 0, 1, 1, 0, 1]), unconstrained_labels)
+
+    # Cannot-Link between sample 4 and {0, 1} pushes sample 4 into cluster 1.
+    cl_matrix = np.zeros((6, 6))
+    cl_matrix[0, 4] = -1.0
+    cl_matrix[4, 0] = -1.0
+    cl_matrix[1, 4] = -1.0
+    cl_matrix[4, 1] = -1.0
+    for integration_type in [IntegrationType.Max, IntegrationType.Smooth]:
+      constraint_options = constraint.ConstraintOptions(
+          constraint_name=ConstraintName.AffinityIntegration,
+          apply_before_refinement=False,
+          integration_type=integration_type)
+      clusterer = spectral_clusterer.SpectralClusterer(
+          min_clusters=2,
+          max_clusters=2,
+          refinement_options=refinement_options,
+          constraint_options=constraint_options,
+          laplacian_type=LaplacianType.GraphCut,
+          row_wise_renorm=True)
+      labels = utils.enforce_ordered_labels(
+          clusterer.predict(matrix, cl_matrix))
+      np.testing.assert_equal(np.array([0, 0, 1, 1, 1, 1]), labels)
+
+  def test_normalized_constraint_propagation_must_link(self):
+    # Unconstrained clustering assigns sample 4 ([0.9, -0.1]) to cluster 0:
+    # [0, 0, 1, 1, 0, 1]. A single Must-Link constraint ML(4, 5) pulls
+    # sample 4 into cluster 1: [0, 0, 1, 1, 1, 1].
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.1, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.9, -0.1],
+        [0.0, 1.2],
+    ])
+    ml_matrix = np.zeros((6, 6))
+    ml_matrix[4, 5] = 1.0
+    ml_matrix[5, 4] = 1.0
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.95,
+        thresholding_type=ThresholdType.Percentile,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=[
+            RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+        ])
+    constraint_options = constraint.ConstraintOptions(
+        constraint_name=ConstraintName.NormalizedConstraintPropagation,
+        apply_before_refinement=True,
+        constraint_propagation_alpha=0.6)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=2,
+        max_clusters=2,
+        refinement_options=refinement_options,
+        constraint_options=constraint_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = utils.enforce_ordered_labels(
+        clusterer.predict(matrix, ml_matrix))
+    np.testing.assert_equal(np.array([0, 0, 1, 1, 1, 1]), labels)
+
+  def test_normalized_constraint_propagation_cannot_link(self):
+    # A single Cannot-Link CL(0, 4) propagates to neighbor (1, 4) and pushes
+    # boundary sample 4 ([0.8, 0.6]) out of cluster 0 into cluster 1.
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.0, 0.1],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.8, 0.6],
+        [0.0, 1.1],
+    ])
+    cl_matrix = np.zeros((6, 6))
+    cl_matrix[0, 4] = -1.0
+    cl_matrix[4, 0] = -1.0
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.6,
+        thresholding_type=ThresholdType.Percentile,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=[
+            RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+        ])
+    constraint_options = constraint.ConstraintOptions(
+        constraint_name=ConstraintName.NormalizedConstraintPropagation,
+        apply_before_refinement=True,
+        constraint_propagation_alpha=0.6)
+    clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=2,
+        max_clusters=2,
+        refinement_options=refinement_options,
+        constraint_options=constraint_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    labels = utils.enforce_ordered_labels(
+        clusterer.predict(matrix, cl_matrix))
+    np.testing.assert_equal(np.array([0, 0, 1, 1, 1, 1]), labels)
+
+  def test_speaker_turn_constraint_matrix_clustering(self):
+    # 6 sequential turns: turns 0, 1 are Speaker 0; turn 2 ([0.8, 0.6]) is
+    # acoustically closer to Speaker 0, but speaker_turn_scores indicate a
+    # high-confidence speaker turn between 1 and 2 (score=5.0 > 1.0 -> CL)
+    # and no speaker turn between 2 and 3 (score=0.0 -> ML).
+    matrix = np.array([
+        [1.0, 0.0],
+        [1.0, 0.1],
+        [0.8, 0.6],
+        [0.0, 1.0],
+        [0.1, 1.0],
+        [0.0, 1.1],
+    ])
+    # Scores: (0,1)=0 (ML), (1,2)=5.0 (CL), (2,3)=0 (ML),
+    # (3,4)=0.2 (unconstrained), (4,5)=0.2 (unconstrained)
+    speaker_turn_scores = [0.0, 0.0, 5.0, 0.0, 0.2, 0.2]
+    constraint_matrix = constraint.ConstraintMatrix(
+        speaker_turn_scores, threshold=1.0).compute_diagonals()
+    refinement_options = refinement.RefinementOptions(
+        p_percentile=0.6,
+        thresholding_type=ThresholdType.Percentile,
+        thresholding_with_binarization=True,
+        thresholding_preserve_diagonal=True,
+        symmetrize_type=SymmetrizeType.Average,
+        refinement_sequence=[
+            RefinementName.RowWiseThreshold, RefinementName.Symmetrize
+        ])
+    unconstrained_clusterer = spectral_clusterer.SpectralClusterer(
+        min_clusters=2,
+        max_clusters=2,
+        refinement_options=refinement_options,
+        laplacian_type=LaplacianType.GraphCut,
+        row_wise_renorm=True)
+    unconstrained_labels = utils.enforce_ordered_labels(
+        unconstrained_clusterer.predict(matrix))
+    np.testing.assert_equal(
+        np.array([0, 0, 0, 1, 1, 1]), unconstrained_labels)
+
+    for constraint_name in [
+        ConstraintName.ConstraintPropagation,
+        ConstraintName.NormalizedConstraintPropagation,
+        ConstraintName.AffinityIntegration,
+    ]:
+      constraint_options = constraint.ConstraintOptions(
+          constraint_name=constraint_name,
+          apply_before_refinement=(
+              constraint_name != ConstraintName.AffinityIntegration),
+          constraint_propagation_alpha=0.4)
+      clusterer = spectral_clusterer.SpectralClusterer(
+          min_clusters=2,
+          max_clusters=2,
+          refinement_options=refinement_options,
+          constraint_options=constraint_options,
+          laplacian_type=LaplacianType.GraphCut,
+          row_wise_renorm=True)
+      labels = utils.enforce_ordered_labels(
+          clusterer.predict(matrix, constraint_matrix))
+      np.testing.assert_equal(np.array([0, 0, 1, 1, 1, 1]), labels)
+
 
 if __name__ == "__main__":
   unittest.main()
