@@ -2,8 +2,7 @@
 set -o errexit
 
 # This script requires these tools:
-# pip3 install --user --upgrade setuptools wheel
-# pip3 install --user --upgrade twine
+# pip3 install --user --upgrade build twine
 
 # Get project path.
 PROJECT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -16,7 +15,7 @@ rm -rf dist
 rm -rf spectralcluster.egg-info
 
 # build and upload
-python3 setup.py sdist bdist_wheel
+python3 -m build
 python3 -m twine upload dist/* --verbose
 
 popd
