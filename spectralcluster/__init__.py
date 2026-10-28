@@ -12,7 +12,7 @@ from . import refinement
 from . import spectral_clusterer
 from . import utils
 
-__version__ = "0.2.23"
+__version__ = "0.2.24"
 
 AutoTune = autotune.AutoTune
 AutoTuneProxy = autotune.AutoTuneProxy

@@ -75,6 +75,9 @@
                         <li>
                                 <a class="variable" href="#ConstraintName.ConstraintPropagation">ConstraintPropagation</a>
                         </li>
+                        <li>
+                                <a class="variable" href="#ConstraintName.NormalizedConstraintPropagation">NormalizedConstraintPropagation</a>
+                        </li>
                 </ul>
 
             </li>
@@ -831,6 +834,10 @@ estimate the number of clusters.</p>
 </span><span id="ConstraintName-16"><a href="#ConstraintName-16"><span class="linenos">16</span></a>
 </span><span id="ConstraintName-17"><a href="#ConstraintName-17"><span class="linenos">17</span></a>  <span class="c1"># The Constraint Propagation method</span>
 </span><span id="ConstraintName-18"><a href="#ConstraintName-18"><span class="linenos">18</span></a>  <span class="n">ConstraintPropagation</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+</span><span id="ConstraintName-19"><a href="#ConstraintName-19"><span class="linenos">19</span></a>
+</span><span id="ConstraintName-20"><a href="#ConstraintName-20"><span class="linenos">20</span></a>  <span class="c1"># Normalized Constraint Propagation (E2CP with zero-diagonal propagation</span>
+</span><span id="ConstraintName-21"><a href="#ConstraintName-21"><span class="linenos">21</span></a>  <span class="c1"># graph, normalized/clipped propagated constraints, and preserved diagonal)</span>
+</span><span id="ConstraintName-22"><a href="#ConstraintName-22"><span class="linenos">22</span></a>  <span class="n">NormalizedConstraintPropagation</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -862,6 +869,18 @@ estimate the number of clusters.</p>
     
 
                             </div>
+                            <div id="ConstraintName.NormalizedConstraintPropagation" class="classattr">
+                                <div class="attr variable">
+            <span class="name">NormalizedConstraintPropagation</span>        =
+<span class="default_value">&lt;<a href="#ConstraintName.NormalizedConstraintPropagation">ConstraintName.NormalizedConstraintPropagation</a>: 3&gt;</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ConstraintName.NormalizedConstraintPropagation"></a>
+    
+    
+
+                            </div>
                 </section>
                 <section id="ConstraintOptions">
                             <input id="ConstraintOptions-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -875,34 +894,38 @@ estimate the number of clusters.</p>
 
     </div>
     <a class="headerlink" href="#ConstraintOptions"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ConstraintOptions-27"><a href="#ConstraintOptions-27"><span class="linenos">27</span></a><span class="nd">@dataclass</span>
-</span><span id="ConstraintOptions-28"><a href="#ConstraintOptions-28"><span class="linenos">28</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ConstraintOptions</span><span class="p">:</span>
-</span><span id="ConstraintOptions-29"><a href="#ConstraintOptions-29"><span class="linenos">29</span></a><span class="w">  </span><span class="sd">"""Constraint options for constrained clustering methods."""</span>
-</span><span id="ConstraintOptions-30"><a href="#ConstraintOptions-30"><span class="linenos">30</span></a>
-</span><span id="ConstraintOptions-31"><a href="#ConstraintOptions-31"><span class="linenos">31</span></a>  <span class="c1"># Name of the constrained clustering method.</span>
-</span><span id="ConstraintOptions-32"><a href="#ConstraintOptions-32"><span class="linenos">32</span></a>  <span class="n">constraint_name</span><span class="p">:</span> <span class="n">ConstraintName</span>
-</span><span id="ConstraintOptions-33"><a href="#ConstraintOptions-33"><span class="linenos">33</span></a>
-</span><span id="ConstraintOptions-34"><a href="#ConstraintOptions-34"><span class="linenos">34</span></a>  <span class="c1"># If True, this operation is applied before the affinity refinement.</span>
-</span><span id="ConstraintOptions-35"><a href="#ConstraintOptions-35"><span class="linenos">35</span></a>  <span class="c1"># It is suggested to set as True for the ConstraintPropagation method</span>
-</span><span id="ConstraintOptions-36"><a href="#ConstraintOptions-36"><span class="linenos">36</span></a>  <span class="c1"># and False for the AffinityIntegration method.</span>
-</span><span id="ConstraintOptions-37"><a href="#ConstraintOptions-37"><span class="linenos">37</span></a>  <span class="n">apply_before_refinement</span><span class="p">:</span> <span class="nb">bool</span>
-</span><span id="ConstraintOptions-38"><a href="#ConstraintOptions-38"><span class="linenos">38</span></a>
-</span><span id="ConstraintOptions-39"><a href="#ConstraintOptions-39"><span class="linenos">39</span></a>  <span class="c1"># Integration type for the Affinity Integration method.</span>
-</span><span id="ConstraintOptions-40"><a href="#ConstraintOptions-40"><span class="linenos">40</span></a>  <span class="n">integration_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">IntegrationType</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntegrationType</span><span class="o">.</span><span class="n">Max</span>
-</span><span id="ConstraintOptions-41"><a href="#ConstraintOptions-41"><span class="linenos">41</span></a>
-</span><span id="ConstraintOptions-42"><a href="#ConstraintOptions-42"><span class="linenos">42</span></a>  <span class="c1"># alpha value of the constraint propagation method.</span>
-</span><span id="ConstraintOptions-43"><a href="#ConstraintOptions-43"><span class="linenos">43</span></a>  <span class="n">constraint_propagation_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span>
-</span><span id="ConstraintOptions-44"><a href="#ConstraintOptions-44"><span class="linenos">44</span></a>
-</span><span id="ConstraintOptions-45"><a href="#ConstraintOptions-45"><span class="linenos">45</span></a>  <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="ConstraintOptions-46"><a href="#ConstraintOptions-46"><span class="linenos">46</span></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span> <span class="o">==</span> <span class="n">ConstraintName</span><span class="o">.</span><span class="n">AffinityIntegration</span><span class="p">:</span>
-</span><span id="ConstraintOptions-47"><a href="#ConstraintOptions-47"><span class="linenos">47</span></a>      <span class="n">integration_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integration_type</span> <span class="ow">or</span> <span class="n">IntegrationType</span><span class="o">.</span><span class="n">Max</span>
-</span><span id="ConstraintOptions-48"><a href="#ConstraintOptions-48"><span class="linenos">48</span></a>      <span class="bp">self</span><span class="o">.</span><span class="n">constraint_operator</span> <span class="o">=</span> <span class="n">AffinityIntegration</span><span class="p">(</span><span class="n">integration_type</span><span class="p">)</span>
-</span><span id="ConstraintOptions-49"><a href="#ConstraintOptions-49"><span class="linenos">49</span></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span> <span class="o">==</span> <span class="n">ConstraintName</span><span class="o">.</span><span class="n">ConstraintPropagation</span><span class="p">:</span>
-</span><span id="ConstraintOptions-50"><a href="#ConstraintOptions-50"><span class="linenos">50</span></a>      <span class="bp">self</span><span class="o">.</span><span class="n">constraint_operator</span> <span class="o">=</span> <span class="n">ConstraintPropagation</span><span class="p">(</span>
-</span><span id="ConstraintOptions-51"><a href="#ConstraintOptions-51"><span class="linenos">51</span></a>          <span class="bp">self</span><span class="o">.</span><span class="n">constraint_propagation_alpha</span><span class="p">)</span>
-</span><span id="ConstraintOptions-52"><a href="#ConstraintOptions-52"><span class="linenos">52</span></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="ConstraintOptions-53"><a href="#ConstraintOptions-53"><span class="linenos">53</span></a>      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unsupported constraint name: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-</span><span id="ConstraintOptions-54"><a href="#ConstraintOptions-54"><span class="linenos">54</span></a>          <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ConstraintOptions-40"><a href="#ConstraintOptions-40"><span class="linenos">40</span></a><span class="nd">@dataclass</span>
+</span><span id="ConstraintOptions-41"><a href="#ConstraintOptions-41"><span class="linenos">41</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ConstraintOptions</span><span class="p">:</span>
+</span><span id="ConstraintOptions-42"><a href="#ConstraintOptions-42"><span class="linenos">42</span></a><span class="w">  </span><span class="sd">"""Constraint options for constrained clustering methods."""</span>
+</span><span id="ConstraintOptions-43"><a href="#ConstraintOptions-43"><span class="linenos">43</span></a>
+</span><span id="ConstraintOptions-44"><a href="#ConstraintOptions-44"><span class="linenos">44</span></a>  <span class="c1"># Name of the constrained clustering method.</span>
+</span><span id="ConstraintOptions-45"><a href="#ConstraintOptions-45"><span class="linenos">45</span></a>  <span class="n">constraint_name</span><span class="p">:</span> <span class="n">ConstraintName</span>
+</span><span id="ConstraintOptions-46"><a href="#ConstraintOptions-46"><span class="linenos">46</span></a>
+</span><span id="ConstraintOptions-47"><a href="#ConstraintOptions-47"><span class="linenos">47</span></a>  <span class="c1"># If True, this operation is applied before the affinity refinement.</span>
+</span><span id="ConstraintOptions-48"><a href="#ConstraintOptions-48"><span class="linenos">48</span></a>  <span class="c1"># It is suggested to set as True for the ConstraintPropagation method</span>
+</span><span id="ConstraintOptions-49"><a href="#ConstraintOptions-49"><span class="linenos">49</span></a>  <span class="c1"># and False for the AffinityIntegration method.</span>
+</span><span id="ConstraintOptions-50"><a href="#ConstraintOptions-50"><span class="linenos">50</span></a>  <span class="n">apply_before_refinement</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="ConstraintOptions-51"><a href="#ConstraintOptions-51"><span class="linenos">51</span></a>
+</span><span id="ConstraintOptions-52"><a href="#ConstraintOptions-52"><span class="linenos">52</span></a>  <span class="c1"># Integration type for the Affinity Integration method.</span>
+</span><span id="ConstraintOptions-53"><a href="#ConstraintOptions-53"><span class="linenos">53</span></a>  <span class="n">integration_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">IntegrationType</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntegrationType</span><span class="o">.</span><span class="n">Smooth</span>
+</span><span id="ConstraintOptions-54"><a href="#ConstraintOptions-54"><span class="linenos">54</span></a>
+</span><span id="ConstraintOptions-55"><a href="#ConstraintOptions-55"><span class="linenos">55</span></a>  <span class="c1"># alpha value of the constraint propagation method.</span>
+</span><span id="ConstraintOptions-56"><a href="#ConstraintOptions-56"><span class="linenos">56</span></a>  <span class="n">constraint_propagation_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span>
+</span><span id="ConstraintOptions-57"><a href="#ConstraintOptions-57"><span class="linenos">57</span></a>
+</span><span id="ConstraintOptions-58"><a href="#ConstraintOptions-58"><span class="linenos">58</span></a>  <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="ConstraintOptions-59"><a href="#ConstraintOptions-59"><span class="linenos">59</span></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span> <span class="o">==</span> <span class="n">ConstraintName</span><span class="o">.</span><span class="n">AffinityIntegration</span><span class="p">:</span>
+</span><span id="ConstraintOptions-60"><a href="#ConstraintOptions-60"><span class="linenos">60</span></a>      <span class="n">integration_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integration_type</span> <span class="ow">or</span> <span class="n">IntegrationType</span><span class="o">.</span><span class="n">Smooth</span>
+</span><span id="ConstraintOptions-61"><a href="#ConstraintOptions-61"><span class="linenos">61</span></a>      <span class="bp">self</span><span class="o">.</span><span class="n">constraint_operator</span> <span class="o">=</span> <span class="n">AffinityIntegration</span><span class="p">(</span><span class="n">integration_type</span><span class="p">)</span>
+</span><span id="ConstraintOptions-62"><a href="#ConstraintOptions-62"><span class="linenos">62</span></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span> <span class="o">==</span> <span class="n">ConstraintName</span><span class="o">.</span><span class="n">ConstraintPropagation</span><span class="p">:</span>
+</span><span id="ConstraintOptions-63"><a href="#ConstraintOptions-63"><span class="linenos">63</span></a>      <span class="bp">self</span><span class="o">.</span><span class="n">constraint_operator</span> <span class="o">=</span> <span class="n">ConstraintPropagation</span><span class="p">(</span>
+</span><span id="ConstraintOptions-64"><a href="#ConstraintOptions-64"><span class="linenos">64</span></a>          <span class="bp">self</span><span class="o">.</span><span class="n">constraint_propagation_alpha</span><span class="p">)</span>
+</span><span id="ConstraintOptions-65"><a href="#ConstraintOptions-65"><span class="linenos">65</span></a>    <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span> <span class="o">==</span>
+</span><span id="ConstraintOptions-66"><a href="#ConstraintOptions-66"><span class="linenos">66</span></a>          <span class="n">ConstraintName</span><span class="o">.</span><span class="n">NormalizedConstraintPropagation</span><span class="p">):</span>
+</span><span id="ConstraintOptions-67"><a href="#ConstraintOptions-67"><span class="linenos">67</span></a>      <span class="bp">self</span><span class="o">.</span><span class="n">constraint_operator</span> <span class="o">=</span> <span class="n">ConstraintPropagation</span><span class="p">(</span>
+</span><span id="ConstraintOptions-68"><a href="#ConstraintOptions-68"><span class="linenos">68</span></a>          <span class="bp">self</span><span class="o">.</span><span class="n">constraint_propagation_alpha</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="ConstraintOptions-69"><a href="#ConstraintOptions-69"><span class="linenos">69</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="ConstraintOptions-70"><a href="#ConstraintOptions-70"><span class="linenos">70</span></a>      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unsupported constraint name: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+</span><span id="ConstraintOptions-71"><a href="#ConstraintOptions-71"><span class="linenos">71</span></a>          <span class="bp">self</span><span class="o">.</span><span class="n">constraint_name</span><span class="p">))</span>
 </span></pre></div>
 
 
@@ -913,7 +936,7 @@ estimate the number of clusters.</p>
                             <div id="ConstraintOptions.__init__" class="classattr">
                                 <div class="attr function">
             
-        <span class="name">ConstraintOptions</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">constraint_name</span><span class="p">:</span> <span class="n"><a href="#ConstraintName">ConstraintName</a></span>,</span><span class="param">	<span class="n">apply_before_refinement</span><span class="p">:</span> <span class="nb">bool</span>,</span><span class="param">	<span class="n">integration_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="../spectralcluster.html#IntegrationType">spectralcluster.IntegrationType</a></span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">IntegrationType</span><span class="o">.</span><span class="n">Max</span><span class="p">:</span> <span class="mi">1</span><span class="o">&gt;</span>,</span><span class="param">	<span class="n">constraint_propagation_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span></span>)</span>
+        <span class="name">ConstraintOptions</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">constraint_name</span><span class="p">:</span> <span class="n"><a href="#ConstraintName">ConstraintName</a></span>,</span><span class="param">	<span class="n">apply_before_refinement</span><span class="p">:</span> <span class="nb">bool</span>,</span><span class="param">	<span class="n">integration_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="../spectralcluster.html#IntegrationType">spectralcluster.IntegrationType</a></span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">IntegrationType</span><span class="o">.</span><span class="n">Smooth</span><span class="p">:</span> <span class="mi">3</span><span class="o">&gt;</span>,</span><span class="param">	<span class="n">constraint_propagation_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span></span>)</span>
 
         
     </div>
@@ -947,7 +970,7 @@ estimate the number of clusters.</p>
                             <div id="ConstraintOptions.integration_type" class="classattr">
                                 <div class="attr variable">
             <span class="name">integration_type</span><span class="annotation">: Optional[<a href="../spectralcluster.html#IntegrationType">spectralcluster.IntegrationType</a>]</span>        =
-<span class="default_value">&lt;IntegrationType.Max: 1&gt;</span>
+<span class="default_value">&lt;IntegrationType.Smooth: 3&gt;</span>
 
         
     </div>
@@ -2489,7 +2512,7 @@ estimate the number of clusters.</p>
                     <div class="attr variable">
             <span class="name">turntodiarize_constraint_options</span>        =
 <input id="turntodiarize_constraint_options-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="turntodiarize_constraint_options-view-value"></label><span class="default_value">ConstraintOptions(constraint_name=&lt;<a href="#ConstraintName.ConstraintPropagation">ConstraintName.ConstraintPropagation</a>: 2&gt;, apply_before_refinement=True, integration_type=&lt;IntegrationType.Max: 1&gt;, constraint_propagation_alpha=0.4)</span>
+            <label class="view-value-button pdoc-button" for="turntodiarize_constraint_options-view-value"></label><span class="default_value">ConstraintOptions(constraint_name=&lt;<a href="#ConstraintName.ConstraintPropagation">ConstraintName.ConstraintPropagation</a>: 2&gt;, apply_before_refinement=True, integration_type=&lt;IntegrationType.Smooth: 3&gt;, constraint_propagation_alpha=0.4)</span>
 
         
     </div>
